@@ -90,6 +90,10 @@ When generating or verifying a quantum circuit proof, follow this template:
 - `cd lean && lake build AutoQuantum` must succeed with 0 errors (`sorry`s are allowed during scaffolding).
 - To check a single file: `lake env lean AutoQuantum/<File>.lean`
 
+## Git Conventions
+
+- When making a git commit, agents should add themselves as co-authors using a `Co-authored-by:` trailer in the commit message.
+
 ## Keeping Notes in Sync
 
 After every session that changes Lean source files, update the notes wiki **before or in the same commit**:

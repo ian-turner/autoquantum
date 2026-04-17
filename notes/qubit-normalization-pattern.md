@@ -1,6 +1,6 @@
 # Qubit Normalization Pattern
 
-This note records the proof pattern used to discharge the `ketPlus` and `ketMinus` normalization proofs in `lean/AutoQuantum/Qubit.lean`.
+This note records the proof patterns used to discharge the `ketPlus`, `ketMinus`, and `blochState` proofs in `lean/AutoQuantum/Qubit.lean`.
 
 ## Pattern
 
@@ -40,4 +40,33 @@ calc
   _ = 1 := by norm_num
 ```
 
-This should generalize to other symmetric single-qubit superpositions.
+This also generalizes to Bloch-sphere states if the second coefficient is a unit-modulus phase times a real sine term.
+
+## Unit-modulus phases
+
+For Bloch states, the second coefficient is
+
+```lean
+Complex.exp (Complex.I * phi) * Real.sin (theta / 2)
+```
+
+Instead of expanding the complex exponential manually, use the built-in norm fact:
+
+```lean
+have hphase : Complex.normSq (Complex.exp (Complex.I * phi)) = 1 := by
+  rw [Complex.normSq_eq_norm_sq, Complex.norm_exp_I_mul_ofReal]
+  norm_num
+```
+
+Then the coefficient goal reduces to `cos^2 + sin^2 = 1`, which `nlinarith` can close from `Real.sin_sq_add_cos_sq`.
+
+## Orthogonality and pointwise proofs
+
+For `ketPlus_braket_ketMinus`, the clean proof is a coordinate calculation over `Fin 2`:
+
+```lean
+simp [QState.braket, QState.vec, QState.mk, ketPlus, ketMinus, ket0, ket1, basisState,
+  superpose, PiLp.inner_apply, Fin.sum_univ_two]
+```
+
+For Bloch pole lemmas, `simp` needs both `QState.vec` and `QState.mk` to see through the subtype wrapper around the underlying vector.

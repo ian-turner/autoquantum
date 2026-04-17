@@ -1,4 +1,5 @@
 import AutoQuantum.Hilbert
+import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Data.Complex.Basic
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
@@ -78,7 +79,8 @@ noncomputable def ketMinus : QState 1 :=
 
 /-- |+> and |-> are orthogonal. -/
 lemma ketPlus_braket_ketMinus : QState.braket ketPlus ketMinus = 0 := by
-  sorry
+  simp [QState.braket, QState.vec, QState.mk, ketPlus, ketMinus, ket0, ket1, basisState,
+    superpose, PiLp.inner_apply, Fin.sum_univ_two]
 
 /-! ## Bloch sphere representation -/
 
@@ -86,21 +88,29 @@ lemma ketPlus_braket_ketMinus : QState.braket ketPlus ketMinus = 0 := by
     cos(theta/2)|0> + exp(i*phi) sin(theta/2)|1>. -/
 noncomputable def blochState (theta phi : ℝ) : QState 1 :=
   QState.mk
-    (EuclideanSpace.single ⟨0, by norm_num⟩ (Real.cos (theta / 2) : ℂ) +
-     EuclideanSpace.single ⟨1, by norm_num⟩
-       (Complex.exp (Complex.I * phi) * Real.sin (theta / 2)))
+    (superpose (Real.cos (theta / 2) : ℂ)
+      (Complex.exp (Complex.I * phi) * Real.sin (theta / 2)) ket0.vec ket1.vec)
     (by
-      sorry
-      -- Proof: ‖v‖^2 = cos^2(theta/2) + |exp(i*phi)|^2 sin^2(theta/2) = cos^2(theta/2) + sin^2(theta/2) = 1
+      apply superpose_norm_eq_one
+      · exact QState.norm_eq_one ket0
+      · exact QState.norm_eq_one ket1
+      · simpa [QState.braket] using ket0_braket_ket1
+      · have hphase : Complex.normSq (Complex.exp (Complex.I * phi)) = 1 := by
+          rw [Complex.normSq_eq_norm_sq, Complex.norm_exp_I_mul_ofReal]
+          norm_num
+        rw [Complex.normSq_ofReal, Complex.normSq_mul, hphase, one_mul, Complex.normSq_ofReal]
+        nlinarith [Real.sin_sq_add_cos_sq (theta / 2)]
     )
 
 /-- |0> is the north pole of the Bloch sphere: blochState 0 phi = |0> for any phi. -/
 lemma blochState_zero_eq_ket0 (phi : ℝ) : (blochState 0 phi).vec = ket0.vec := by
-  sorry
+  ext i
+  fin_cases i <;> simp [QState.vec, QState.mk, blochState, superpose, ket0, ket1, basisState]
 
 /-- |1> is the south pole: blochState pi phi = exp(i*phi)|1> (up to global phase). -/
 lemma blochState_pi_eq_ket1 (phi : ℝ) :
     (blochState Real.pi phi).vec = Complex.exp (Complex.I * phi) • ket1.vec := by
-  sorry
+  ext i
+  fin_cases i <;> simp [QState.vec, QState.mk, blochState, superpose, ket0, ket1, basisState]
 
 end AutoQuantum
