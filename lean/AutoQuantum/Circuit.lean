@@ -29,14 +29,14 @@ abbrev Circuit (n : ℕ) := List (GateStep n)
 /-! ## Circuit semantics -/
 
 /-- The unitary matrix of a circuit (product of gate matrices, left-to-right).
-    `circuitMatrix [U₁, U₂, ..., Uₖ]` = Uₖ · ... · U₂ · U₁
+    `circuitMatrix [U1, U2, ..., Uk]` = Uk * ... * U2 * U1
     (i.e., the first gate is applied first, so it appears rightmost in the product). -/
 def circuitMatrix {n : ℕ} (c : Circuit n) : QGate n :=
   c.foldr (fun step acc => step.unitary * acc) 1
 
 -- Note: foldr with initial value 1 and operation U * acc gives
--- U₁ * (U₂ * (... * (Uₖ * 1))) = U₁ * U₂ * ... * Uₖ
--- which means U₁ is applied first (rightmost in conventional matrix notation).
+-- U1 * (U2 * (... * (Uk * 1))) = U1 * U2 * ... * Uk
+-- which means U1 is applied first (rightmost in conventional matrix notation).
 
 /-- Apply a circuit to a quantum state. -/
 noncomputable def runCircuit {n : ℕ} (c : Circuit n) (ψ : QState n) : QState n :=
@@ -70,7 +70,7 @@ def singleGate {n : ℕ} (U : QGate n) : Circuit n := [⟨U⟩]
 /-- Sequential composition of two circuits. -/
 def seqComp {n : ℕ} (c₁ c₂ : Circuit n) : Circuit n := c₁ ++ c₂
 
-/-- Apply gate U then gate V: V ∘ U (U first). -/
+/-- Apply gate U then gate V: V after U (U first). -/
 lemma seqComp_matrix {n : ℕ} (c₁ c₂ : Circuit n) :
     circuitMatrix (seqComp c₁ c₂) = circuitMatrix c₁ * circuitMatrix c₂ :=
   circuitMatrix_append c₁ c₂
@@ -79,8 +79,8 @@ lemma seqComp_matrix {n : ℕ} (c₁ c₂ : Circuit n) :
 lemma circuitMatrix_reverse {n : ℕ} (c : Circuit n) :
     circuitMatrix c.reverse = (circuitMatrix c)⁻¹ := by
   sorry
-  -- Proof: By induction. (U₁ · U₂ · ... · Uₖ)⁻¹ = Uₖ⁻¹ · ... · U₂⁻¹ · U₁⁻¹
-  -- and reversing the list gives Uₖ · ... · U₁, each of which equals its own inverse
+  -- Proof: By induction. (U1 * U2 * ... * Uk)^(-1) = Uk^(-1) * ... * U2^(-1) * U1^(-1)
+  -- and reversing the list gives Uk * ... * U1, each of which equals its own inverse
   -- in the unitary group.
 
 /-! ## Circuit correctness statement template -/

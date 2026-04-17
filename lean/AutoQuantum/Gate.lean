@@ -96,9 +96,9 @@ lemma hadamardMatrix_isUnitary : hadamardMatrix ∈ Matrix.unitaryGroup (Fin 2) 
                Matrix.of_apply, Fin.isValue]
   all_goals {
     sorry
-    -- Strategy: simp the entries to (1/√2)² + (1/√2)² = 1 or (1/√2)² - (1/√2)² = 0.
-    -- Key lemma: Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num) gives (√2)² = 2.
-    -- Then (1/√2)² = 1/2, so 1/2 + 1/2 = 1. Use: field_simp, ring.
+    -- Strategy: simp the entries to (1/sqrt 2)^2 + (1/sqrt 2)^2 = 1 or (1/sqrt 2)^2 - (1/sqrt 2)^2 = 0.
+    -- Key lemma: Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num) gives (sqrt 2)^2 = 2.
+    -- Then (1/sqrt 2)^2 = 1/2, so 1/2 + 1/2 = 1. Use: field_simp, ring.
   }
 
 /-- The Hadamard gate. -/
@@ -112,7 +112,7 @@ lemma hadamard_mul_self : hadamard * hadamard = (1 : QGate 1) := by
     simp [hadamard, hadamardMatrix, Matrix.mul_apply, Matrix.one_apply]
   all_goals sorry
 
-/-- The phase rotation R_k gate: [[1, 0], [0, exp(2πi/2^k)]].
+/-- The phase rotation R_k gate: [[1, 0], [0, exp(2*pi*i/2^k)]].
     R_1 = Z, R_2 = S, R_3 = T. -/
 noncomputable def phaseRotationMatrix (k : ℕ) : Matrix (Fin 2) (Fin 2) ℂ :=
   !![1, 0; 0, Complex.exp (2 * Real.pi * Complex.I / (2 ^ k : ℂ))]
@@ -124,7 +124,7 @@ lemma phaseRotationMatrix_isUnitary (k : ℕ) :
   fin_cases i <;> fin_cases j <;>
     simp [phaseRotationMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply]
   · sorry
-    -- Key: starRingEnd ℂ (exp(iθ)) = exp(-iθ) and exp(-iθ) * exp(iθ) = exp(0) = 1.
+    -- Key: starRingEnd ℂ (exp(i*theta)) = exp(-i*theta) and exp(-i*theta) * exp(i*theta) = exp(0) = 1.
     -- Use: Complex.exp_conj, Complex.conj_ofReal, ← Complex.exp_add, Complex.exp_zero.
 
 /-- The phase rotation gate R_k. -/
