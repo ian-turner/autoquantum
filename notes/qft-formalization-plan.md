@@ -1,6 +1,7 @@
 # QFT Formalization Plan
 
-A step-by-step plan for proving the correctness of the Quantum Fourier Transform circuit in Lean 4.
+Step-by-step plan for proving the correctness of the Quantum Fourier Transform circuit in Lean 4.
+Current scaffold lives in `lean/AutoQuantum/Algorithms/QFT.lean`.
 
 ---
 
@@ -20,115 +21,104 @@ As a matrix:
 QFT[j, k] = (1 / √(2^n)) · exp(2πi · j · k / 2^n)
 ```
 
-This is exactly `(1 / √(2^n))` times the DFT matrix.
+This is `(1 / √(2^n))` times the DFT matrix.
 
 ### Circuit Decomposition (for n qubits)
 
 The standard circuit uses:
 - `H` — Hadamard gate
-- `R_k` — phase rotation by `2π/2^k`:
-  ```
-  R_k = [[1, 0], [0, exp(2πi/2^k)]]
-  ```
+- `R_k` — phase rotation by `2π/2^k`: `[[1, 0], [0, exp(2πi/2^k)]]`
 - `SWAP` gates to reverse bit order at the end
 
-**Circuit for qubit 0 (most significant):**
-1. Apply H to qubit 0
-2. Apply controlled-R_2 (control=qubit 1, target=qubit 0)
-3. Apply controlled-R_3 (control=qubit 2, target=qubit 0)
+**For each qubit m (m = 0 is MSB):**
+1. Apply H to qubit m
+2. Apply controlled-R_2 (control=qubit m+1, target=qubit m)
+3. Apply controlled-R_3 (control=qubit m+2, target=qubit m)
 4. ...
-5. Apply controlled-R_n (control=qubit n-1, target=qubit 0)
+5. Apply controlled-R_{n-m} (control=qubit n-1, target=qubit m)
 
-Repeat for each qubit, then bit-reverse.
-
-The matrix identity to prove is:
-```
-Circuit_matrix = QFT_matrix
-```
+Repeat for all m, then bit-reverse.
 
 ---
 
 ## Lean Proof Strategy
 
-### Step 1: Define the QFT matrix
+### Step 1: Define the QFT matrix ✓ (done)
 
 ```lean
-def qftMatrix (n : ℕ) : Matrix (Fin (2^n)) (Fin (2^n)) ℂ :=
-  fun j k =>
-    let ω := Complex.exp (2 * Real.pi * Complex.I / (2^n : ℂ))
-    (1 / Real.sqrt (2^n : ℝ) : ℂ) * ω ^ (j.val * k.val)
+noncomputable def omega (n : ℕ) : ℂ :=
+  Complex.exp (2 * Real.pi * Complex.I / (2 ^ n : ℂ))
+
+noncomputable def qftMatrix (n : ℕ) : Matrix (Fin (2^n)) (Fin (2^n)) ℂ :=
+  fun j k => (1 / Real.sqrt (2^n : ℝ) : ℂ) * (omega n) ^ (j.val * k.val)
 ```
 
-### Step 2: Prove QFT matrix is unitary
+### Step 2: Prove ω is a primitive root of unity (sorry'd)
 
 ```lean
-lemma qftMatrix_isUnitary (n : ℕ) : qftMatrix n ∈ Matrix.unitaryGroup (Fin (2^n)) ℂ
+lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1
 ```
 
-**Proof sketch:**
-- `(qftMatrix n)^* ⬝ qftMatrix n = 1` by the DFT orthogonality relation:
-  `Σ_k exp(2πi(j-j')k/N) = N · δ_{jj'}`
-- This follows from `Finset.sum_geometric_two_add_one` or a direct root-of-unity sum lemma.
+**Proof:** `ω^{2^n} = exp(2πi/2^n)^{2^n} = exp(2πi) = 1`.
+Key lemma needed: something like `Complex.exp_int_mul_two_pi_mul_I` or rewriting via `Complex.exp_nat_mul` and then reducing `exp(2πi) = 1`. The exact Mathlib lemma name requires searching; `simp [Complex.exp_two_pi_mul_I]` did **not** work in v4.29.0.
 
-### Step 3: Define the circuit gates
+### Step 3: DFT orthogonality relation (sorry'd)
 
 ```lean
--- Phase rotation gate
-def phaseRotationMatrix (k : ℕ) : Matrix (Fin 2) (Fin 2) ℂ :=
-  Matrix.of ![![1, 0], ![0, Complex.exp (2 * Real.pi * Complex.I / (2^k : ℂ))]]
-
--- Controlled gate embedding
-def controlled (U : Matrix (Fin 2) (Fin 2) ℂ) : Matrix (Fin 4) (Fin 4) ℂ := ...
-
--- Bit-reversal permutation matrix
-def bitReversal (n : ℕ) : Matrix (Fin (2^n)) (Fin (2^n)) ℂ := ...
+lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
+    ∑ k : Fin (2 ^ n), (omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val)) =
+    if j = j' then (2 ^ n : ℂ) else 0
 ```
 
-### Step 4: Define the QFT circuit
+Note: use `star` for conjugation, not `conj` (see `lean-quantum-landscape.md`).
 
-```lean
-def qftCircuit (n : ℕ) : Matrix (Fin (2^n)) (Fin (2^n)) ℂ :=
-  bitReversal n ⬝ qftCircuitNoSwap n
-```
+**Proof strategy:**
+- The sum equals `Σ_k r^k` where `r = ω^{j-j'}`.
+- If `j = j'`: `r = 1`, each term is 1, sum = 2^n.
+- If `j ≠ j'`: geometric series with `r ≠ 1`. Sum = `(1 - r^{2^n}) / (1 - r) = 0` since `r^{2^n} = 1`.
+- Key Mathlib lemma: search for `geom_sum` under `Mathlib.Algebra.BigOperators` or use `Finset.geom_series_def`. Note: `Mathlib.Algebra.GeomSum` is **not** a valid import path in v4.29.
 
-where `qftCircuitNoSwap n` is the product of all H and controlled-R_k gates.
+### Step 4: Prove QFT matrix is unitary (sorry'd)
 
-### Step 5: Prove circuit equals QFT matrix
+Uses `dft_orthogonality` to show `(qftMatrix n)† ⬝ qftMatrix n = 1` entry-wise.
 
-```lean
-theorem qft_circuit_correct (n : ℕ) : qftCircuit n = qftMatrix n
-```
+### Step 5: Define gate embeddings (deferred)
 
-**Proof approach:**
-- **Induction on n**: Base case n=1 is `H = qftMatrix 1` (direct computation).
-- **Inductive step**: Show `qftCircuit (n+1)` factors as `(I ⊗ qftCircuit n) ⬝ (Hn stage)` and use `qftMatrix (n+1) = (I ⊗ qftMatrix n) ⬝ (phase stage)`.
-- **Alternative**: `Matrix.ext` + entry-wise calculation using geometric sum.
+`tensorWithId`, `idTensorWith`, and `controlled` in `Gate.lean` are all deferred. These require bridging the Kronecker product reindexing (`Fin (2^k) × Fin (2^m) ≅ Fin (2^(k+m))`).
+
+### Step 6: Define the QFT circuit (deferred)
+
+Depends on Step 5. The circuit body is currently `sorry`.
+
+### Step 7: Prove `qft_correct` (deferred)
+
+Depends on Steps 3–6. Proof by induction on n using the recursive DFT factoring.
 
 ---
 
 ## Known Proof Obstacles
 
-1. **Geometric series over `Fin n`**: Need `Σ_{k : Fin N} ω^(j*k) = N * δ_{j,0}` for ω a primitive N-th root of unity. Check if this is in Mathlib (`Finset.geom_sum_eq` or similar).
+1. **`exp(2πi) = 1`**: The right Mathlib lemma is not `Complex.exp_two_pi_mul_I` (unused in v4.29 simp). Try:
+   - `Complex.exp_int_mul_two_pi_mul_I 1`
+   - Or `rw [show 2 * Real.pi * Complex.I = ..., Complex.exp_mul_I]` + trig identities
 
-2. **`Fin (2^(n+1))` ≅ `Fin (2^n) × Fin 2`**: Need a canonical isomorphism to split the tensor product structure. Use `finProdFinEquiv` or `Fin.divNat` / `Fin.modNat`.
+2. **Geometric series over `Fin n`**: The needed lemma is roughly `Finset.univ_sum_geom_series`. Search Mathlib for `geom_sum` — the exact name and location changed between Mathlib versions.
 
-3. **Kronecker product reindexing**: `Matrix.kronecker A B` is indexed by `n × m`, not `Fin (n * m)`. Need reindexing lemmas.
+3. **`Fin (2^(n+1))` ≅ `Fin (2^n) × Fin 2`**: Use `Fin.divNat` / `Fin.modNat` or `finProdFinEquiv` for tensor product reindexing.
 
-4. **`norm_cast` / `push_cast` for `2^n` in ℂ**: Casting `2^n : ℕ` to `ℂ` requires care.
+4. **Kronecker product indices**: `Matrix.kroneckerMap A B` produces a matrix indexed by `ι × κ`, not `Fin (n * m)`. Need to reindex via `Fintype.equivFin` or similar.
+
+5. **Casting `2^n` between types**: `push_cast` and `norm_cast` help with `(2^n : ℕ)` vs `(2^n : ℝ)` vs `(2^n : ℂ)` mismatches.
 
 ---
 
 ## Small Cases First
 
-For confidence, prove the n=1 and n=2 cases explicitly by `norm_num` / `decide`:
+For confidence, prove n=1 and n=2 explicitly before the general case.
 
-```lean
--- n=1: QFT on 1 qubit = Hadamard
-example : qftCircuit 1 = qftMatrix 1 := by decide  -- or norm_num + Complex.ext
+**n=1:** `qftCircuit 1 = qftMatrix 1` reduces to `hadamardMatrix = qftMatrix 1`. Proven entry-wise with `Matrix.ext` + `fin_cases` + `norm_num` / `ring`. Note: `decide` and `native_decide` do **not** work for `ℂ`-valued matrices (ℂ is not a `DecidableEq` type in a useful sense here).
 
--- n=2: QFT on 2 qubits
-example : qftCircuit 2 = qftMatrix 2 := by native_decide  -- or norm_num
-```
+**n=2:** `qftCircuit 2 = qftMatrix 2`. Once the circuit is defined, this is a 4×4 matrix equality. Approach: `Matrix.ext` + `fin_cases` + `norm_num`.
 
 ---
 
@@ -140,7 +130,7 @@ For 2 qubits (|q0 q1⟩, q0 = MSB):
 3. H on q1
 4. SWAP(q0, q1)
 
-Matrix product:
+Matrix product (basis order |00⟩, |01⟩, |10⟩, |11⟩):
 ```
 SWAP ⬝ (I ⊗ H) ⬝ CR_2 ⬝ (H ⊗ I) = QFT_4
 ```

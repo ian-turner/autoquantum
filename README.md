@@ -24,8 +24,9 @@ Because every output is a checked Lean proof, correctness is not tested—it is 
 
 ```
 autoquantum/
-├── lean/               # Lean 4 library (AutoQuantum)
+├── lean/                   # Lean 4 library (AutoQuantum)
 │   ├── lakefile.lean
+│   ├── lean-toolchain       -- pins leanprover/lean4:v4.29.0
 │   └── AutoQuantum/
 │       ├── Hilbert.lean     -- Hilbert spaces, quantum state types
 │       ├── Qubit.lean       -- Single-qubit primitives and basis states
@@ -33,12 +34,13 @@ autoquantum/
 │       ├── Circuit.lean     -- Circuit composition and semantics
 │       └── Algorithms/
 │           └── QFT.lean     -- Quantum Fourier Transform
-├── notes/              # Literature survey and design notes
-│   ├── research_references.md
-│   ├── lean_quantum_landscape.md
-│   └── qft_formalization_plan.md
-├── AGENTS.md           # All instructions for AI agents working here
-└── CLAUDE.md           # Points to AGENTS.md
+├── notes/                  # Wiki — start at notes/home.md
+│   ├── home.md
+│   ├── research-references.md
+│   ├── lean-quantum-landscape.md
+│   └── qft-formalization-plan.md
+├── AGENTS.md               # All instructions for AI agents working here
+└── CLAUDE.md               # Points to AGENTS.md
 ```
 
 ## Getting Started
@@ -52,14 +54,17 @@ autoquantum/
 
 ```bash
 cd lean
-lake update        # fetch Mathlib and dependencies
-lake build         # compile the library
+lake update          # fetch Mathlib at the pinned tag (~5–10 min first time)
+lake exe cache get   # download prebuilt .oleans — skips hours of compilation
+lake build           # compile only our library (~seconds)
 ```
+
+> **Note:** `lake exe cache get` is essential. Without it, `lake build` will attempt to compile all of Mathlib from source.
 
 ### Explore
 
 ```bash
-# Open in VS Code with lean4 extension for interactive proof state
+# Open in VS Code with the lean4 extension for interactive proof state
 code lean/AutoQuantum/Algorithms/QFT.lean
 ```
 
@@ -67,20 +72,21 @@ code lean/AutoQuantum/Algorithms/QFT.lean
 
 | Module | Status |
 |--------|--------|
-| `Hilbert.lean` | Scaffold — core types defined, proofs partial |
-| `Qubit.lean` | Scaffold — basis states defined |
-| `Gate.lean` | Scaffold — standard gates defined, unitarity sorry'd |
-| `Circuit.lean` | Scaffold — composition semantics defined |
-| `QFT.lean` | Scaffold — statement proven sorry, proof strategy outlined |
+| `Hilbert.lean` | Builds — `QState`, `QHilbert`, `basisState`, `superpose`; norm proofs sorry'd |
+| `Qubit.lean` | Builds — `ket0`, `ket1`, `ketPlus`, `ketMinus`, Bloch sphere; proofs sorry'd |
+| `Gate.lean` | Builds — Pauli X/Y/Z, H, R_k, CNOT, SWAP defined; `applyGate` body deferred (EuclideanSpace/PiLp bridge) |
+| `Circuit.lean` | Builds — `circuitMatrix`, `runCircuit`, `circuitMatrix_append` proved |
+| `QFT.lean` | Builds — `qftMatrix`, `qftGate`, `qftCircuit` defined; correctness sorry'd |
 
-All `sorry`s are intentional scaffolding markers; each carries a comment describing the intended proof strategy.
+All `sorry`s carry a comment describing the proof strategy. `lake build` completes with 0 errors.
 
 ## Key Design Decisions
 
-- **States as unit vectors** in `EuclideanSpace ℂ (Fin (2^n))` — integrates cleanly with Mathlib's inner product space machinery.
+- **States as unit vectors** in `EuclideanSpace ℂ (Fin (2^n))` — integrates with Mathlib's inner product space machinery.
 - **Gates as `Matrix.unitaryGroup` members** — unitary constraints are type-level, not runtime checks.
-- **Circuits as gate lists with qubit indices** — compositional and easy to generate from LLM output.
-- **Tensor products via Kronecker** — `Matrix.kroneckerMap` computes multi-qubit gate embeddings.
+- **Circuits as `abbrev` list** — `abbrev Circuit (n : ℕ) := List (GateStep n)` ensures `List` instances (`++`, induction) work without manual unfolding.
+- **Inner product via `braket`** — `QState.braket` wraps `@inner ℂ (QHilbert n) _` to avoid shadowing Mathlib's `inner`.
+- **Tensor products via Kronecker** — `Matrix.kroneckerMap` computes multi-qubit gate embeddings (gate embedding deferred).
 
 ## References
 
