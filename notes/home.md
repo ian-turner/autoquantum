@@ -21,7 +21,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | File | Sorry-free? | Notes |
 |------|-------------|-------|
 | `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
-| `Qubit.lean` | No | `ketPlus`/`ketMinus` norm, `blochState` lemmas |
+| `Qubit.lean` | No | `ketPlus` and `ketMinus` norm proofs complete; remaining gaps are `ketPlus_braket_ketMinus` and the `blochState` lemmas |
 | `Gate.lean` | No | `hadamard` unitarity, `phaseRotation` unitarity, `applyGate`, tensor embeddings |
 | `Circuit.lean` | **Yes** | All proofs complete |
 | `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
@@ -33,6 +33,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
+- [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof pattern for `1 / sqrt 2` superpositions in `Qubit.lean`
 
 ### Algorithms
 - [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles

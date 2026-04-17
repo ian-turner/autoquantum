@@ -82,6 +82,7 @@ Last updated: April 2026 (Mathlib v4.29.0).
 | `superpose` — linear combination of vectors | Done | `Hilbert.lean` |
 | `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Hilbert.lean` |
 | `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Qubit.lean` |
+| `ketPlus_braket_ketMinus` | Partial | `Qubit.lean` |
 | Bloch sphere parameterization | Done (sorry'd) | `Qubit.lean` |
 | `QGate k` — unitary gate type | Done | `Gate.lean` |
 | Pauli X, Y, Z gates + unitarity proofs | Done | `Gate.lean` |
@@ -150,3 +151,12 @@ rw [orthonormal_iff_ite] at h
 exact h j k
 ```
 `orthonormal_iff_ite` requires `[DecidableEq ι]`; for `Fin n` this is always satisfied automatically.
+
+### 10. `field_simp` stalls on `Complex.normSq ((1 : ℂ) / √2)`
+In `Qubit.lean`, the coefficient obligation for `ketPlus` normalization does not fully close with `field_simp`; Lean can stop at a scalar goal like `Complex.normSq (1 / ↑√2) * (1 + 1) = 1`. The robust route is to prove the scalar fact first:
+```lean
+have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
+  rw [Complex.normSq_div]
+  norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
+```
+and then finish the sum with `nlinarith`.

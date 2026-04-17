@@ -42,19 +42,39 @@ lemma ket1_braket_ket1 : QState.braket ket1 ket1 = 1 := by
 /-- The |+> = (|0> + |1>) / sqrt(2) state (eigenstate of X with eigenvalue +1). -/
 noncomputable def ketPlus : QState 1 :=
   QState.mk
-    (EuclideanSpace.single ⟨0, by norm_num⟩ ((1 : ℂ) / Real.sqrt 2) +
-     EuclideanSpace.single ⟨1, by norm_num⟩ ((1 : ℂ) / Real.sqrt 2))
+    (superpose ((1 : ℂ) / Real.sqrt 2) ((1 : ℂ) / Real.sqrt 2) ket0.vec ket1.vec)
     (by
-      sorry
-      -- Proof: ‖(1/sqrt 2)|0> + (1/sqrt 2)|1>‖ = sqrt(1/2 + 1/2) = 1
+      apply superpose_norm_eq_one
+      · exact QState.norm_eq_one ket0
+      · exact QState.norm_eq_one ket1
+      · simpa [QState.braket] using ket0_braket_ket1
+      · have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
+          rw [Complex.normSq_div]
+          norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
+        nlinarith [hcoef]
     )
 
 /-- The |-> = (|0> - |1>) / sqrt(2) state (eigenstate of X with eigenvalue -1). -/
 noncomputable def ketMinus : QState 1 :=
   QState.mk
-    (EuclideanSpace.single ⟨0, by norm_num⟩ ((1 : ℂ) / Real.sqrt 2) +
-     EuclideanSpace.single ⟨1, by norm_num⟩ (-(1 : ℂ) / Real.sqrt 2))
-    (by sorry)
+    (superpose ((1 : ℂ) / Real.sqrt 2) (-((1 : ℂ) / Real.sqrt 2)) ket0.vec ket1.vec)
+    (by
+      apply superpose_norm_eq_one
+      · exact QState.norm_eq_one ket0
+      · exact QState.norm_eq_one ket1
+      · simpa [QState.braket] using ket0_braket_ket1
+      · have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
+          rw [Complex.normSq_div]
+          norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
+        have hneg : Complex.normSq (-((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
+          rw [Complex.normSq_neg]
+          exact hcoef
+        calc
+          Complex.normSq (((1 : ℂ) / Real.sqrt 2)) +
+              Complex.normSq (-((1 : ℂ) / Real.sqrt 2)) = 1 / 2 + 1 / 2 := by
+                rw [hcoef, hneg]
+          _ = 1 := by norm_num
+    )
 
 /-- |+> and |-> are orthogonal. -/
 lemma ketPlus_braket_ketMinus : QState.braket ketPlus ketMinus = 0 := by
