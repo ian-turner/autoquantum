@@ -30,6 +30,5 @@ __pycache__/
 # Claude Code local settings
 .claude/
 
-# Obsidian personal state
-notes/.obsidian/workspace.json
-notes/.obsidian/workspace-mobile.json
+# Obsidian
+notes/.obsidian/
