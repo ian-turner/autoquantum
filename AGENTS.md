@@ -90,6 +90,16 @@ When generating or verifying a quantum circuit proof, follow this template:
 - `cd lean && lake build AutoQuantum` must succeed with 0 errors (`sorry`s are allowed during scaffolding).
 - To check a single file: `lake env lean AutoQuantum/<File>.lean`
 
+## Keeping Notes in Sync
+
+After every session that changes Lean source files, update the notes wiki **before or in the same commit**:
+
+1. **`notes/home.md` sorry-status table** — mark files sorry-free when all proofs are complete; list remaining gaps for partially-proved files.
+2. **`notes/lean-quantum-landscape.md` feature table** — update status (Done / Partial / Deferred) for any definitions or lemmas that changed.
+3. **`notes/lean-quantum-landscape.md` pitfalls** — add a new numbered entry for any Lean or Mathlib API surprise encountered during the session (wrong lemma names, elaboration stalls, notation quirks, import paths, etc.).
+
+This is a hard requirement, not optional cleanup.
+
 ## Research Context
 
 See `notes/research-references.md` for key papers and `notes/lean-quantum-landscape.md` for the current state of Lean quantum libraries. The notes are organized as a wiki — start at `notes/home.md`.
