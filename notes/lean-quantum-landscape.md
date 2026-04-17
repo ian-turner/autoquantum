@@ -33,7 +33,9 @@ Last updated: April 2026 (Mathlib v4.29.0).
 
 ### Useful Imports (confirmed v4.29.0)
 - `Mathlib.Analysis.InnerProductSpace.Basic` — inner product spaces
-- `Mathlib.Analysis.InnerProductSpace.PiL2` — EuclideanSpace
+- `Mathlib.Analysis.InnerProductSpace.PiL2` — EuclideanSpace, `EuclideanSpace.single`, `PiLp.norm_single`
+- `Mathlib.Analysis.InnerProductSpace.Orthonormal` — `orthonormal_iff_ite`, `Orthonormal`
+- `Mathlib.Analysis.Complex.Norm` — `Complex.sq_norm : ‖z‖^2 = normSq z`
 - `Mathlib.LinearAlgebra.UnitaryGroup` — unitary group
 - `Mathlib.LinearAlgebra.Matrix.Hermitian` — Hermitian matrices
 - `Mathlib.Analysis.SpecialFunctions.Complex.Circle` — complex exp on the unit circle
@@ -75,8 +77,10 @@ Last updated: April 2026 (Mathlib v4.29.0).
 | `QHilbert n` — `EuclideanSpace ℂ (Fin (2^n))` | Done | `Hilbert.lean` |
 | `QState n` — unit vector subtype | Done | `Hilbert.lean` |
 | `QState.braket` — inner product wrapper | Done | `Hilbert.lean` |
+| `basisState_braket` — basis orthonormality | **Done** (c4dcc6b) | `Hilbert.lean` |
 | `basisState n k` — computational basis state | Done | `Hilbert.lean` |
 | `superpose` — linear combination of vectors | Done | `Hilbert.lean` |
+| `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Hilbert.lean` |
 | `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Qubit.lean` |
 | Bloch sphere parameterization | Done (sorry'd) | `Qubit.lean` |
 | `QGate k` — unitary gate type | Done | `Gate.lean` |
@@ -124,3 +128,25 @@ After `fin_cases i <;> fin_cases j`, Lean generates 16 goals with residual `∑`
 
 ### 6. `import` must precede doc comments
 Lean 4 requires all `import` statements at the very top of a file, before anything else — including `/-! ... -/` module doc comments. Placing a doc comment first causes "invalid 'import' command" errors on every subsequent import.
+
+### 7. `⟪·, ·⟫_𝕜` notation requires `open scoped InnerProductSpace`
+The inner product notation is declared `scoped[InnerProductSpace]` in `Mathlib.Analysis.InnerProductSpace.Defs`. Without opening the scope it is unavailable outside Mathlib's own files. Add this line to any file that uses `⟪·, ·⟫_𝕜`:
+```lean
+open scoped InnerProductSpace
+```
+Alternatively, write `@inner ℂ E _ x y` directly (which is how the notation expands).
+
+### 8. `norm_add_sq` requires explicit field `𝕜`
+`norm_add_sq (x y : E) : ‖x+y‖^2 = ‖x‖^2 + 2 * re⟪x,y⟫ + ‖y‖^2` has `𝕜` as an implicit argument inferred from `E`. When `E` is a `PiLp`/`EuclideanSpace` type, Lean's elaborator often cannot unify the `InnerProductSpace ?𝕜 E` instance and gets stuck on the `re` metavariable. **Fix:** provide the field explicitly:
+```lean
+@norm_add_sq ℂ (QHilbert n) _ _ _ x y
+```
+
+### 9. Basis orthonormality via `EuclideanSpace.orthonormal_single`
+To prove `⟪EuclideanSpace.single j 1, EuclideanSpace.single k 1⟫_ℂ = if j = k then 1 else 0`, the direct route is:
+```lean
+have h := EuclideanSpace.orthonormal_single (𝕜 := ℂ) (ι := Fin (2^n))
+rw [orthonormal_iff_ite] at h
+exact h j k
+```
+`orthonormal_iff_ite` requires `[DecidableEq ι]`; for `Fin n` this is always satisfied automatically.

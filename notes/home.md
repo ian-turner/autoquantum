@@ -16,6 +16,16 @@ Mathlib pinned to **v4.29.0** (`lean/lean-toolchain`). `lake build AutoQuantum` 
 cd lean && lake update && lake exe cache get && lake build AutoQuantum
 ```
 
+### Sorry status (April 2026)
+
+| File | Sorry-free? | Notes |
+|------|-------------|-------|
+| `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
+| `Qubit.lean` | No | `ketPlus`/`ketMinus` norm, `blochState` lemmas |
+| `Gate.lean` | No | `hadamard` unitarity, `phaseRotation` unitarity, `applyGate`, tensor embeddings |
+| `Circuit.lean` | **Yes** | All proofs complete |
+| `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
+
 ## Topics
 
 ### Research & Literature
