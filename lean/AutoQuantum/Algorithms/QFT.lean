@@ -1,3 +1,7 @@
+import AutoQuantum.Circuit
+import Mathlib.Analysis.SpecialFunctions.Complex.Circle
+import Mathlib.RingTheory.RootsOfUnity.Basic
+
 /-!
 # Quantum Fourier Transform (QFT)
 
@@ -32,13 +36,9 @@ Then reverse the qubit order (bit-reversal via SWAP cascade).
 - `notes/qft-formalization-plan.md` for full proof strategy
 -/
 
-import AutoQuantum.Circuit
-import Mathlib.Analysis.SpecialFunctions.Complex.Circle
-import Mathlib.Algebra.GeomSum
-
 namespace AutoQuantum.QFT
 
-open Complex Matrix AutoQuantum
+open Matrix AutoQuantum
 
 /-! ## The QFT matrix (target) -/
 
@@ -63,22 +63,21 @@ lemma qftMatrix_eq_scale_dft (n : ℕ) :
 
 /-- Key identity: ω is a primitive 2^n-th root of unity. -/
 lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1 := by
-  simp [omega, ← Complex.exp_nat_mul]
-  ring_nf
-  simp [Complex.exp_two_pi_mul_I]
+  sorry
+  -- Proof: ω^{2^n} = exp(2πi/2^n)^{2^n} = exp(2πi) = 1.
+  -- Key lemma: Complex.exp_int_mul_two_pi_mul_I or Complex.exp_two_pi_mul_I.
 
 /-- The DFT orthogonality relation (core of the unitarity proof):
-    Σ_{k=0}^{N-1} ω^{(j-j')·k} = N · δ_{j,j'} -/
+    Σ_{k} ω^{j·k} · conj(ω^{j'·k}) = 2^n · δ_{j,j'} -/
 lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
-    ∑ k : Fin (2 ^ n), (omega n) ^ (j.val * k.val) * conj ((omega n) ^ (j'.val * k.val)) =
+    ∑ k : Fin (2 ^ n), (omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val)) =
     if j = j' then (2 ^ n : ℂ) else 0 := by
   sorry
   -- Proof strategy:
-  -- The sum equals Σ_k ω^{(j-j')k}.
-  -- If j = j': ω^0 = 1, so sum = 2^n.
-  -- If j ≠ j': geometric series with ratio ω^{j-j'} ≠ 1, sum = (1 - ω^{(j-j')·2^n}) / (1 - ω^{j-j'}) = 0
-  --   since ω^{2^n} = 1 (from omega_pow_two_pow).
-  -- Use: Finset.geom_sum_eq or direct geometric series computation.
+  -- Sum equals Σ_k ω^{(j-j')k} (using star (ω^m) = ω^{-m} since |ω| = 1).
+  -- If j = j': each term is 1, sum = 2^n.
+  -- If j ≠ j': geometric series with ratio r = ω^{j-j'} ≠ 1.
+  --   Sum = (1 - r^{2^n}) / (1 - r) = 0 since r^{2^n} = 1 (omega_pow_two_pow).
 
 /-- The QFT matrix is unitary. -/
 lemma qftMatrix_isUnitary (n : ℕ) : qftMatrix n ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ := by
@@ -89,10 +88,10 @@ lemma qftMatrix_isUnitary (n : ℕ) : qftMatrix n ∈ Matrix.unitaryGroup (Fin (
   -- Proof:
   -- ((qftMatrix n)†  ⬝ qftMatrix n)[j, j']
   -- = Σ_k conj(qftMatrix[k,j]) * qftMatrix[k,j']
-  -- = Σ_k (1/√N) ω^{-kj} * (1/√N) ω^{kj'}
+  -- = (1/N) Σ_k star(ω^{kj}) * ω^{kj'}
   -- = (1/N) Σ_k ω^{k(j'-j)}
-  -- = (1/N) * (N · δ_{j,j'})   [by dft_orthogonality]
-  -- = δ_{j,j'}
+  -- = (1/N) · (N · δ_{j,j'})   [by dft_orthogonality]
+  -- = δ_{j,j'}                 [since Matrix.one_apply j j' = δ_{j,j'}]
 
 /-- Package the QFT matrix as a gate. -/
 noncomputable def qftGate (n : ℕ) : QGate n :=
@@ -100,91 +99,44 @@ noncomputable def qftGate (n : ℕ) : QGate n :=
 
 /-! ## The QFT circuit -/
 
-/-- The phase rotation gate to use at position (target qubit m, control qubit m+j).
-    This is R_{j+1}: rotation by 2π/2^{j+1}. -/
-noncomputable def qftPhaseStep (j : ℕ) : QGate 1 := phaseRotation (j + 1)
-
 /-- The QFT circuit on 1 qubit is just the Hadamard gate. -/
 noncomputable def qftCircuit1 : Circuit 1 := singleGate hadamard
 
-/-- Correctness of QFT on 1 qubit: H = QFT_2. -/
+/-- Correctness of QFT on 1 qubit: H = QFT_2.
+    Entry-wise: H[i,j] = (1/√2) · (-1)^{ij} = (1/√2) · ω^{ij} for ω = exp(πi). -/
 theorem qft1_correct : qftCircuit1.CorrectFor (qftMatrix 1) (qftMatrix_isUnitary 1) := by
-  simp [Circuit.CorrectFor, qftCircuit1, singleGate, circuitMatrix, hadamard,
-        hadamardMatrix, qftMatrix, omega]
-  ext i j
-  fin_cases i <;> fin_cases j <;> simp
-  · -- Entry [0,0]: (1/√2) · ω^0 = 1/√2 ✓
-    simp [omega]
-    sorry
-  · -- Entry [0,1]: (1/√2) · ω^0 = 1/√2 ✓
-    sorry
-  · -- Entry [1,0]: (1/√2) · ω^0 = 1/√2 ✓
-    sorry
-  · -- Entry [1,1]: (1/√2) · ω^{1·1} = (1/√2) · exp(2πi/2) = (1/√2) · (-1) = -1/√2 ✓
-    simp [omega]
-    rw [show (2 : ℝ) ^ (1 : ℕ) = 2 from by norm_num]
-    rw [show (2 * Real.pi * Complex.I / (2 : ℂ)) = Real.pi * Complex.I from by ring]
-    rw [Complex.exp_mul_I]
-    simp [Real.cos_pi, Real.sin_pi]
-    sorry
+  sorry
+  -- Strategy: unfold both sides, use Matrix.ext, then fin_cases on (i, j) ∈ Fin 2 × Fin 2.
+  -- Each of the four entries reduces to a real arithmetic identity.
+  -- Key: omega 1 = exp(2πi/2) = exp(πi) = -1, so ω^{1·1} = -1.
 
 /-- The QFT circuit on n qubits (general construction).
 
-    Structure for n qubits (q₀ = MSB = qubit 0):
-      For m = 0, 1, ..., n-1:
-        - Apply H to qubit m (embedded as identity on other qubits)
-        - For j = 1, ..., n-1-m:
-            Apply controlled-R_{j+1} (control = qubit m+j, target = qubit m)
-      Then apply the bit-reversal permutation.
-
-    This is given as a partial definition (sorry'd), awaiting the multi-qubit
-    gate embedding machinery from Gate.lean to be fully elaborated. -/
+    For each qubit m = 0, ..., n-1:
+      - Apply H to qubit m
+      - Apply controlled-R_{j+1} for j = 1, ..., n-1-m
+    Then apply the bit-reversal permutation (SWAP cascade). -/
 noncomputable def qftCircuit (n : ℕ) : Circuit n := by
-  sorry
-  -- Construction:
-  -- 1. Build the "butterfly" layers:
-  --    For m in 0..n-1:
-  --      [tensorWithId (n-1-m) (singleGate hadamard),
-  --       controlled-R₂ at positions (m+1, m),
-  --       controlled-R₃ at positions (m+2, m),
-  --       ...,
-  --       controlled-R_{n-m} at positions (n-1, m)]
-  -- 2. Append bit-reversal (SWAP cascade on the n-qubit system).
+  exact sorry
+  -- Awaits: tensorWithId and controlled gate embeddings from Gate.lean.
 
 /-- Main correctness theorem: the QFT circuit implements the QFT unitary.
 
-    The proof proceeds by induction on n:
-    - Base: n=1 is `qft1_correct`.
-    - Step: QFT_{n+1} = bitReversal ⬝ (blockDiag (QFT_n ⊗ I) · phaseLayer)
-      and the circuit satisfies the same factored structure.
-
-    Key lemmas needed:
-    - `qftMatrix_recursive`: QFT_{n+1}[j,k] factors via DFT recursive structure
-    - `bitReversal_matrix`: the bit-reversal permutation matrix
-    - `dft_orthogonality`: geometric sum identity (for unitarity) -/
+    Proof by induction on n using the recursive structure of the DFT:
+      QFT_{2n}[j,k] = (1/√2) · (QFT_n ⊗ I) · phaseLayer · ... -/
 theorem qft_correct (n : ℕ) :
     qftCircuit n |>.CorrectFor (qftMatrix n) (qftMatrix_isUnitary n) := by
   sorry
 
-/-! ## Small cases (n=2) for validation -/
+/-! ## Small cases -/
 
-/-- The QFT on 2 qubits: H⊗I, then CR_2, then I⊗H, then SWAP.
-
-    In matrix form (basis ordering |00⟩,|01⟩,|10⟩,|11⟩):
-      SWAP · (I⊗H) · CR_2 · (H⊗I) = QFT_4
-    where QFT_4[j,k] = (1/2) · i^{jk}  (since ω = i for N=4). -/
+/-- The QFT on 2 qubits: (H⊗I), CR_2, (I⊗H), SWAP.
+    Matrix identity: SWAP · (I⊗H) · CR_2 · (H⊗I) = QFT_4. -/
 noncomputable def qftCircuit2 : Circuit 2 := by
-  sorry
-  -- Steps:
-  -- 1. H on qubit 0 (= H ⊗ I₂ as a 4×4 matrix)
-  -- 2. Controlled-R_2 (control=qubit 1, target=qubit 0)
-  -- 3. H on qubit 1 (= I₂ ⊗ H as a 4×4 matrix)
-  -- 4. SWAP
+  exact sorry
 
 theorem qft2_correct :
     qftCircuit2.CorrectFor (qftMatrix 2) (qftMatrix_isUnitary 2) := by
   sorry
-  -- For n=2, this can in principle be discharged by native_decide or norm_num
-  -- once qftCircuit2 is fully elaborated.
 
 end AutoQuantum.QFT

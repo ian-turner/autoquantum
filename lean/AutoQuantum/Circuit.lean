@@ -1,3 +1,5 @@
+import AutoQuantum.Gate
+
 /-!
 # Quantum Circuit Composition
 
@@ -7,8 +9,6 @@ and provides their semantics (as unitary matrix products).
 A circuit on n qubits is represented as a list of `GateStep n` values.
 The circuit's matrix is the product of the step matrices in order.
 -/
-
-import AutoQuantum.Gate
 
 namespace AutoQuantum
 
@@ -24,7 +24,7 @@ structure GateStep (n : ℕ) where
   unitary : QGate n
 
 /-- A quantum circuit on n qubits: an ordered list of gate steps. -/
-def Circuit (n : ℕ) := List (GateStep n)
+abbrev Circuit (n : ℕ) := List (GateStep n)
 
 /-! ## Circuit semantics -/
 
@@ -39,7 +39,7 @@ def circuitMatrix {n : ℕ} (c : Circuit n) : QGate n :=
 -- which means U₁ is applied first (rightmost in conventional matrix notation).
 
 /-- Apply a circuit to a quantum state. -/
-def runCircuit {n : ℕ} (c : Circuit n) (ψ : QState n) : QState n :=
+noncomputable def runCircuit {n : ℕ} (c : Circuit n) (ψ : QState n) : QState n :=
   applyGate (circuitMatrix c) ψ
 
 /-- The empty circuit is the identity. -/
@@ -59,7 +59,8 @@ lemma circuitMatrix_append {n : ℕ} (c₁ c₂ : Circuit n) :
   induction c₁ with
   | nil => simp [circuitMatrix]
   | cons s c ih =>
-    simp [circuitMatrix, List.foldr_append, ih, mul_assoc]
+    show s.unitary * circuitMatrix (c ++ c₂) = s.unitary * circuitMatrix c * circuitMatrix c₂
+    rw [ih, mul_assoc]
 
 /-! ## Circuit construction helpers -/
 

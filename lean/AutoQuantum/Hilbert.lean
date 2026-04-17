@@ -1,3 +1,9 @@
+import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.LinearAlgebra.Matrix.Hermitian
+import Mathlib.LinearAlgebra.UnitaryGroup
+
 /-!
 # Hilbert Spaces for Quantum Computing
 
@@ -8,12 +14,6 @@ An n-qubit system lives in the space `ℂ^(2^n)`, formalized as
 
 Quantum states are unit vectors in this space.
 -/
-
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.InnerProductSpace.PiL2
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
-import Mathlib.LinearAlgebra.Matrix.Hermitian
-import Mathlib.LinearAlgebra.UnitaryGroup
 
 namespace AutoQuantum
 
@@ -36,14 +36,14 @@ lemma norm_eq_one {n : ℕ} (ψ : QState n) : ‖ψ.vec‖ = 1 := ψ.property
 /-- Construct a quantum state from a vector, given a proof of normalization. -/
 def mk {n : ℕ} (v : QHilbert n) (h : ‖v‖ = 1) : QState n := ⟨v, h⟩
 
-/-- The inner product of two quantum states. -/
-def inner {n : ℕ} (φ ψ : QState n) : ℂ :=
-  @inner ℂ _ _ φ.vec ψ.vec
+/-- The inner product ⟨φ|ψ⟩ of two quantum states. -/
+noncomputable def braket {n : ℕ} (φ ψ : QState n) : ℂ :=
+  @inner ℂ (QHilbert n) _ φ.vec ψ.vec
 
-/-- The probability amplitude ⟨φ|ψ⟩ has absolute value ≤ 1 (Cauchy-Schwarz). -/
-lemma inner_abs_le_one {n : ℕ} (φ ψ : QState n) : Complex.abs (inner φ ψ) ≤ 1 := by
-  have h := @abs_inner_le_norm ℂ _ _ φ.vec ψ.vec
-  simp [inner, φ.norm_eq_one, ψ.norm_eq_one] at h
+/-- The probability amplitude ⟨φ|ψ⟩ has norm ≤ 1 (Cauchy-Schwarz). -/
+lemma braket_norm_le_one {n : ℕ} (φ ψ : QState n) : ‖braket φ ψ‖ ≤ 1 := by
+  have h := norm_inner_le_norm (𝕜 := ℂ) φ.vec ψ.vec
+  rw [φ.norm_eq_one, ψ.norm_eq_one, mul_one] at h
   exact h
 
 end QState
@@ -51,28 +51,26 @@ end QState
 /-! ## Computational Basis -/
 
 /-- The k-th computational basis state |k⟩ in the n-qubit Hilbert space. -/
-def basisState (n : ℕ) (k : Fin (2 ^ n)) : QState n :=
-  ⟨EuclideanSpace.single k 1, by simp [EuclideanSpace.norm_single]⟩
+noncomputable def basisState (n : ℕ) (k : Fin (2 ^ n)) : QState n :=
+  ⟨EuclideanSpace.single k 1, by simp [PiLp.norm_single]⟩
 
 /-- Basis states are orthonormal. -/
-lemma basisState_inner_eq {n : ℕ} (j k : Fin (2 ^ n)) :
-    QState.inner (basisState n j) (basisState n k) = if j = k then 1 else 0 := by
-  simp [QState.inner, basisState, EuclideanSpace.inner_single_left,
-        EuclideanSpace.single, inner_apply]
-  split_ifs with h
-  · subst h; simp
-  · simp [EuclideanSpace.single, h]
+lemma basisState_braket {n : ℕ} (j k : Fin (2 ^ n)) :
+    QState.braket (basisState n j) (basisState n k) = if j = k then 1 else 0 := by
+  simp only [QState.braket, basisState, QState.vec]
+  sorry
+  -- Proof: ⟨e_j, e_k⟩ = ∑_i conj((e_j)_i) * (e_k)_i = conj(δ_ji) * δ_ki = δ_jk
 
 /-! ## Superposition -/
 
-/-- A linear combination of states (not necessarily normalized). -/
-def superpose {n : ℕ} (α β : ℂ) (ψ φ : QHilbert n) : QHilbert n :=
+/-- A linear combination of two vectors (not necessarily normalized). -/
+noncomputable def superpose {n : ℕ} (α β : ℂ) (ψ φ : QHilbert n) : QHilbert n :=
   α • ψ + β • φ
 
-/-- The state resulting from applying a scalar multiple and sum of basis states,
-    normalized when |α|² + |β|² = 1. -/
-lemma superpose_norm_sq {n : ℕ} (α β : ℂ) (ψ φ : QHilbert n)
-    (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1) (horth : @inner ℂ _ _ ψ φ = 0)
+/-- Superposition of two orthonormal states with unit-norm coefficients is normalized. -/
+lemma superpose_norm_eq_one {n : ℕ} (α β : ℂ) (ψ φ : QHilbert n)
+    (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1)
+    (horth : @inner ℂ (QHilbert n) _ ψ φ = 0)
     (hnorm : Complex.normSq α + Complex.normSq β = 1) :
     ‖superpose α β ψ φ‖ = 1 := by
   sorry

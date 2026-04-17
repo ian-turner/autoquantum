@@ -1,3 +1,7 @@
+import AutoQuantum.Hilbert
+import Mathlib.Data.Complex.Basic
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+
 /-!
 # Single-Qubit Primitives
 
@@ -5,10 +9,6 @@ This module defines the basic single-qubit states and their properties.
 
 A single qubit lives in `ℂ²`, which is `QHilbert 1 = EuclideanSpace ℂ (Fin 2)`.
 -/
-
-import AutoQuantum.Hilbert
-import Mathlib.Data.Complex.Basic
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
 namespace AutoQuantum
 
@@ -20,21 +20,22 @@ abbrev Qubit := QHilbert 1
 /-! ## Computational basis states -/
 
 /-- The |0⟩ state (qubit = 0). -/
-def ket0 : QState 1 := basisState 1 ⟨0, by norm_num⟩
+noncomputable def ket0 : QState 1 := basisState 1 ⟨0, by norm_num⟩
 
 /-- The |1⟩ state (qubit = 1). -/
-def ket1 : QState 1 := basisState 1 ⟨1, by norm_num⟩
+noncomputable def ket1 : QState 1 := basisState 1 ⟨1, by norm_num⟩
 
 /-- |0⟩ and |1⟩ are orthogonal. -/
-lemma ket0_inner_ket1 : QState.inner ket0 ket1 = 0 := by
-  simp [ket0, ket1, basisState_inner_eq]
+lemma ket0_braket_ket1 : QState.braket ket0 ket1 = 0 := by
+  simp [ket0, ket1, basisState_braket]
 
-/-- |0⟩ and |1⟩ are orthonormal. -/
-lemma ket0_inner_ket0 : QState.inner ket0 ket0 = 1 := by
-  simp [ket0, basisState_inner_eq]
+/-- |0⟩ is normalized. -/
+lemma ket0_braket_ket0 : QState.braket ket0 ket0 = 1 := by
+  simp [ket0, basisState_braket]
 
-lemma ket1_inner_ket1 : QState.inner ket1 ket1 = 1 := by
-  simp [ket1, basisState_inner_eq]
+/-- |1⟩ is normalized. -/
+lemma ket1_braket_ket1 : QState.braket ket1 ket1 = 1 := by
+  simp [ket1, basisState_braket]
 
 /-! ## Plus and minus states -/
 
@@ -45,7 +46,7 @@ noncomputable def ketPlus : QState 1 :=
      EuclideanSpace.single ⟨1, by norm_num⟩ ((1 : ℂ) / Real.sqrt 2))
     (by
       sorry
-      -- Proof: ‖(1/√2)|0⟩ + (1/√2)|1⟩‖ = √(|1/√2|² + |1/√2|²) = √(1/2 + 1/2) = 1
+      -- Proof: ‖(1/√2)|0⟩ + (1/√2)|1⟩‖ = √(1/2 + 1/2) = 1
     )
 
 /-- The |−⟩ = (|0⟩ − |1⟩) / √2 state (eigenstate of X with eigenvalue −1). -/
@@ -56,7 +57,7 @@ noncomputable def ketMinus : QState 1 :=
     (by sorry)
 
 /-- |+⟩ and |−⟩ are orthogonal. -/
-lemma ketPlus_inner_ketMinus : QState.inner ketPlus ketMinus = 0 := by
+lemma ketPlus_braket_ketMinus : QState.braket ketPlus ketMinus = 0 := by
   sorry
 
 /-! ## Bloch sphere representation -/
@@ -79,8 +80,7 @@ lemma blochState_zero_eq_ket0 (φ : ℝ) : (blochState 0 φ).vec = ket0.vec := b
 
 /-- |1⟩ is the south pole: blochState π φ = e^{iφ}|1⟩ (up to global phase). -/
 lemma blochState_pi_eq_ket1 (φ : ℝ) :
-    (blochState Real.pi φ).vec =
-    Complex.exp (Complex.I * φ) • ket1.vec := by
+    (blochState Real.pi φ).vec = Complex.exp (Complex.I * φ) • ket1.vec := by
   sorry
 
 end AutoQuantum
