@@ -22,7 +22,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 |------|-------------|-------|
 | `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete |
-| `Gate.lean` | No | `hadamard` unitarity, `phaseRotation` unitarity, `applyGate`, tensor embeddings |
+| `Gate.lean` | No | `hadamard`, phase-rotation, and `applyGate` proofs are complete; tensor embeddings and `controlled` remain deferred |
 | `Circuit.lean` | **Yes** | All proofs complete |
 | `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
 

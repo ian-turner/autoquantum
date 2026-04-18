@@ -86,11 +86,11 @@ Last updated: April 2026 (Mathlib v4.29.0).
 | Bloch sphere parameterization | Done | `Qubit.lean` |
 | `QGate k` — unitary gate type | Done | `Gate.lean` |
 | Pauli X, Y, Z gates + unitarity proofs | Done | `Gate.lean` |
-| Hadamard gate (unitarity sorry'd) | Partial | `Gate.lean` |
-| Phase rotation R_k (unitarity sorry'd) | Partial | `Gate.lean` |
+| Hadamard gate + unitarity proof | Done | `Gate.lean` |
+| Phase rotation R_k + unitarity proof | Done | `Gate.lean` |
 | CNOT gate + unitarity proof | Done | `Gate.lean` |
 | SWAP gate + unitarity proof | Done | `Gate.lean` |
-| `applyGate` — gate application to state | Deferred | `Gate.lean` |
+| `applyGate` — gate application to state | Done | `Gate.lean` |
 | `tensorWithId`, `idTensorWith`, `controlled` | Deferred | `Gate.lean` |
 | `Circuit n` — list of gate steps | Done | `Circuit.lean` |
 | `circuitMatrix` — product of gate matrices | Done | `Circuit.lean` |
@@ -109,11 +109,11 @@ Last updated: April 2026 (Mathlib v4.29.0).
 ### 1. `EuclideanSpace` vs `Matrix.mulVec`
 `EuclideanSpace ℂ (Fin n) = PiLp 2 (fun _ => ℂ)` is a newtype wrapper. `Matrix.mulVec` expects `Fin n → ℂ`, which requires an explicit bridge.
 
-**Status:** `applyGate` body is deferred with `sorry`.
+**Status:** Resolved for gate application.
 
-**Solutions to try:**
-- `Matrix.toEuclideanLin` — maps a matrix to a `LinearMap` between `EuclideanSpace`s directly (check if available in v4.29)
-- `WithLp.equiv 2 (Fin n → ℂ) : PiLp 2 (fun _ => ℂ) ≃ (Fin n → ℂ)` — explicit equivalence
+**Working pattern:**
+- `Matrix.toEuclideanLin` maps a matrix directly to a `LinearMap` on `EuclideanSpace`.
+- To recover norm preservation from matrix unitarity, use `Matrix.toEuclideanLin_conjTranspose_eq_adjoint` together with `Matrix.UnitaryGroup.star_mul_self`, then turn the resulting inner-product preservation proof into a `LinearIsometry` via `LinearMap.isometryOfInner`.
 
 ### 2. Naming collision with `inner`
 Defining a function called `inner` inside a namespace that also uses `⟪·, ·⟫_𝕜` notation causes shadowing. **Solution:** Use a different name (`braket`) and keep the `@inner 𝕜 E _` form for the definition body.
@@ -167,3 +167,10 @@ When a goal mentions `(blochState θ φ).vec` or another state built with `QStat
 fin_cases i <;> simp [QState.vec, QState.mk, blochState, superpose, ket0, ket1, basisState]
 ```
 For the `|+⟩`/`|-⟩` orthogonality proof, a direct coordinate calculation using `PiLp.inner_apply` and `Fin.sum_univ_two` avoids the same subtype noise.
+
+### 12. `Complex.exp_conj` rewrites can leave a `starRingEnd`-shaped angle
+After rewriting a unit-circle goal with
+```lean
+rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
+```
+the exponent may normalize to `(starRingEnd ℂ) θ + θ` rather than `star θ + θ`. A helper lemma stated with `star θ` may then fail to rewrite the goal. The stable route is to prove the cancellation identity using the exact post-rewrite expression and finish with `simpa using congrArg Complex.exp hθ`.
