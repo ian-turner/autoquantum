@@ -105,6 +105,9 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
 | `qftMatrix_isUnitary` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit n` — the decomposed QFT circuit | Done | `QFT.lean` (Apr 18, 2026) |
+| `dftMatrix_succ_entry` — recursive `(n+1)`-to-`n` DFT entry factorization | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -247,3 +250,30 @@ qftMatrix n j k * star (qftMatrix n j' k)
 ```
 rather than the reversed product. Once the scalar factorization was aligned to that orientation,
 `dft_orthogonality n j j'` applied directly.
+
+### 19. Direct `simp` on instantiated `onQubit` / `onQubits` can leave `Nat.casesAuxOn` stuck in goals
+In the first serious attempt at `qft2_correct`, unfolding
+```lean
+hadamardAt (0 : Fin 2)
+hadamardAt (1 : Fin 2)
+controlledPhaseAt (1 : Fin 2) (0 : Fin 2) (by decide) 2
+```
+inside a `Matrix.ext` + `fin_cases` proof did not normalize all the way to concrete 4×4 matrices.
+Even helper lemmas intended to expose the `n = 2` specializations stalled on goals containing
+`Nat.casesAuxOn` or timed out during `whnf`. The reliable next step is not "more simp"; it is to
+prove matrix-level lemmas by first `change`-ing the goal to the explicit permuted form
+(`permuteGate ... (idTensorWith 1 hadamard)`, etc.) and then reasoning entrywise from there.
+
+### 20. Global `rw [pow_mul]` is too blunt once a DFT exponent has already been split by `pow_add`
+In the new recursive DFT-entry helper for `QFT.lean`, a first attempt used
+```lean
+rw [pow_add, pow_add, pow_add, pow_mul]
+```
+to turn the final factor `ω ^ (2^(n+1) * t)` into `((ω ^ 2^(n+1)) ^ t)`. Lean also rewrote
+earlier factors like `ω ^ (b * c * 2^n)` at the same time, which made the intended
+`omega_pow_two_pow` rewrite miss. The stable pattern is to isolate just the desired factor:
+```lean
+have hfull : ω ^ (2^(n+1) * t) = (ω ^ (2^(n+1))) ^ t := by rw [pow_mul]
+rw [hfull, omega_pow_two_pow]
+```
+This keeps the proof state aligned with the recursive factorization you actually want.

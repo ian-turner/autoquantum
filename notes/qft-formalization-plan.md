@@ -116,9 +116,27 @@ or a stronger library of lemmas about the semantics of `controlledPhaseAt`, `had
 `bitReverse`.
 
 Current status: the file now builds with only `qft_correct` and `qft2_correct` left as `sorry`s.
-The next concrete milestone is `qft2_correct`, but a brute-force `simp` over the full
-definition of `qftCircuit 2` does **not** reduce the embedded gate placements enough. The likely
-next move is to prove explicit 4×4 matrix lemmas for:
+Two additional helper lemmas are now in place:
+
+- `omega_two : omega 2 = Complex.I`
+- `qftCircuit_two` — the explicit textbook gate list for `qftCircuit 2`
+
+For the general inductive step, the file now also contains explicit index-splitting helpers
+`msbIndex` / `lsbIndex` together with `dftMatrix_succ_entry`. This factors an `(n+1)`-qubit DFT
+entry into:
+
+- the leading-bit phase term,
+- the lower-bit contribution to the new output bit, and
+- the recursive `n`-qubit DFT term.
+
+This corrected an earlier informal sketch that omitted the extra lower-bit phase
+`ω_(n+1)^(j' * k0)` when writing `j = j0 * 2^n + j'` and `k = k0 + 2 * k'`.
+
+The next concrete milestone is still `qft2_correct`, but a brute-force `simp` over the full
+definition of `qftCircuit 2` does **not** reduce the embedded gate placements enough. A follow-up
+attempt also showed that even helper lemmas for instantiated terms like `hadamardAt (1 : Fin 2)`
+can get stuck on `Nat.casesAuxOn` when unfolded naively. The likely next move is to prove explicit
+4×4 matrix lemmas for:
 
 - `hadamardAt 0`
 - `hadamardAt 1`
@@ -151,13 +169,23 @@ For confidence, prove n=1 and n=2 explicitly before the general case.
 
 **n=2:** `qftCircuit2 = qftMatrix 2` remains open. The direct brute-force proof by
 `Matrix.ext` + `fin_cases` + unfolding `qftCircuit` exposes too much unreduced placement
-machinery (`onQubit`, `onQubits`, `permuteGate`, `permuteQubits`). The next reasonable proof
-shape is:
+machinery (`onQubit`, `onQubits`, `permuteGate`, `permuteQubits`). The newly added lemmas
+`omega_two` and `qftCircuit_two` remove the scalar/root-of-unity issue and freeze the exact gate
+sequence, but the gate-placement semantics still need to be pushed down to concrete 4×4 matrices.
+The next reasonable proof shape is:
 
 1. prove explicit 4×4 matrix lemmas for the four gates in `qftCircuit2`;
 2. rewrite the circuit matrix to a product of those explicit matrices;
 3. finish the 4×4 equality by `Matrix.ext` + `fin_cases`, with the scalar identity
    `omega 2 = Complex.I`.
+
+For the general recursive proof, the current entrywise target should be read as:
+```lean
+dftMatrix (n+1) (j0 * 2^n + j') (k0 + 2 * k')
+  = ω^(j0 * k0 * 2^n) * ω^(j' * k0) * dftMatrix n j' k'
+```
+where the recursive `dftMatrix n` term arises from the `ω^(2 * (j' * k'))` contribution via
+`omega_sq_pred`.
 
 ---
 

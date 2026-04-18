@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Lemmas.Circuit
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.RingTheory.RootsOfUnity.Basic
 import Mathlib.RingTheory.RootsOfUnity.Complex
@@ -274,15 +275,181 @@ private noncomputable def qftQubitLayer (n : ℕ) (target : Fin n) : Circuit n :
 noncomputable def qftCircuit (n : ℕ) : Circuit n :=
   (List.finRange n).foldr (fun target acc => qftQubitLayer n target ++ acc) [⟨bitReverse⟩]
 
-/-- Main correctness theorem: the QFT circuit implements the QFT unitary.
+/-! ## Infrastructure for the general correctness proof -/
 
-    Proof by induction on n using the recursive structure of the DFT:
-      QFT_{2n}[j,k] = (1/sqrt 2) * (QFT_n tensor I) * phaseLayer * ... -/
-theorem qft_correct (n : ℕ) :
-    qftCircuit n |>.CorrectFor (qftMatrix n) (qftMatrix_isUnitary n) := by
+/-- Embed a leading qubit bit `b` and an `n`-qubit suffix index `i` into `Fin (2^(n+1))`
+    as `b * 2^n + i`. This matches the input-side decomposition used in the recursive QFT proof. -/
+private def msbIndex (n : ℕ) (b : Fin 2) (i : Fin (2 ^ n)) : Fin (2 ^ (n + 1)) := by
+  refine ⟨i.val + 2 ^ n * b.val, ?_⟩
+  fin_cases b <;> simp [pow_succ] <;> omega
+
+/-- Embed an `n`-qubit prefix index `i` and a trailing bit `b` into `Fin (2^(n+1))`
+    as `b + 2 * i`. This matches the output-side decomposition after bit-reversal. -/
+private def lsbIndex (n : ℕ) (i : Fin (2 ^ n)) (b : Fin 2) : Fin (2 ^ (n + 1)) := by
+  refine ⟨b.val + 2 * i.val, ?_⟩
+  fin_cases b <;> simp [pow_succ] <;> omega
+
+/-- Arithmetic split for the exponent appearing in the `(n+1)`-qubit DFT entry
+    with `j = b * 2^n + i` and `k = c + 2 * i'`. -/
+private lemma msbIndex_mul_lsbIndex (n : ℕ) (b c : Fin 2)
+    (i i' : Fin (2 ^ n)) :
+    (msbIndex n b i).val * (lsbIndex n i' c).val =
+      b.val * c.val * 2 ^ n + i.val * c.val + 2 * (i.val * i'.val) +
+        2 ^ (n + 1) * (b.val * i'.val) := by
+  fin_cases b <;> fin_cases c <;> simp [msbIndex, lsbIndex, pow_succ] <;> ring
+
+/-- ω_{n+1}² = ω_n: squaring the root doubles the angle, stepping down one qubit. -/
+lemma omega_sq_pred (n : ℕ) : (omega (n + 1)) ^ 2 = omega n := by
+  simp only [omega, ← Complex.exp_nat_mul]
+  congr 1
+  have h2n : (2 : ℂ) ^ n ≠ 0 := pow_ne_zero n (by norm_num)
+  push_cast
+  have h2n1 : (2 : ℂ) ^ (n + 1) = 2 * (2 : ℂ) ^ n := by ring
+  rw [h2n1]
+  field_simp [h2n]
+
+/-- Entrywise factorization of the DFT matrix at size `2^(n+1)`.
+
+    The last term in the exponent contributes a full multiple of `2^(n+1)`, so it vanishes
+    against `omega_pow_two_pow (n + 1)`. The remaining third factor is the `n`-qubit DFT term,
+    expressed using `omega_sq_pred`. -/
+private lemma dftMatrix_succ_entry (n : ℕ) (b c : Fin 2)
+    (i i' : Fin (2 ^ n)) :
+    dftMatrix (n + 1) (msbIndex n b i) (lsbIndex n i' c) =
+      (omega (n + 1)) ^ (b.val * c.val * 2 ^ n) *
+        (omega (n + 1)) ^ (i.val * c.val) *
+        dftMatrix n i i' := by
+  rw [dftMatrix, msbIndex_mul_lsbIndex, pow_add, pow_add, pow_add]
+  have hfull :
+      (omega (n + 1)) ^ (2 ^ (n + 1) * (b.val * i'.val)) =
+        ((omega (n + 1)) ^ (2 ^ (n + 1))) ^ (b.val * i'.val) := by
+    rw [pow_mul]
+  rw [hfull, omega_pow_two_pow]
+  simp only [one_pow, mul_assoc]
+  have hrec :
+      (omega (n + 1)) ^ (2 * (i.val * i'.val)) =
+        ((omega (n + 1)) ^ 2) ^ (i.val * i'.val) := by
+    rw [pow_mul]
+  rw [hrec, dftMatrix, omega_sq_pred]
+  simp
+
+/-- The QFT matrix on 0 qubits is the 1×1 identity. -/
+@[simp]
+lemma qftMatrix_zero : (qftMatrix 0 : Matrix (Fin 1) (Fin 1) ℂ) = 1 := by
+  ext j k; fin_cases j; fin_cases k
+  simp [qftMatrix, Real.sqrt_one]
+
+/-- qftCircuit 0 is just [bitReverse]. -/
+@[simp]
+lemma qftCircuit_zero : qftCircuit 0 = [⟨(bitReverse : QGate 0)⟩] := by
+  simp [qftCircuit, List.finRange]
+
+/-- The coercion of permuteQubits to a plain matrix gives the permutation matrix.
+    Definitionally true from the `refine ⟨..., ?_⟩` construction of permuteQubits. -/
+private lemma permuteQubits_coe {n : ℕ} (σ : Equiv.Perm (Fin n)) :
+    (permuteQubits σ : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = (qubitPerm σ).permMatrix ℂ := rfl
+
+/-- On a 0-qubit system (state space Fin 1), any permutation of the 1-element state space is
+    trivial: both qubitPerm σ and the identity send the unique element to itself. -/
+private lemma qubitPerm_zero (σ : Equiv.Perm (Fin 0)) :
+    (qubitPerm σ : Equiv.Perm (Fin (2 ^ 0))) = 1 := by
+  ext x
+  fin_cases x
+  rfl
+
+/-- Qubit permutations preserve the identity permutation definitionally. -/
+private lemma qubitPerm_refl (n : ℕ) :
+    (qubitPerm (Equiv.refl (Fin n)) : Equiv.Perm (Fin (2 ^ n))) = 1 := by
+  ext x
+  simp [qubitPerm]
+
+/-- Fin.revPerm on a 1-element type is the identity permutation. -/
+private lemma Fin_revPerm_one : (Fin.revPerm : Equiv.Perm (Fin 1)) = Equiv.refl _ := by
+  ext x; fin_cases x
+  simp [Fin.revPerm, Fin.rev]
+
+/-- On a 1-qubit system (state space Fin 2), the qubit-reversal permutation is trivial
+    because there is only one qubit to reverse (Fin.revPerm on Fin 1 is the identity). -/
+private lemma qubitPerm_revPerm_one :
+    (qubitPerm (Fin.revPerm : Equiv.Perm (Fin 1)) : Equiv.Perm (Fin (2 ^ 1))) = 1 := by
+  rw [Fin_revPerm_one]
+  exact qubitPerm_refl 1
+
+/-- bitReverse on 0 qubits is the identity gate. The proof uses that the unique
+    qubit permutation on the 1-element state space is trivial. -/
+lemma bitReverse_zero : (bitReverse : QGate 0) = 1 := by
+  apply Subtype.ext
+  show (qubitPerm (Fin.revPerm : Equiv.Perm (Fin 0))).permMatrix ℂ =
+       (1 : Matrix (Fin (2 ^ 0)) (Fin (2 ^ 0)) ℂ)
+  rw [qubitPerm_zero]; simp
+
+/-- bitReverse on 1 qubit is the identity gate (only one qubit to reverse). -/
+lemma bitReverse_one : (bitReverse : QGate 1) = 1 := by
+  apply Subtype.ext
+  show (qubitPerm (Fin.revPerm : Equiv.Perm (Fin 1))).permMatrix ℂ =
+       (1 : Matrix (Fin (2 ^ 1)) (Fin (2 ^ 1)) ℂ)
+  rw [qubitPerm_revPerm_one]; simp
+
+/-- qft_correct for the base case n = 0. -/
+theorem qft_correct_zero :
+    (qftCircuit 0).CorrectFor (qftMatrix 0) (qftMatrix_isUnitary 0) := by
+  show (circuitMatrix (qftCircuit 0) : Matrix (Fin (2 ^ 0)) (Fin (2 ^ 0)) ℂ) = qftMatrix 0
+  simp only [qftCircuit_zero, circuitMatrix_singleton]
+  simp [bitReverse_zero, qftMatrix_zero]
+
+/-- Inductive step: if the n-qubit QFT circuit is correct, so is the (n+1)-qubit circuit.
+
+    The proof proceeds by:
+    1. Unfolding qftCircuit (n+1) via List.finRange and foldr.
+    2. Applying circuitMatrix_append to split into layers.
+    3. Using the IH to handle the embedded n-qubit sub-circuit (qubits 1..n).
+    4. Computing the matrix contributions of hadamardAt 0, controlledPhaseAt, and bitReverse.
+    5. Verifying the resulting matrix product equals qftMatrix (n+1) entry-by-entry,
+       using the decomposition `j = j0 * 2^n + j'`, `k = k0 + 2 * k'` together with the
+       corresponding factorization of the DFT/QFT entry into the leading-bit phase,
+       the lower-bit phase on `k0`, and the recursive `n`-qubit term,
+       where j = j0 * 2^n + j', k = k0 + 2 * k'. -/
+private lemma qftCircuit_succ_matrix (n : ℕ)
+    (ih : (circuitMatrix (qftCircuit n) : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = qftMatrix n) :
+    (circuitMatrix (qftCircuit (n + 1)) : Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ) =
+    qftMatrix (n + 1) := by
   sorry
 
+/-- Main correctness theorem: the QFT circuit implements the QFT unitary.
+
+    Proved by induction on n: the base case (n = 0) is qft_correct_zero, and the
+    inductive step is qftCircuit_succ_matrix (currently deferred). -/
+theorem qft_correct (n : ℕ) :
+    qftCircuit n |>.CorrectFor (qftMatrix n) (qftMatrix_isUnitary n) := by
+  induction n with
+  | zero => exact qft_correct_zero
+  | succ n ih =>
+    unfold Circuit.CorrectFor at *
+    exact qftCircuit_succ_matrix n ih
+
 /-! ## Small cases -/
+
+/-- On two qubits, the QFT root of unity is `i`. -/
+lemma omega_two : omega 2 = Complex.I := by
+  unfold omega
+  have hpow : (2 ^ 2 : ℂ) = 4 := by norm_num
+  have hfour : (4 : ℂ) ≠ 0 := by norm_num
+  have harg : 2 * (Real.pi : ℂ) * Complex.I / (2 ^ 2 : ℂ) =
+      ((Real.pi : ℂ) / 2) * Complex.I := by
+    rw [hpow]
+    field_simp [hfour]
+    ring
+  rw [harg, Complex.exp_pi_div_two_mul_I]
+
+/-- The 2-qubit QFT circuit has the textbook gate sequence
+    `H₀ ; CR₂(1→0) ; H₁ ; bitReverse`. -/
+lemma qftCircuit_two :
+    qftCircuit 2 =
+      [⟨hadamardAt 0⟩,
+       ⟨controlledPhaseAt 1 0 (by decide) 2⟩,
+       ⟨hadamardAt 1⟩,
+       ⟨bitReverse⟩] := by
+  simp [qftCircuit, qftQubitLayer, qftControlledLayer, List.finRange]
 
 /-- The QFT on 2 qubits: (H tensor I), CR_2, (I tensor H), SWAP.
     Matrix identity: SWAP * (I tensor H) * CR_2 * (H tensor I) = QFT_4. -/
