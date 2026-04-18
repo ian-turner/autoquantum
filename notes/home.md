@@ -41,3 +41,4 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ### Algorithms
 - [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles
+- [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem

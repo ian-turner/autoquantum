@@ -143,6 +143,15 @@ can get stuck on `Nat.casesAuxOn` when unfolded naively. The likely next move is
 - `controlledPhaseAt 1 0 2`
 - `bitReverse`
 
+### Textbook alignment
+
+The current proof plan intentionally tracks both local textbook references, but in different layers:
+
+- **Nielsen and Chuang, §5.1:** the circuit definition `qftCircuit` follows the standard gate-by-gate construction exactly: Hadamard on each target qubit, controlled phase rotations from later qubits, and final bit reversal.
+- **Fenner course notes, pages 99 and 109–110:** the proved matrix lemmas and the unfinished inductive step follow the DFT-first proof style: orthogonality by geometric series, then recursive decomposition by splitting indices into leading/trailing bits.
+
+This means the remaining proof obligation `qftCircuit_succ_matrix` is expected to look more like Fenner’s recursive correctness proof than Nielsen and Chuang’s product-state derivation. That is acceptable. If we want the final file to advertise the Nielsen correspondence more clearly, the missing ingredient is an explanatory lemma that rewrites the target QFT state into the binary-fraction product form before the final swap layer.
+
 ---
 
 ## Known Proof Obstacles
