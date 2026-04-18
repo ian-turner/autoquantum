@@ -273,8 +273,12 @@ private noncomputable def qftControlledLayer (n : ℕ) (target : Fin n) : Circui
 private noncomputable def qftQubitLayer (n : ℕ) (target : Fin n) : Circuit n :=
   [⟨hadamardAt target⟩] ++ qftControlledLayer n target
 
+/-- The QFT gate layers without the final bit-reversal permutation. -/
+private noncomputable def qftLayers (n : ℕ) : Circuit n :=
+  (List.finRange n).foldr (fun target acc => qftQubitLayer n target ++ acc) []
+
 noncomputable def qftCircuit (n : ℕ) : Circuit n :=
-  (List.finRange n).foldr (fun target acc => qftQubitLayer n target ++ acc) [⟨bitReverse⟩]
+  qftLayers n ++ [⟨bitReverse⟩]
 
 /-! ## Infrastructure for the general correctness proof -/
 
@@ -420,7 +424,7 @@ lemma qftMatrix_zero : (qftMatrix 0 : Matrix (Fin 1) (Fin 1) ℂ) = 1 := by
 /-- qftCircuit 0 is just [bitReverse]. -/
 @[simp]
 lemma qftCircuit_zero : qftCircuit 0 = [⟨(bitReverse : QGate 0)⟩] := by
-  simp [qftCircuit, List.finRange]
+  simp [qftCircuit, qftLayers]
 
 /-- The coercion of permuteQubits to a plain matrix gives the permutation matrix.
     Definitionally true from the `refine ⟨..., ?_⟩` construction of permuteQubits. -/
@@ -533,7 +537,8 @@ lemma qftCircuit_two :
        ⟨controlledPhaseAt 1 0 (by decide) 2⟩,
        ⟨hadamardAt 1⟩,
        ⟨bitReverse⟩] := by
-  simp [qftCircuit, qftQubitLayer, qftControlledLayer, List.finRange]
+  rw [qftCircuit, qftLayers, List.finRange_succ, List.finRange_succ, List.finRange_zero]
+  simp [qftQubitLayer, qftControlledLayer, List.finRange_succ, List.finRange_zero]
 
 /-- The QFT normalization factor at `n = 2` is `1/2`. -/
 private lemma qft_two_scale :

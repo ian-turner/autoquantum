@@ -5,6 +5,12 @@ Exact lemma inventory for finishing the general theorem
 
 Last updated: April 18, 2026.
 
+Update later on April 18, 2026: after refactoring `QFT.lean` to expose `qftLayers`, the likely
+recursive embedding now appears to be `tensorWithId 1` rather than the older `liftGate` /
+`idTensorWith 1` suffix lift. Keep the lemma inventory below as the record of the earlier suffix
+approach, but treat it as provisional; the revised indexing diagnosis is written up in
+`notes/qft-recursion-indexing.md`.
+
 ---
 
 ## Executive Summary

@@ -147,6 +147,15 @@ can get stuck on `Nat.casesAuxOn` when unfolded naively. The likely next move is
 If we instead prioritize the general theorem first, the exact remaining circuit-side lemma inventory
 is now written up in `notes/qft-general-proof-obligations.md`.
 
+Update from the next proof pass: `QFT.lean` now factors the circuit as
+```lean
+qftCircuit n = qftLayers n ++ [⟨bitReverse⟩]
+```
+so the recursive gate layers are separated from the final permutation. The new structural blocker is
+that the recursive `target.succ` layers appear to line up with `tensorWithId 1` (new LSB) rather
+than the older `liftGate` / `idTensorWith 1` suffix embedding. That indexing issue is now written
+up in `notes/qft-recursion-indexing.md`.
+
 ### Textbook alignment
 
 The current proof plan intentionally tracks both local textbook references, but in different layers:

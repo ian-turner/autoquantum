@@ -105,6 +105,7 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
 | `qftMatrix_isUnitary` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit n` — the decomposed QFT circuit | Done | `QFT.lean` (Apr 18, 2026) |
+| `qftLayers n` — the decomposed QFT layers without the final `bitReverse` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `circuitMatrix_liftCircuit` — suffix-lift scaffolding for the inductive QFT proof | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `dftMatrix_succ_entry` — recursive `(n+1)`-to-`n` DFT entry factorization | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
@@ -331,3 +332,31 @@ the follow-on errors looked like a malformed `Subtype.mk` or an attempted applic
 open scoped Kronecker
 ```
 inside every file that uses `⊗ₖ`, even if some imported file already opened that scope locally.
+
+### 25. The recursive `target.succ` QFT layers appear to require `tensorWithId 1`, not the older suffix-lift helper
+During the next general-proof pass, `QFT.lean` was refactored to expose
+```lean
+qftLayers n
+```
+as the gate list without the final `bitReverse`. A direct attempted bridge lemma of the form
+```lean
+hadamardAt q.succ = liftGate (hadamardAt q)
+```
+did not fail for a merely syntactic reason. It exposed that the two sides are using different
+computational-basis reindexings.
+
+The existing helper
+```lean
+liftGate U
+```
+uses the split `b * 2^n + i`, i.e. it adds a new **most-significant** qubit via `I₂ ⊗ U`.
+But the raw recursive QFT layers in `qftCircuit (n+1)` are indexed by `target.succ`, which is the
+shape you get when the old qubits are shifted upward because a new **least-significant** qubit was
+inserted.
+
+So the likely next circuit-side embedding for the inductive proof is
+```lean
+tensorWithId 1
+```
+rather than `liftGate` / `idTensorWith 1`. This distinction is easy to miss because both are
+“attach one idle qubit” operations, but they are different Kronecker/reindex conventions.
