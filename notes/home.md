@@ -25,7 +25,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
 | `Gate.lean` | **Yes** | All gate definitions, embeddings, and controlled-gate constructions complete; lint-clean as of April 17, 2026 |
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
-| `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
+| `Algorithms/QFT.lean` | No | `qft1_correct` and `omega_pow_two_pow` are complete; remaining gaps are `dft_orthogonality`, `qftMatrix_isUnitary`, `qftCircuit`, `qft_correct`, `qftCircuit2`, `qft2_correct` |
 
 ## Topics
 

@@ -53,14 +53,13 @@ noncomputable def qftMatrix (n : ℕ) : Matrix (Fin (2^n)) (Fin (2^n)) ℂ :=
   fun j k => (1 / Real.sqrt (2^n : ℝ) : ℂ) * (omega n) ^ (j.val * k.val)
 ```
 
-### Step 2: Prove ω is a primitive root of unity (sorry'd)
+### Step 2: Prove ω is a primitive root of unity ✓ (done)
 
 ```lean
 lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1
 ```
 
-**Proof:** `ω^{2^n} = exp(2πi/2^n)^{2^n} = exp(2πi) = 1`.
-Key lemma needed: something like `Complex.exp_int_mul_two_pi_mul_I` or rewriting via `Complex.exp_nat_mul` and then reducing `exp(2πi) = 1`. The exact Mathlib lemma name requires searching; `simp [Complex.exp_two_pi_mul_I]` did **not** work in v4.29.0.
+**Proof:** rewrite with `← Complex.exp_nat_mul`, then cancel the factor `((2 ^ n : ℕ) : ℂ)` against the denominator `((2 : ℂ) ^ n)` in the exponent and finish with `Complex.exp_two_pi_mul_I`.
 
 ### Step 3: DFT orthogonality relation (sorry'd)
 
@@ -116,7 +115,7 @@ Depends on Steps 3–6. Proof by induction on n using the recursive DFT factorin
 
 For confidence, prove n=1 and n=2 explicitly before the general case.
 
-**n=1:** `qftCircuit 1 = qftMatrix 1` reduces to `hadamardMatrix = qftMatrix 1`. Proven entry-wise with `Matrix.ext` + `fin_cases` + `norm_num` / `ring`. Note: `decide` and `native_decide` do **not** work for `ℂ`-valued matrices (ℂ is not a `DecidableEq` type in a useful sense here).
+**n=1:** `qft1_correct` is now proved. The proof reduces `qftCircuit1` to `hadamard`, then uses `Matrix.ext` + `fin_cases` on the 2×2 matrix entries. The only nontrivial branch is `(1,1)`, where `omega 1 = -1` is obtained by an explicit rewrite from `exp (2 * π * I / 2^1)` to `exp (π * I)` followed by `Complex.exp_pi_mul_I`. Note: `decide` and `native_decide` do **not** work for `ℂ`-valued matrices (ℂ is not a `DecidableEq` type in a useful sense here).
 
 **n=2:** `qftCircuit 2 = qftMatrix 2`. Once the circuit is defined, this is a 4×4 matrix equality. Approach: `Matrix.ext` + `fin_cases` + `norm_num`.
 

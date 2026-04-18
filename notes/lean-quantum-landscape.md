@@ -97,6 +97,8 @@ Last updated: April 17, 2026 (Mathlib v4.29.0).
 | `circuitMatrix_append` — composition lemma | Done | `Circuit.lean` |
 | `Circuit.CorrectFor` — correctness predicate | Done | `Circuit.lean` (unitary witness intentionally unused) |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
+| `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
+| `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
 | `qftMatrix_isUnitary` | Sorry'd | `QFT.lean` |
 | `qftCircuit n` — the QFT circuit | Deferred | `QFT.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
@@ -189,3 +191,34 @@ The orientation matters: `pow_add` states `2^(k+m) = 2^k * 2^m`, so the equality
 
 ### 14. `unusedSimpArgs` usually means a proof script kept historical baggage
 When `simp` closes a goal through reducible definitions or lemmas already tagged with `[simp]`, extra entries in the explicit simp list are ignored and Lean reports them with `linter.unusedSimpArgs`. The same cleanup can expose trailing tactics such as `all_goals simp [...]` as unreachable because the earlier `simp` already discharged every branch. For small `fin_cases` matrix proofs, keep the simp set minimal and rerun the linter after each proof simplification pass.
+
+### 15. `Complex.exp_pi_mul_I` does not match `exp (2 * π * I / 2 ^ 1)` without an explicit scalar rewrite
+In `QFT.lean`, the `qft1_correct` proof stalled when trying to show `omega 1 = -1` by simplification alone. Even though `Complex.exp_pi_mul_I` is the right endpoint lemma, `simp` did not normalize
+```lean
+Complex.exp (2 * (Real.pi : ℂ) * Complex.I / (2 ^ 1 : ℂ))
+```
+to `Complex.exp ((Real.pi : ℂ) * Complex.I)`. The reliable route was to prove the intermediate scalar identity explicitly:
+```lean
+have harg : 2 * (Real.pi : ℂ) * Complex.I / (2 ^ 1 : ℂ) = (Real.pi : ℂ) * Complex.I := by
+  rw [show (2 ^ 1 : ℂ) = 2 by norm_num]
+  field_simp [show (2 : ℂ) ≠ 0 by norm_num]
+```
+and then rewrite with `rw [harg, Complex.exp_pi_mul_I]`.
+
+### 16. `Complex.exp_nat_mul` introduces `↑(2^n)` while the original denominator may stay as `(2 : ℂ)^n`
+In `omega_pow_two_pow`, rewriting
+```lean
+(Complex.exp (2 * Real.pi * Complex.I / (2 ^ n : ℂ))) ^ (2 ^ n)
+```
+with `← Complex.exp_nat_mul` produces an exponent of the form
+```lean
+((2 ^ n : ℕ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I / ((2 : ℂ) ^ n))
+```
+rather than a uniform `(2 ^ n : ℂ)` shape everywhere. The stable route is:
+```lean
+change Complex.exp ((((2 ^ n : ℕ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I / ((2 : ℂ) ^ n)))) = 1
+have hcast : ((2 ^ n : ℕ) : ℂ) = (2 : ℂ) ^ n := by simp
+rw [hcast]
+field_simp [show ((2 : ℂ) ^ n) ≠ 0 by exact pow_ne_zero n (by norm_num)]
+```
+This mixed-shape issue is easy to miss because both sides pretty-print as `2 ^ n`.

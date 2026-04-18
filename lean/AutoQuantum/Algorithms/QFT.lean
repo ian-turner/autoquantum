@@ -59,9 +59,21 @@ lemma qftMatrix_eq_scale_dft (n : ℕ) :
 
 /-- Key identity: omega is a primitive 2^n-th root of unity. -/
 lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1 := by
-  sorry
-  -- Proof: omega^{2^n} = exp(2*pi*i/2^n)^{2^n} = exp(2*pi*i) = 1.
-  -- Key lemma: Complex.exp_int_mul_two_pi_mul_I or Complex.exp_two_pi_mul_I.
+  unfold omega
+  rw [← Complex.exp_nat_mul]
+  change Complex.exp ((((2 ^ n : ℕ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I / ((2 : ℂ) ^ n)))) = 1
+  have hpow : ((2 : ℂ) ^ n) ≠ 0 := by
+    exact pow_ne_zero n (show (2 : ℂ) ≠ 0 by norm_num)
+  have hcast : ((2 ^ n : ℕ) : ℂ) = (2 : ℂ) ^ n := by
+    simp
+  have harg : (((2 ^ n : ℕ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I / ((2 : ℂ) ^ n))) =
+      2 * (Real.pi : ℂ) * Complex.I := by
+    rw [hcast]
+    field_simp [hpow]
+  calc
+    Complex.exp ((((2 ^ n : ℕ) : ℂ) * (2 * (Real.pi : ℂ) * Complex.I / ((2 : ℂ) ^ n))))
+        = Complex.exp (2 * (Real.pi : ℂ) * Complex.I) := by rw [harg]
+    _ = 1 := Complex.exp_two_pi_mul_I
 
 /-- The DFT orthogonality relation (core of the unitarity proof):
     sum_k omega^{j*k} * conj(omega^{j'*k}) = 2^n * delta_{j,j'} -/
@@ -101,10 +113,21 @@ noncomputable def qftCircuit1 : Circuit 1 := singleGate hadamard
 /-- Correctness of QFT on 1 qubit: H = QFT_2.
     Entry-wise: H[i,j] = (1/sqrt 2) * (-1)^{ij} = (1/sqrt 2) * omega^{ij} for omega = exp(pi*i). -/
 theorem qft1_correct : qftCircuit1.CorrectFor (qftMatrix 1) (qftMatrix_isUnitary 1) := by
-  sorry
-  -- Strategy: unfold both sides, use Matrix.ext, then fin_cases on (i, j) ∈ Fin 2 × Fin 2.
-  -- Each of the four entries reduces to a real arithmetic identity.
-  -- Key: omega 1 = exp(2*pi*i/2) = exp(pi*i) = -1, so omega^(1*1) = -1.
+  change (circuitMatrix qftCircuit1 : Matrix (Fin 2) (Fin 2) ℂ) = qftMatrix 1
+  ext i j
+  fin_cases i <;> fin_cases j
+  · simp [qftCircuit1, circuitMatrix, singleGate, qftMatrix, omega, hadamard, hadamardMatrix]
+  · simp [qftCircuit1, circuitMatrix, singleGate, qftMatrix, omega, hadamard, hadamardMatrix]
+  · simp [qftCircuit1, circuitMatrix, singleGate, qftMatrix, omega, hadamard, hadamardMatrix]
+  · have hω : omega 1 = (-1 : ℂ) := by
+      unfold omega
+      have hpow : (2 ^ 1 : ℂ) = 2 := by norm_num
+      have htwo : (2 : ℂ) ≠ 0 := by norm_num
+      have harg : 2 * (Real.pi : ℂ) * Complex.I / (2 ^ 1 : ℂ) = (Real.pi : ℂ) * Complex.I := by
+        rw [hpow]
+        field_simp [htwo]
+      rw [harg, Complex.exp_pi_mul_I]
+    simp [qftCircuit1, circuitMatrix, singleGate, qftMatrix, hadamard, hadamardMatrix, hω]
 
 /-- The QFT circuit on n qubits (general construction).
 
