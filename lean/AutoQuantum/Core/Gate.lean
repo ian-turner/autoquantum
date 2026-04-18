@@ -1,10 +1,13 @@
 import AutoQuantum.Core.Hilbert
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Data.Fin.Rev
 import Mathlib.Data.Fin.SuccPred
 import Mathlib.Data.Matrix.Block
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.LinearAlgebra.UnitaryGroup
 import Mathlib.LinearAlgebra.Matrix.Hermitian
 import Mathlib.LinearAlgebra.Matrix.Kronecker
+import Mathlib.LinearAlgebra.Matrix.Permutation
 import Mathlib.LinearAlgebra.Matrix.Reindex
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -205,6 +208,33 @@ end TwoQubit
 
 /-! ## Gate embeddings -/
 
+/-- Lift a permutation of qubit positions to a permutation of computational-basis indices.
+
+    The basis index `Fin (2^n)` is identified with bitstrings `Fin n → Fin 2`; the qubit
+    permutation acts by reindexing that bitstring. -/
+noncomputable def qubitPerm {n : ℕ} (σ : Equiv.Perm (Fin n)) : Equiv.Perm (Fin (2 ^ n)) :=
+  ((finFunctionFinEquiv (m := 2) (n := n)).symm.trans
+      (Equiv.piCongrLeft (fun _ : Fin n => Fin 2) σ)).trans
+    (finFunctionFinEquiv (m := 2) (n := n))
+
+/-- The unitary gate that permutes qubit positions according to `σ`. -/
+noncomputable def permuteQubits {n : ℕ} (σ : Equiv.Perm (Fin n)) : QGate n := by
+  let τ : Equiv.Perm (Fin (2 ^ n)) := qubitPerm σ
+  refine ⟨τ.permMatrix ℂ, ?_⟩
+  rw [Matrix.mem_unitaryGroup_iff]
+  calc
+    τ.permMatrix ℂ * star (τ.permMatrix ℂ)
+        = τ.permMatrix ℂ * (τ⁻¹).permMatrix ℂ := by
+            simp [Matrix.star_eq_conjTranspose]
+    _ = ((τ⁻¹) * τ).permMatrix ℂ := by
+          rw [← Matrix.permMatrix_mul (R := ℂ) (σ := τ⁻¹) (τ := τ)]
+    _ = 1 := by simp
+
+/-- Conjugate a gate by a qubit permutation. This is the basic transport operation used to move
+    gates away from the ends of the register. -/
+noncomputable def permuteGate {n : ℕ} (σ : Equiv.Perm (Fin n)) (U : QGate n) : QGate n :=
+  permuteQubits σ⁻¹ * U * permuteQubits σ
+
 /-- Reindexing a unitary matrix along an equivalence preserves unitarity. -/
 lemma reindex_mem_unitaryGroup {n m : Type*} [DecidableEq n] [Fintype n]
     [DecidableEq m] [Fintype m] (e : n ≃ m) {A : Matrix n n ℂ}
@@ -256,5 +286,64 @@ noncomputable def controlled (U : Matrix (Fin 2) (Fin 2) ℂ)
       Matrix.fromBlocks_multiply]
     simp [hU'', Matrix.fromBlocks_one]
   exact reindex_mem_unitaryGroup finSumFinEquiv hCU
+
+/-- Place a single-qubit gate on an arbitrary qubit by swapping that qubit to the end,
+    applying `I ⊗ U`, and swapping back. -/
+noncomputable def onQubit {n : ℕ} (q : Fin n) (U : QGate 1) : QGate n := by
+  cases n with
+  | zero => exact q.elim0
+  | succ m =>
+      exact permuteGate (Equiv.swap (Fin.last m) q) (idTensorWith m U)
+
+/-- The Hadamard gate placed on qubit `q`. -/
+noncomputable def hadamardAt {n : ℕ} (q : Fin n) : QGate n :=
+  onQubit q hadamard
+
+/-- The phase-rotation gate `R_k` placed on qubit `q`. -/
+noncomputable def phaseRotationAt {n : ℕ} (q : Fin n) (k : ℕ) : QGate n :=
+  onQubit q (phaseRotation k)
+
+/-- Place a 2-qubit gate on an arbitrary ordered pair of qubits by moving that pair to the front,
+    applying `U ⊗ I`, and moving the pair back. The order matters: `q₁` is the first input qubit
+    of `U`, and `q₂` is the second. -/
+noncomputable def onQubits {n : ℕ} (q₁ q₂ : Fin n) (h : q₁ ≠ q₂) (U : QGate 2) : QGate n := by
+  cases n with
+  | zero => exact q₁.elim0
+  | succ n =>
+      cases n with
+      | zero =>
+          have h' : q₁ = q₂ := by
+            fin_cases q₁
+            fin_cases q₂
+            rfl
+          exact (False.elim (h h'))
+      | succ m =>
+          let last : Fin (Nat.succ (Nat.succ m)) := Fin.last (Nat.succ m)
+          let secondLast : Fin (Nat.succ (Nat.succ m)) := Fin.castSucc (Fin.last m)
+          let τ₁ : Equiv.Perm (Fin (Nat.succ (Nat.succ m))) := Equiv.swap last q₂
+          let σ : Equiv.Perm (Fin (Nat.succ (Nat.succ m))) := Equiv.swap secondLast (τ₁ q₁) * τ₁
+          let V : QGate (Nat.succ (Nat.succ m)) := idTensorWith m U
+          show QGate (Nat.succ (Nat.succ m))
+          exact permuteGate σ V
+
+/-- Place a controlled single-qubit gate on an arbitrary ordered pair of qubits.
+    `control` is the control qubit and `target` is the target qubit. -/
+noncomputable def controlledAt {n : ℕ} (control target : Fin n) (h : control ≠ target)
+    (U : QGate 1) : QGate n :=
+  onQubits control target h (controlled (U : Matrix (Fin 2) (Fin 2) ℂ) (SetLike.coe_mem U))
+
+/-- Place a controlled phase-rotation `R_k` on an arbitrary control/target pair. -/
+noncomputable def controlledPhaseAt {n : ℕ} (control target : Fin n)
+    (h : control ≠ target) (k : ℕ) : QGate n :=
+  controlledAt control target h (phaseRotation k)
+
+/-- Swap two arbitrary qubits in an `n`-qubit register. -/
+noncomputable def swapAt {n : ℕ} (i j : Fin n) : QGate n :=
+  permuteQubits (Equiv.swap i j)
+
+/-- Reverse the order of the qubits in the register. This is the final permutation used in the
+    standard decomposed QFT circuit. -/
+noncomputable def bitReverse {n : ℕ} : QGate n :=
+  permuteQubits Fin.revPerm
 
 end AutoQuantum

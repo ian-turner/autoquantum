@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 17, 2026 (Mathlib v4.29.0).
+Last updated: April 18, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -92,15 +92,19 @@ Last updated: April 17, 2026 (Mathlib v4.29.0).
 | SWAP gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Gate.lean` |
 | `tensorWithId`, `idTensorWith`, `controlled` | Done | `Gate.lean` |
+| `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Gate.lean` (Apr 18, 2026) |
+| `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Gate.lean` (Apr 18, 2026) |
+| `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Gate.lean` (Apr 18, 2026) |
 | `Circuit n` — list of gate steps | Done | `Circuit.lean` |
 | `circuitMatrix` — product of gate matrices | Done | `Circuit.lean` |
 | `circuitMatrix_append` — composition lemma | Done | `Circuit.lean` |
 | `Circuit.CorrectFor` — correctness predicate | Done | `Circuit.lean` (unitary witness intentionally unused) |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
 | `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
+| `dft_orthogonality` — DFT orthogonality sum | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
-| `qftMatrix_isUnitary` | Sorry'd | `QFT.lean` |
-| `qftCircuit n` — the QFT circuit | Deferred | `QFT.lean` |
+| `qftMatrix_isUnitary` | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `qftCircuit n` — the decomposed QFT circuit | Done | `QFT.lean` (Apr 18, 2026) |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -222,3 +226,24 @@ rw [hcast]
 field_simp [show ((2 : ℂ) ^ n) ≠ 0 by exact pow_ne_zero n (by norm_num)]
 ```
 This mixed-shape issue is easy to miss because both sides pretty-print as `2 ^ n`.
+
+### 17. End-placement embeddings are not enough for textbook circuit definitions
+For the decomposed QFT, `tensorWithId`, `idTensorWith`, and a fixed-layout `controlled` constructor are still too low-level: they only place gates at the ends of the register. The missing abstraction is a qubit-permutation layer
+```lean
+Equiv.Perm (Fin n) -> Equiv.Perm (Fin (2 ^ n))
+```
+plus gate conjugation by those permutations. Once that exists, arbitrary `hadamardAt`, `controlledPhaseAt`, and `bitReverse` constructors can be defined cleanly instead of by hand-built swap chains.
+
+### 18. `Matrix.mem_unitaryGroup_iff` exposes the `A * star A = 1` orientation directly
+In `qftMatrix_isUnitary`, the first working proof attempt was organized as though the goal were
+`star A * A = 1`, matching the usual column-orthogonality presentation of the DFT. But
+`Matrix.mem_unitaryGroup_iff` produced the row-oriented identity
+```lean
+A * star A = 1
+```
+so the entrywise summand had to be rewritten in the shape
+```lean
+qftMatrix n j k * star (qftMatrix n j' k)
+```
+rather than the reversed product. Once the scalar factorization was aligned to that orientation,
+`dft_orthogonality n j j'` applied directly.

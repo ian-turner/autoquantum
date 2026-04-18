@@ -61,7 +61,7 @@ lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1
 
 **Proof:** rewrite with `← Complex.exp_nat_mul`, then cancel the factor `((2 ^ n : ℕ) : ℂ)` against the denominator `((2 : ℂ) ^ n)` in the exponent and finish with `Complex.exp_two_pi_mul_I`.
 
-### Step 3: DFT orthogonality relation (sorry'd)
+### Step 3: DFT orthogonality relation ✓ (done)
 
 ```lean
 lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
@@ -71,27 +71,59 @@ lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
 
 Note: use `star` for conjugation, not `conj` (see `lean-quantum-landscape.md`).
 
-**Proof strategy:**
-- The sum equals `Σ_k r^k` where `r = ω^{j-j'}`.
-- If `j = j'`: `r = 1`, each term is 1, sum = 2^n.
-- If `j ≠ j'`: geometric series with `r ≠ 1`. Sum = `(1 - r^{2^n}) / (1 - r) = 0` since `r^{2^n} = 1`.
-- Key Mathlib lemma: search for `geom_sum` under `Mathlib.Algebra.BigOperators` or use `Finset.geom_series_def`. Note: `Mathlib.Algebra.GeomSum` is **not** a valid import path in v4.29.
+**Implemented proof shape:**
+- Rewrite `star (ω^m)` as `(ω⁻¹)^m` using `omega_star`.
+- In the diagonal case, each summand becomes `1`.
+- In the off-diagonal case, package the summand as a geometric progression with ratio
+  `r = ω^j * (ω⁻¹)^j'`.
+- Show `r^(2^n) = 1` from `omega_pow_two_pow`.
+- Show `r ≠ 1` via `Complex.isPrimitiveRoot_exp` and `IsPrimitiveRoot.zpow_eq_one_iff_dvd`.
+- Finish the off-diagonal sum with `geom_sum_mul`.
 
-### Step 4: Prove QFT matrix is unitary (sorry'd)
+### Step 4: Prove QFT matrix is unitary ✓ (done)
 
-Uses `dft_orthogonality` to show `(qftMatrix n)† ⬝ qftMatrix n = 1` entry-wise.
+Uses `dft_orthogonality` to show `qftMatrix n * star (qftMatrix n) = 1` entry-wise.
+The key proof engineering point is that `Matrix.mem_unitaryGroup_iff` exposes the goal in the
+`A * star A = 1` orientation, so the summand must be factored as
+`qftMatrix n j k * star (qftMatrix n j' k)`.
 
 ### Step 5: Define gate embeddings (done)
 
 `tensorWithId`, `idTensorWith`, and `controlled` in `Gate.lean` are now available. The working pattern is Kronecker product plus reindexing through `finProdFinEquiv` / `finCongr`, and `controlled` is implemented as a block-diagonal matrix reindexed from `Fin 2 ⊕ Fin 2` to `Fin 4`.
 
-### Step 6: Define the QFT circuit (deferred)
+### Step 6: Define the QFT circuit ✓ (done)
 
-The gate-embedding prerequisites are in place. The circuit body is currently `sorry`.
+The decomposed circuit is now defined in `QFT.lean` using the new gate-placement API:
+
+- `hadamardAt`
+- `controlledPhaseAt`
+- `bitReverse`
+
+The construction follows the textbook loop over target qubits `m = 0, ..., n-1`, with
+controlled phase gates from later qubits onto `m`, followed by a final bit-reversal gate.
+
+The API work that made this possible is recorded in `notes/qft-api-roadmap.md`.
 
 ### Step 7: Prove `qft_correct` (deferred)
 
-Depends on Steps 3–6. Proof by induction on n using the recursive DFT factoring.
+The circuit is now present, so the remaining work is proof-only. This depends on Steps 3–4 plus
+either:
+
+- a direct matrix proof for small instances, and then
+- a recursive factoring proof for general `n`,
+
+or a stronger library of lemmas about the semantics of `controlledPhaseAt`, `hadamardAt`, and
+`bitReverse`.
+
+Current status: the file now builds with only `qft_correct` and `qft2_correct` left as `sorry`s.
+The next concrete milestone is `qft2_correct`, but a brute-force `simp` over the full
+definition of `qftCircuit 2` does **not** reduce the embedded gate placements enough. The likely
+next move is to prove explicit 4×4 matrix lemmas for:
+
+- `hadamardAt 0`
+- `hadamardAt 1`
+- `controlledPhaseAt 1 0 2`
+- `bitReverse`
 
 ---
 
@@ -117,7 +149,15 @@ For confidence, prove n=1 and n=2 explicitly before the general case.
 
 **n=1:** `qft1_correct` is now proved. The proof reduces `qftCircuit1` to `hadamard`, then uses `Matrix.ext` + `fin_cases` on the 2×2 matrix entries. The only nontrivial branch is `(1,1)`, where `omega 1 = -1` is obtained by an explicit rewrite from `exp (2 * π * I / 2^1)` to `exp (π * I)` followed by `Complex.exp_pi_mul_I`. Note: `decide` and `native_decide` do **not** work for `ℂ`-valued matrices (ℂ is not a `DecidableEq` type in a useful sense here).
 
-**n=2:** `qftCircuit 2 = qftMatrix 2`. Once the circuit is defined, this is a 4×4 matrix equality. Approach: `Matrix.ext` + `fin_cases` + `norm_num`.
+**n=2:** `qftCircuit2 = qftMatrix 2` remains open. The direct brute-force proof by
+`Matrix.ext` + `fin_cases` + unfolding `qftCircuit` exposes too much unreduced placement
+machinery (`onQubit`, `onQubits`, `permuteGate`, `permuteQubits`). The next reasonable proof
+shape is:
+
+1. prove explicit 4×4 matrix lemmas for the four gates in `qftCircuit2`;
+2. rewrite the circuit matrix to a product of those explicit matrices;
+3. finish the 4×4 equality by `Matrix.ext` + `fin_cases`, with the scalar identity
+   `omega 2 = Complex.I`.
 
 ---
 

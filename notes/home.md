@@ -23,9 +23,9 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 |------|-------------|-------|
 | `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
-| `Gate.lean` | **Yes** | All gate definitions, embeddings, and controlled-gate constructions complete; lint-clean as of April 17, 2026 |
+| `Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026 |
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
-| `Algorithms/QFT.lean` | No | `qft1_correct` and `omega_pow_two_pow` are complete; remaining gaps are `dft_orthogonality`, `qftMatrix_isUnitary`, `qftCircuit`, `qft_correct`, `qftCircuit2`, `qft2_correct` |
+| `Algorithms/QFT.lean` | No | `dft_orthogonality` and `qftMatrix_isUnitary` are now proved; remaining gaps are `qft_correct` and `qft2_correct` |
 
 ## Topics
 
@@ -35,6 +35,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Gate.lean`
+- [QFT API Roadmap](qft-api-roadmap.md) — Required gate and circuit abstractions for the full decomposed QFT circuit: qubit permutations, arbitrary placement, and bit-reversal
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Qubit.lean`
 
 ### Algorithms

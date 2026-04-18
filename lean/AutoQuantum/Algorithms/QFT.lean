@@ -1,6 +1,9 @@
 import AutoQuantum.Core.Circuit
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.RingTheory.RootsOfUnity.Basic
+import Mathlib.RingTheory.RootsOfUnity.Complex
+import Mathlib.RingTheory.RootsOfUnity.PrimitiveRoots
+import Mathlib.Algebra.Ring.GeomSum
 
 /-!
 # Quantum Fourier Transform (QFT)
@@ -75,31 +78,146 @@ lemma omega_pow_two_pow (n : ℕ) : (omega n) ^ (2 ^ n) = 1 := by
         = Complex.exp (2 * (Real.pi : ℂ) * Complex.I) := by rw [harg]
     _ = 1 := Complex.exp_two_pi_mul_I
 
+/-- omega is on the unit circle: its complex norm-squared equals 1. -/
+private lemma omega_normSq (n : ℕ) : Complex.normSq (omega n) = 1 := by
+  unfold omega
+  have harg : 2 * ↑Real.pi * Complex.I / (2 : ℂ) ^ n =
+              ↑(2 * Real.pi / (2 : ℝ) ^ n) * Complex.I := by push_cast; ring
+  have hre : (2 * ↑Real.pi * Complex.I / (2 : ℂ) ^ n).re = 0 := by
+    rw [harg, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    ring
+  have him : (2 * ↑Real.pi * Complex.I / (2 : ℂ) ^ n).im = 2 * Real.pi / (2 : ℝ) ^ n := by
+    rw [harg, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    ring
+  rw [Complex.normSq_apply, Complex.exp_re, Complex.exp_im, hre, him, Real.exp_zero,
+      one_mul, one_mul]
+  have := Real.cos_sq_add_sin_sq (2 * Real.pi / (2 : ℝ) ^ n)
+  nlinarith [sq_nonneg (Real.cos (2 * Real.pi / (2 : ℝ) ^ n)),
+             sq_nonneg (Real.sin (2 * Real.pi / (2 : ℝ) ^ n))]
+
+/-- star(omega n) = (omega n)⁻¹ since omega lies on the unit circle. -/
+private lemma omega_star (n : ℕ) : star (omega n) = (omega n)⁻¹ := by
+  have hne : omega n ≠ 0 := Complex.exp_ne_zero _
+  have hmul : omega n * star (omega n) = 1 := by
+    rw [Complex.star_def, Complex.mul_conj]
+    exact_mod_cast omega_normSq n
+  exact mul_left_cancel₀ hne (hmul.trans (mul_inv_cancel₀ hne).symm)
+
 /-- The DFT orthogonality relation (core of the unitarity proof):
     sum_k omega^{j*k} * conj(omega^{j'*k}) = 2^n * delta_{j,j'} -/
 lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
     ∑ k : Fin (2 ^ n), (omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val)) =
     if j = j' then (2 ^ n : ℂ) else 0 := by
-  sorry
-  -- Proof strategy:
-  -- Sum equals sum_k omega^{(j-j')*k} (using star(omega^m) = omega^{-m} since |omega| = 1).
-  -- If j = j': each term is 1, sum = 2^n.
-  -- If j != j': geometric series with ratio r = omega^{j-j'} != 1.
-  --   Sum = (1 - r^{2^n}) / (1 - r) = 0 since r^{2^n} = 1 (omega_pow_two_pow).
+  have hωne : omega n ≠ 0 := Complex.exp_ne_zero _
+  -- star(ω^m) = (ω⁻¹)^m
+  have hstar_pow : ∀ m : ℕ, star ((omega n) ^ m) = (omega n)⁻¹ ^ m := by
+    intro m; rw [star_pow, omega_star]
+  simp_rw [hstar_pow]
+  split_ifs with heq
+  · -- Diagonal: each term is (ω * ω⁻¹)^{jk} = 1
+    subst heq
+    simp_rw [← mul_pow, mul_inv_cancel₀ hωne, one_pow,
+             Finset.sum_const, Finset.card_univ, Fintype.card_fin]
+    norm_num
+  · -- Off-diagonal: geometric series with ratio r = ω^j * (ω⁻¹)^{j'}, r ≠ 1
+    set r : ℂ := (omega n) ^ j.val * (omega n)⁻¹ ^ j'.val with hr_def
+    have hterm : ∀ k : Fin (2 ^ n),
+        (omega n) ^ (j.val * k.val) * (omega n)⁻¹ ^ (j'.val * k.val) = r ^ k.val := by
+      intro k; simp only [hr_def, pow_mul, ← mul_pow]
+    simp_rw [hterm]
+    -- r^{2^n} = 1
+    have hr_pow : r ^ (2 ^ n) = 1 := by
+      have h1 : ((omega n) ^ j.val) ^ (2 ^ n) = 1 := by
+        rw [← pow_mul, mul_comm, pow_mul, omega_pow_two_pow, one_pow]
+      have h2 : ((omega n)⁻¹ ^ j'.val) ^ (2 ^ n) = 1 := by
+        rw [← pow_mul, mul_comm, pow_mul, inv_pow, omega_pow_two_pow, inv_one, one_pow]
+      simp only [hr_def, mul_pow]; rw [h1, h2, mul_one]
+    -- r ≠ 1 by primitivity of omega and j ≠ j'
+    have hr_ne : r ≠ 1 := by
+      intro hr_eq
+      apply heq
+      have hprim : IsPrimitiveRoot (omega n) (2 ^ n) := by
+        have h := Complex.isPrimitiveRoot_exp (2 ^ n) ((Nat.two_pow_pos n).ne')
+        simp only [omega]; convert h using 1; congr 1; push_cast; ring
+      -- r = 1 → ω^{j-j'} = 1 in zpow
+      have hd : (omega n) ^ ((j.val : ℤ) - j'.val) = 1 := by
+        simp only [hr_def, inv_pow] at hr_eq
+        rw [zpow_sub₀ hωne, zpow_natCast, zpow_natCast, div_eq_mul_inv]
+        exact hr_eq
+      have hdvd := (hprim.zpow_eq_one_iff_dvd ((j.val : ℤ) - j'.val)).mp hd
+      have hbound : |(j.val : ℤ) - j'.val| < (2 ^ n : ℤ) := by
+        have hj : (j.val : ℤ) < 2 ^ n := by exact_mod_cast j.is_lt
+        have hj' : (j'.val : ℤ) < 2 ^ n := by exact_mod_cast j'.is_lt
+        rw [abs_lt]; constructor
+        · linarith [Int.natCast_nonneg j'.val]
+        · linarith [Int.natCast_nonneg j.val]
+      have hzero := Int.eq_zero_of_abs_lt_dvd hdvd hbound
+      exact Fin.ext (by exact_mod_cast sub_eq_zero.mp hzero)
+    -- Geometric series = 0
+    have hgeo : ∑ i ∈ Finset.range (2 ^ n), r ^ i = 0 := by
+      have hmul := geom_sum_mul r (2 ^ n)
+      rw [hr_pow, sub_self] at hmul
+      exact (mul_eq_zero.mp hmul).resolve_right (sub_ne_zero.mpr hr_ne)
+    rw [Fin.sum_univ_eq_sum_range (fun i => r ^ i) (2 ^ n)]
+    exact hgeo
 
 /-- The QFT matrix is unitary. -/
 lemma qftMatrix_isUnitary (n : ℕ) : qftMatrix n ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ := by
   rw [Matrix.mem_unitaryGroup_iff]
+  have hN_pos : (0 : ℝ) < 2 ^ n := by positivity
+  have hsqN_sq : (Real.sqrt (2 ^ n : ℝ) : ℂ) ^ 2 = (2 ^ n : ℂ) := by
+    exact_mod_cast Real.sq_sqrt hN_pos.le
+  have hN_ne : (2 ^ n : ℂ) ≠ 0 := by exact_mod_cast (Nat.two_pow_pos n).ne'
+  have hreal : star ((Real.sqrt (2 ^ n : ℝ) : ℂ)) = (Real.sqrt (2 ^ n : ℝ) : ℂ) :=
+    Complex.conj_ofReal _
+  have hstar_inv_sqrt : star (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) =
+      (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) := by
+    rw [one_div, star_inv₀, hreal]
+  have h1N : (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) =
+             1 / (2 ^ n : ℂ) := by
+    rw [div_mul_div_comm, one_mul, ← sq, hsqN_sq]
   ext j j'
-  simp only [Matrix.mul_apply, qftMatrix]
-  sorry
-  -- Proof:
-  -- ((qftMatrix n)^H * qftMatrix n)[j, j']
-  -- = sum_k conj(qftMatrix[k,j]) * qftMatrix[k,j']
-  -- = (1/N) sum_k star(omega^{k*j}) * omega^{k*j'}
-  -- = (1/N) sum_k omega^{k*(j'-j)}
-  -- = (1/N) * (N * delta_{j,j'})   [by dft_orthogonality]
-  -- = delta_{j,j'}                 [since Matrix.one_apply j j' = delta_{j,j'}]
+  simp only [Matrix.mul_apply, Matrix.star_apply, qftMatrix]
+  -- Factor: (1/√N · ω^(j·k)) * star(1/√N · ω^(j'·k)) = (1/N) · (ω^(j·k) * star(ω^(j'·k)))
+  have hterm : ∀ k : Fin (2 ^ n),
+      ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j.val * k.val)) *
+        star ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j'.val * k.val)) =
+      (1 / (2 ^ n : ℂ)) *
+        ((omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val))) := by
+    intro k
+    calc
+      ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j.val * k.val)) *
+          star ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j'.val * k.val)) =
+          ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j.val * k.val)) *
+            (star (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * star ((omega n) ^ (j'.val * k.val))) := by
+            rw [star_mul']
+      _ = ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (1 / (Real.sqrt (2 ^ n : ℝ) : ℂ))) *
+            ((omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val))) := by
+            rw [hstar_inv_sqrt]
+            ring
+      _ = (1 / (2 ^ n : ℂ)) *
+            ((omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val))) := by
+            rw [h1N]
+  calc
+    ∑ k : Fin (2 ^ n),
+        ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j.val * k.val)) *
+          star ((1 / (Real.sqrt (2 ^ n : ℝ) : ℂ)) * (omega n) ^ (j'.val * k.val)) =
+        ∑ k : Fin (2 ^ n),
+          (1 / (2 ^ n : ℂ)) *
+            ((omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val))) := by
+          apply Finset.sum_congr rfl
+          intro k hk
+          exact hterm k
+    _ = (1 / (2 ^ n : ℂ)) *
+          ∑ k : Fin (2 ^ n),
+            ((omega n) ^ (j.val * k.val) * star ((omega n) ^ (j'.val * k.val))) := by
+          rw [← Finset.mul_sum]
+    _ = (1 / (2 ^ n : ℂ)) * (if j = j' then (2 ^ n : ℂ) else 0) := by
+          rw [dft_orthogonality n j j']
+  rw [Matrix.one_apply]
+  split_ifs with h
+  · simp [one_div, hN_ne]
+  · simp
 
 /-- Package the QFT matrix as a gate. -/
 noncomputable def qftGate (n : ℕ) : QGate n :=
@@ -135,9 +253,26 @@ theorem qft1_correct : qftCircuit1.CorrectFor (qftMatrix 1) (qftMatrix_isUnitary
       - Apply H to qubit m
       - Apply controlled-R_{j+1} for j = 1, ..., n-1-m
     Then apply the bit-reversal permutation (SWAP cascade). -/
-noncomputable def qftCircuit (n : ℕ) : Circuit n := by
-  exact sorry
-  -- Awaits: tensorWithId and controlled gate embeddings from Gate.lean.
+private noncomputable def qftControlledLayer (n : ℕ) (target : Fin n) : Circuit n :=
+  (List.finRange (n - (target.val + 1))).map fun offset =>
+    let control : Fin n := ⟨target.val + offset.val + 1, by
+      have hoff : offset.val < n - (target.val + 1) := offset.is_lt
+      omega⟩
+    let hct : control ≠ target := by
+      have hgt : target.val < control.val := by
+        have hoff : offset.val < n - (target.val + 1) := offset.is_lt
+        dsimp [control]
+        omega
+      intro hEq
+      have : control.val = target.val := congrArg Fin.val hEq
+      omega
+    ⟨controlledPhaseAt control target hct (offset.val + 2)⟩
+
+private noncomputable def qftQubitLayer (n : ℕ) (target : Fin n) : Circuit n :=
+  [⟨hadamardAt target⟩] ++ qftControlledLayer n target
+
+noncomputable def qftCircuit (n : ℕ) : Circuit n :=
+  (List.finRange n).foldr (fun target acc => qftQubitLayer n target ++ acc) [⟨bitReverse⟩]
 
 /-- Main correctness theorem: the QFT circuit implements the QFT unitary.
 
@@ -151,8 +286,8 @@ theorem qft_correct (n : ℕ) :
 
 /-- The QFT on 2 qubits: (H tensor I), CR_2, (I tensor H), SWAP.
     Matrix identity: SWAP * (I tensor H) * CR_2 * (H tensor I) = QFT_4. -/
-noncomputable def qftCircuit2 : Circuit 2 := by
-  exact sorry
+noncomputable def qftCircuit2 : Circuit 2 :=
+  qftCircuit 2
 
 theorem qft2_correct :
     qftCircuit2.CorrectFor (qftMatrix 2) (qftMatrix_isUnitary 2) := by
