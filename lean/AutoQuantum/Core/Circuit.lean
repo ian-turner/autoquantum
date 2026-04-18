@@ -59,7 +59,7 @@ def Circuit.Implements {n : ℕ} (c : Circuit n) (U : QGate n) : Prop :=
     a unitarity proof) if the circuit's matrix equals T. -/
 def Circuit.CorrectFor {n : ℕ} (c : Circuit n)
     (T : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)
-    (hT : T ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ) : Prop :=
+    (_hT : T ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ) : Prop :=
   (circuitMatrix c : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = T
 
 end AutoQuantum

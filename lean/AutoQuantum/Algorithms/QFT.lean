@@ -79,7 +79,7 @@ lemma dft_orthogonality (n : ℕ) (j j' : Fin (2 ^ n)) :
 lemma qftMatrix_isUnitary (n : ℕ) : qftMatrix n ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ := by
   rw [Matrix.mem_unitaryGroup_iff]
   ext j j'
-  simp only [Matrix.mul_apply, Matrix.conjTranspose_apply, qftMatrix]
+  simp only [Matrix.mul_apply, qftMatrix]
   sorry
   -- Proof:
   -- ((qftMatrix n)^H * qftMatrix n)[j, j']

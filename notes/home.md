@@ -11,6 +11,7 @@ Central index for all project notes. Start here.
 ## Build Status
 
 Mathlib pinned to **v4.29.0** (`lean/lean-toolchain`). `lake build AutoQuantum` succeeds with 0 errors.
+All non-`sorry` linter warnings in the Lean sources were cleaned up on April 17, 2026; current warnings come from the unfinished QFT development.
 
 ```bash
 cd lean && lake update && lake exe cache get && lake build AutoQuantum
@@ -21,9 +22,9 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | File | Sorry-free? | Notes |
 |------|-------------|-------|
 | `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
-| `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete |
-| `Gate.lean` | **Yes** | All gate definitions, embeddings, and controlled-gate constructions complete |
-| `Circuit.lean` | **Yes** | All proofs complete |
+| `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
+| `Gate.lean` | **Yes** | All gate definitions, embeddings, and controlled-gate constructions complete; lint-clean as of April 17, 2026 |
+| `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
 | `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
 
 ## Topics

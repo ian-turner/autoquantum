@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 2026 (Mathlib v4.29.0).
+Last updated: April 17, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -81,21 +81,21 @@ Last updated: April 2026 (Mathlib v4.29.0).
 | `basisState n k` — computational basis state | Done | `Hilbert.lean` |
 | `superpose` — linear combination of vectors | Done | `Hilbert.lean` |
 | `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Hilbert.lean` |
-| `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Qubit.lean` |
+| `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Qubit.lean` (lint-cleaned Apr 17, 2026) |
 | `ketPlus_braket_ketMinus` | Done | `Qubit.lean` |
 | Bloch sphere parameterization | Done | `Qubit.lean` |
 | `QGate k` — unitary gate type | Done | `Gate.lean` |
-| Pauli X, Y, Z gates + unitarity proofs | Done | `Gate.lean` |
+| Pauli X, Y, Z gates + unitarity proofs | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
 | Hadamard gate + unitarity proof | Done | `Gate.lean` |
 | Phase rotation R_k + unitarity proof | Done | `Gate.lean` |
-| CNOT gate + unitarity proof | Done | `Gate.lean` |
-| SWAP gate + unitarity proof | Done | `Gate.lean` |
+| CNOT gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
+| SWAP gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Gate.lean` |
 | `tensorWithId`, `idTensorWith`, `controlled` | Done | `Gate.lean` |
 | `Circuit n` — list of gate steps | Done | `Circuit.lean` |
 | `circuitMatrix` — product of gate matrices | Done | `Circuit.lean` |
 | `circuitMatrix_append` — composition lemma | Done | `Circuit.lean` |
-| `Circuit.CorrectFor` — correctness predicate | Done | `Circuit.lean` |
+| `Circuit.CorrectFor` — correctness predicate | Done | `Circuit.lean` (unitary witness intentionally unused) |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
 | `qftMatrix_isUnitary` | Sorry'd | `QFT.lean` |
 | `qftCircuit n` — the QFT circuit | Deferred | `QFT.lean` |
@@ -186,3 +186,6 @@ let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
 ```
 The orientation matters: `pow_add` states `2^(k+m) = 2^k * 2^m`, so the equality passed to
 `finCongr` must be the symmetric form shown above.
+
+### 14. `unusedSimpArgs` usually means a proof script kept historical baggage
+When `simp` closes a goal through reducible definitions or lemmas already tagged with `[simp]`, extra entries in the explicit simp list are ignored and Lean reports them with `linter.unusedSimpArgs`. The same cleanup can expose trailing tactics such as `all_goals simp [...]` as unreachable because the earlier `simp` already discharged every branch. For small `fin_cases` matrix proofs, keep the simp set minimal and rerun the linter after each proof simplification pass.

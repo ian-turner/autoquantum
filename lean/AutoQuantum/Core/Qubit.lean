@@ -42,8 +42,7 @@ noncomputable def ketPlus : QState 1 :=
       apply superpose_norm_eq_one
       · exact QState.norm_eq_one ket0
       · exact QState.norm_eq_one ket1
-      · simp [QState.braket, QState.vec, QState.mk, ket0, ket1, basisState,
-              PiLp.inner_apply, Fin.sum_univ_two]
+      · simp [QState.vec, ket0, ket1, basisState, PiLp.inner_apply]
       · have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
           rw [Complex.normSq_div]
           norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
@@ -58,8 +57,7 @@ noncomputable def ketMinus : QState 1 :=
       apply superpose_norm_eq_one
       · exact QState.norm_eq_one ket0
       · exact QState.norm_eq_one ket1
-      · simp [QState.braket, QState.vec, QState.mk, ket0, ket1, basisState,
-              PiLp.inner_apply, Fin.sum_univ_two]
+      · simp [QState.vec, ket0, ket1, basisState, PiLp.inner_apply]
       · have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
           rw [Complex.normSq_div]
           norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
@@ -80,8 +78,7 @@ noncomputable def blochState (theta phi : ℝ) : QState 1 :=
       apply superpose_norm_eq_one
       · exact QState.norm_eq_one ket0
       · exact QState.norm_eq_one ket1
-      · simp [QState.braket, QState.vec, QState.mk, ket0, ket1, basisState,
-              PiLp.inner_apply, Fin.sum_univ_two]
+      · simp [QState.vec, ket0, ket1, basisState, PiLp.inner_apply]
       · have hphase : Complex.normSq (Complex.exp (Complex.I * phi)) = 1 := by
           rw [Complex.normSq_eq_norm_sq, Complex.norm_exp_I_mul_ofReal]
           norm_num

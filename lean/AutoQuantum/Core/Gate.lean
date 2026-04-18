@@ -80,7 +80,7 @@ lemma pauliXMatrix_isUnitary : pauliXMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ 
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [pauliXMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply]
+    simp [pauliXMatrix, Matrix.mul_apply]
 
 /-- The Pauli X gate. -/
 noncomputable def pauliX : QGate 1 := ⟨pauliXMatrix, pauliXMatrix_isUnitary⟩
@@ -93,8 +93,7 @@ lemma pauliYMatrix_isUnitary : pauliYMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ 
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [pauliYMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply, Complex.I_sq]
-  all_goals simp [Complex.ext_iff, Complex.I_re, Complex.I_im, mul_comm]
+    simp [pauliYMatrix, Matrix.mul_apply]
 
 /-- The Pauli Y gate. -/
 noncomputable def pauliY : QGate 1 := ⟨pauliYMatrix, pauliYMatrix_isUnitary⟩
@@ -106,7 +105,7 @@ lemma pauliZMatrix_isUnitary : pauliZMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ 
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [pauliZMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply]
+    simp [pauliZMatrix, Matrix.mul_apply]
 
 /-- The Pauli Z gate. -/
 noncomputable def pauliZ : QGate 1 := ⟨pauliZMatrix, pauliZMatrix_isUnitary⟩
@@ -181,8 +180,7 @@ lemma cnotMatrix_isUnitary : cnotMatrix ∈ Matrix.unitaryGroup (Fin 4) ℂ := b
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [cnotMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply,
-          Fin.sum_univ_four]
+    simp [cnotMatrix, Matrix.mul_apply, Fin.sum_univ_four]
 
 /-- The CNOT gate. -/
 noncomputable def cnot : QGate 2 := ⟨cnotMatrix, cnotMatrix_isUnitary⟩
@@ -198,8 +196,7 @@ lemma swapMatrix_isUnitary : swapMatrix ∈ Matrix.unitaryGroup (Fin 4) ℂ := b
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [swapMatrix, Matrix.conjTranspose, Matrix.mul_apply, Matrix.one_apply,
-          Fin.sum_univ_four]
+    simp [swapMatrix, Matrix.mul_apply, Fin.sum_univ_four]
 
 /-- The SWAP gate. -/
 noncomputable def swap : QGate 2 := ⟨swapMatrix, swapMatrix_isUnitary⟩
