@@ -32,3 +32,6 @@ __pycache__/
 
 # Obsidian
 notes/.obsidian/
+
+# Local reference PDFs
+references/*.pdf

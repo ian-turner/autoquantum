@@ -31,6 +31,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ### Research & Literature
 - [Research References](research-references.md) — Annotated bibliography: Lean quantum libs, LLM+quantum papers, Coq patterns, QFT verification
+- [Reference Assets](reference-assets.md) — Local PDF references stored under `references/` with source provenance and git-ignore policy
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
