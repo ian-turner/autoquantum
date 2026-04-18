@@ -119,6 +119,7 @@ Current status: the file now builds with only `qft_correct` and `qft2_correct` l
 Two additional helper lemmas are now in place:
 
 - `omega_two : omega 2 = Complex.I`
+- `qftMatrix_two` — the explicit 4×4 target matrix for `qftMatrix 2`
 - `qftCircuit_two` — the explicit textbook gate list for `qftCircuit 2`
 
 For the general inductive step, the file now also contains explicit index-splitting helpers
@@ -142,6 +143,9 @@ can get stuck on `Nat.casesAuxOn` when unfolded naively. The likely next move is
 - `hadamardAt 1`
 - `controlledPhaseAt 1 0 2`
 - `bitReverse`
+
+If we instead prioritize the general theorem first, the exact remaining circuit-side lemma inventory
+is now written up in `notes/qft-general-proof-obligations.md`.
 
 ### Textbook alignment
 

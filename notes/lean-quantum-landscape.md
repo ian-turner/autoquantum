@@ -105,8 +105,10 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
 | `qftMatrix_isUnitary` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit n` — the decomposed QFT circuit | Done | `QFT.lean` (Apr 18, 2026) |
+| `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `circuitMatrix_liftCircuit` — suffix-lift scaffolding for the inductive QFT proof | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `dftMatrix_succ_entry` — recursive `(n+1)`-to-`n` DFT entry factorization | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
@@ -277,3 +279,55 @@ have hfull : ω ^ (2^(n+1) * t) = (ω ^ (2^(n+1))) ^ t := by rw [pow_mul]
 rw [hfull, omega_pow_two_pow]
 ```
 This keeps the proof state aligned with the recursive factorization you actually want.
+
+### 21. `norm_num` does not close `Real.sqrt (2 ^ 2 : ℝ) = 2` for the 2-qubit QFT scalar without an explicit square rewrite
+In the new explicit target lemma `qftMatrix_two`, the normalization factor
+```lean
+(1 / (Real.sqrt (2 ^ 2 : ℝ) : ℂ))
+```
+needed a helper lemma because `norm_num` did not solve `√4 = 2` directly. The stable route was:
+```lean
+have hsqrtR : Real.sqrt (2 ^ 2 : ℝ) = 2 := by
+  rw [show (2 ^ 2 : ℝ) = (2 : ℝ) ^ 2 by norm_num]
+  exact Real.sqrt_sq (by positivity)
+```
+and then cast that real equality into `ℂ` with `exact_mod_cast`.
+
+### 22. `Complex.I_pow_eq_pow_mod` handles most QFT entry powers, but a cleanup pass still needs `I_sq` / `I_pow_three`
+For `qftMatrix_two`, `simp [Complex.I_pow_eq_pow_mod]` reduced most branches immediately, but some entries still stopped at terms like
+```lean
+Complex.I ^ 2 * (1 / 2)
+Complex.I ^ 3 * (1 / 2)
+```
+The reliable finish was a second cleanup pass:
+```lean
+all_goals
+  try simp [Complex.I_sq, Complex.I_pow_three]
+  try ring_nf
+```
+That pattern is likely to be useful again for the eventual explicit `qft2_correct` matrix calculation.
+
+### 23. The inductive QFT proof cannot use the suffix layers directly as `qftCircuit n` until bit-reversal is decomposed
+The first serious attempt at the general proof treated the target-`1..n` part of `qftCircuit (n+1)`
+as though it were simply `qftCircuit n` embedded on the last `n` qubits. That is not literally
+true: the raw suffix layers in `qftCircuit (n+1)` do **not** include a standalone suffix
+bit-reversal gate, while `qftCircuit n` does. The induction hypothesis only becomes usable after a
+separate permutation lemma decomposes the full `(n+1)`-qubit `bitReverse` into:
+```lean
+embedded_suffix_bitReverse * final_swap_0_last
+```
+This is not just cosmetic proof organization; it is the structural step that makes the recursive
+statement line up with the existing induction hypothesis.
+
+### 24. `⊗ₖ` notation is file-local syntax: importing `Gate.lean` does not automatically open the Kronecker scope in `QFT.lean`
+When the new suffix-lift helper `liftGate` was first written in `QFT.lean`, the definition used
+```lean
+(1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)
+```
+but the file had not opened `scoped Kronecker`. Lean then parsed the definition badly enough that
+the follow-on errors looked like a malformed `Subtype.mk` or an attempted application of
+`Matrix.reindex` to the identity matrix. The fix is explicit:
+```lean
+open scoped Kronecker
+```
+inside every file that uses `⊗ₖ`, even if some imported file already opened that scope locally.

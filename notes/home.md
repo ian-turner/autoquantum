@@ -25,7 +25,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
 | `Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026 |
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
-| `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, and `qftCircuit_two` are proved; general-case scaffolding now includes `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`; remaining gaps are `qft_correct` and `qft2_correct` |
+| `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now also includes `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`, `circuitMatrix_liftCircuit`, `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`; remaining gaps are `qft_correct` and `qft2_correct` |
 
 ## Topics
 
@@ -42,3 +42,4 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 ### Algorithms
 - [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles
 - [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem
+- [QFT General Proof Obligations](qft-general-proof-obligations.md) — Exact circuit-side lemma inventory needed to finish `qftCircuit_succ_matrix` without depending on `qft2_correct`
