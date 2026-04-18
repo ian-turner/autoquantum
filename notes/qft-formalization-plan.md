@@ -82,13 +82,13 @@ Note: use `star` for conjugation, not `conj` (see `lean-quantum-landscape.md`).
 
 Uses `dft_orthogonality` to show `(qftMatrix n)† ⬝ qftMatrix n = 1` entry-wise.
 
-### Step 5: Define gate embeddings (deferred)
+### Step 5: Define gate embeddings (done)
 
-`tensorWithId`, `idTensorWith`, and `controlled` in `Gate.lean` are all deferred. These require bridging the Kronecker product reindexing (`Fin (2^k) × Fin (2^m) ≅ Fin (2^(k+m))`).
+`tensorWithId`, `idTensorWith`, and `controlled` in `Gate.lean` are now available. The working pattern is Kronecker product plus reindexing through `finProdFinEquiv` / `finCongr`, and `controlled` is implemented as a block-diagonal matrix reindexed from `Fin 2 ⊕ Fin 2` to `Fin 4`.
 
 ### Step 6: Define the QFT circuit (deferred)
 
-Depends on Step 5. The circuit body is currently `sorry`.
+The gate-embedding prerequisites are in place. The circuit body is currently `sorry`.
 
 ### Step 7: Prove `qft_correct` (deferred)
 

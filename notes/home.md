@@ -22,7 +22,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 |------|-------------|-------|
 | `Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete |
-| `Gate.lean` | No | `hadamard`, phase-rotation, and `applyGate` proofs are complete; tensor embeddings and `controlled` remain deferred |
+| `Gate.lean` | **Yes** | All gate definitions, embeddings, and controlled-gate constructions complete |
 | `Circuit.lean` | **Yes** | All proofs complete |
 | `Algorithms/QFT.lean` | No | `omega_pow_two_pow`, `dft_orthogonality`, `qftMatrix_isUnitary`, circuit construction |
 
@@ -33,6 +33,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
+- [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Gate.lean`
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Qubit.lean`
 
 ### Algorithms

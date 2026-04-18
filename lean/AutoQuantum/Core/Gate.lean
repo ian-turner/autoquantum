@@ -1,7 +1,11 @@
 import AutoQuantum.Core.Hilbert
+import Mathlib.Data.Fin.SuccPred
+import Mathlib.Data.Matrix.Block
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.LinearAlgebra.UnitaryGroup
 import Mathlib.LinearAlgebra.Matrix.Hermitian
+import Mathlib.LinearAlgebra.Matrix.Kronecker
+import Mathlib.LinearAlgebra.Matrix.Reindex
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Analysis.SpecialFunctions.Exp
 
@@ -16,14 +20,14 @@ A gate on k qubits is a unitary matrix in `Matrix.unitaryGroup (Fin (2^k)) ℂ`.
 This file is part of the **Core** module and is intended for human review.
 It contains gate type definitions, gate matrix entries, unitarity witnesses
 (the proofs required to package a matrix as a `QGate`), and gate embedding
-stubs. Derived properties (e.g. H² = I, applyGate composition laws) live in
+constructions. Derived properties (e.g. H² = I, applyGate composition laws) live in
 `AutoQuantum.Lemmas.Gate`.
 -/
 
 namespace AutoQuantum
 
 open Complex Matrix
-open scoped InnerProductSpace
+open scoped InnerProductSpace Kronecker
 
 /-! ## Gate type -/
 
@@ -202,19 +206,58 @@ noncomputable def swap : QGate 2 := ⟨swapMatrix, swapMatrix_isUnitary⟩
 
 end TwoQubit
 
-/-! ## Gate embeddings (deferred) -/
+/-! ## Gate embeddings -/
+
+/-- Reindexing a unitary matrix along an equivalence preserves unitarity. -/
+lemma reindex_mem_unitaryGroup {n m : Type*} [DecidableEq n] [Fintype n]
+    [DecidableEq m] [Fintype m] (e : n ≃ m) {A : Matrix n n ℂ}
+    (hA : A ∈ Matrix.unitaryGroup n ℂ) :
+    Matrix.reindex e e A ∈ Matrix.unitaryGroup m ℂ := by
+  rw [Matrix.mem_unitaryGroup_iff]
+  have hA' : A * star A = 1 := Matrix.mem_unitaryGroup_iff.mp hA
+  simpa [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_reindex] using
+    congrArg (Matrix.reindex e e) hA'
 
 /-- Embed a k-qubit gate on the first k qubits of a (k+m)-qubit system (U ⊗ I_{2^m}). -/
 noncomputable def tensorWithId {k : ℕ} (m : ℕ) (U : QGate k) : QGate (k + m) := by
-  exact sorry
+  let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+    finProdFinEquiv.trans <|
+      finCongr (show 2 ^ k * 2 ^ m = 2 ^ (k + m) by rw [pow_add])
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
+    ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
+  refine ⟨Matrix.reindex e e ((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im), ?_⟩
+  have hIm : Im ∈ Matrix.unitaryGroup (Fin (2 ^ m)) ℂ := SetLike.coe_mem (1 : QGate m)
+  exact reindex_mem_unitaryGroup e <|
+    Matrix.kronecker_mem_unitary (SetLike.coe_mem U) hIm
 
 /-- Embed a k-qubit gate on the last k qubits of an (m+k)-qubit system (I_{2^m} ⊗ U). -/
 noncomputable def idTensorWith {k : ℕ} (m : ℕ) (U : QGate k) : QGate (m + k) := by
-  exact sorry
+  let e : Fin (2 ^ m) × Fin (2 ^ k) ≃ Fin (2 ^ (m + k)) :=
+    finProdFinEquiv.trans <|
+      finCongr (show 2 ^ m * 2 ^ k = 2 ^ (m + k) by rw [pow_add])
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
+    ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
+  refine ⟨Matrix.reindex e e (Im ⊗ₖ (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)), ?_⟩
+  have hIm : Im ∈ Matrix.unitaryGroup (Fin (2 ^ m)) ℂ := SetLike.coe_mem (1 : QGate m)
+  exact reindex_mem_unitaryGroup e <|
+    Matrix.kronecker_mem_unitary hIm (SetLike.coe_mem U)
 
 /-- Build a controlled-U gate from a single-qubit unitary: [[I₂, 0], [0, U]]. -/
 noncomputable def controlled (U : Matrix (Fin 2) (Fin 2) ℂ)
     (hU : U ∈ Matrix.unitaryGroup (Fin 2) ℂ) : QGate 2 := by
-  exact sorry
+  let CU : Matrix (Fin 2 ⊕ Fin 2) (Fin 2 ⊕ Fin 2) ℂ :=
+    Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U
+  refine ⟨Matrix.reindex finSumFinEquiv finSumFinEquiv CU, ?_⟩
+  have hCU : CU ∈ Matrix.unitaryGroup (Fin 2 ⊕ Fin 2) ℂ := by
+    rw [Matrix.mem_unitaryGroup_iff]
+    have hU' : U * star U = 1 := Matrix.mem_unitaryGroup_iff.mp hU
+    have hU'' : U * Uᴴ = 1 := by
+      simpa [Matrix.star_eq_conjTranspose] using hU'
+    change Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U *
+        star (Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U) = 1
+    rw [Matrix.star_eq_conjTranspose, Matrix.fromBlocks_conjTranspose,
+      Matrix.fromBlocks_multiply]
+    simp [hU'', Matrix.fromBlocks_one]
+  exact reindex_mem_unitaryGroup finSumFinEquiv hCU
 
 end AutoQuantum

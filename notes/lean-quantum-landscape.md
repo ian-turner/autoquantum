@@ -91,7 +91,7 @@ Last updated: April 2026 (Mathlib v4.29.0).
 | CNOT gate + unitarity proof | Done | `Gate.lean` |
 | SWAP gate + unitarity proof | Done | `Gate.lean` |
 | `applyGate` — gate application to state | Done | `Gate.lean` |
-| `tensorWithId`, `idTensorWith`, `controlled` | Deferred | `Gate.lean` |
+| `tensorWithId`, `idTensorWith`, `controlled` | Done | `Gate.lean` |
 | `Circuit n` — list of gate steps | Done | `Circuit.lean` |
 | `circuitMatrix` — product of gate matrices | Done | `Circuit.lean` |
 | `circuitMatrix_append` — composition lemma | Done | `Circuit.lean` |
@@ -174,3 +174,15 @@ After rewriting a unit-circle goal with
 rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
 ```
 the exponent may normalize to `(starRingEnd ℂ) θ + θ` rather than `star θ + θ`. A helper lemma stated with `star θ` may then fail to rewrite the goal. The stable route is to prove the cancellation identity using the exact post-rewrite expression and finish with `simpa using congrArg Complex.exp hθ`.
+
+### 13. `finProdFinEquiv` stops at `Fin (a * b)`, not `Fin (a + b)`-style qubit exponents
+For tensor embeddings, `finProdFinEquiv` gives
+`Fin (2^k) × Fin (2^m) ≃ Fin (2^k * 2^m)`, while `QGate (k+m)` is indexed by
+`Fin (2^(k+m))`. The robust bridge is:
+```lean
+let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+  finProdFinEquiv.trans <|
+    finCongr (show 2 ^ k * 2 ^ m = 2 ^ (k + m) by rw [pow_add])
+```
+The orientation matters: `pow_add` states `2^(k+m) = 2^k * 2^m`, so the equality passed to
+`finCongr` must be the symmetric form shown above.
