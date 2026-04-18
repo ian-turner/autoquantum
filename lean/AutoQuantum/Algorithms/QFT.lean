@@ -1,4 +1,4 @@
-import AutoQuantum.Circuit
+import AutoQuantum.Core.Circuit
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.RingTheory.RootsOfUnity.Basic
 
