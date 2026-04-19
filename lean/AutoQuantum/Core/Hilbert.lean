@@ -100,9 +100,7 @@ noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QSta
             apply hyb
             exact (congrArg Prod.snd (e.injective h)).symm
           simp [hneq]
-        · intro hb
-          exfalso
-          exact hb (Finset.mem_univ b)
+        · exact fun hb => absurd (Finset.mem_univ b) hb
       · intro x _ hxa
         apply Finset.sum_eq_zero
         intro y _
@@ -111,33 +109,23 @@ noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QSta
           apply hxa
           exact (congrArg Prod.fst (e.injective h)).symm
         simp [hneq]
-      · intro ha
-        exfalso
-        exact ha (Finset.mem_univ a)
+      · exact fun ha => absurd (Finset.mem_univ a) ha
     have hsq : ‖tensorVec ψ.vec φ.vec‖ ^ 2 = 1 := by
       rw [PiLp.norm_sq_eq_of_L2]
       calc
         ∑ i : Fin (2 ^ (k + m)), ‖tensorVec ψ.vec φ.vec i‖ ^ 2
-            = ∑ p : Fin (2 ^ k) × Fin (2 ^ m), ‖tensorVec ψ.vec φ.vec (e p)‖ ^ 2 := by
-                symm
-                exact Fintype.sum_equiv e _ _ (fun p => rfl)
+            = ∑ p : Fin (2 ^ k) × Fin (2 ^ m), ‖tensorVec ψ.vec φ.vec (e p)‖ ^ 2 :=
+                (Fintype.sum_equiv e _ _ (fun p => rfl)).symm
         _ = ∑ p : Fin (2 ^ k) × Fin (2 ^ m), ‖ψ.vec p.1 * φ.vec p.2‖ ^ 2 := by
               simp [hcoord]
         _ = ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m), ‖ψ.vec a * φ.vec b‖ ^ 2 := by
               rw [Fintype.sum_prod_type]
         _ = ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m), (‖ψ.vec a‖ ^ 2) * (‖φ.vec b‖ ^ 2) := by
-              congr with a
-              congr with b
-              rw [norm_mul]
-              ring
+              simp_rw [norm_mul, mul_pow]
         _ = (∑ a : Fin (2 ^ k), ‖ψ.vec a‖ ^ 2) * ∑ b : Fin (2 ^ m), ‖φ.vec b‖ ^ 2 := by
               rw [Finset.sum_mul_sum]
         _ = 1 := by simp [hψsq, hφsq]
-    calc
-      ‖tensorVec ψ.vec φ.vec‖ = Real.sqrt (‖tensorVec ψ.vec φ.vec‖ ^ 2) :=
-        (Real.sqrt_sq (norm_nonneg _)).symm
-      _ = Real.sqrt 1 := by rw [hsq]
-      _ = 1 := Real.sqrt_one)
+    rw [← Real.sqrt_sq (norm_nonneg _), hsq]; exact Real.sqrt_one)
 
 /-! ## Superposition -/
 
