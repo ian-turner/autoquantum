@@ -48,7 +48,7 @@ lemma allOnesIndex_ne_zero {n : ℕ} (hn : n ≥ 1) : allOnesIndex n ≠ 0 := by
     calc
       2 ^ n ≥ 2 ^ 1 := Nat.pow_le_pow_right (by norm_num) hn
       _ = 2 := by norm_num
-  linarith [hpow]
+  omega
 
 /-- The GHZ state vector (unnormalized): |0…0⟩ + |1…1⟩. -/
 noncomputable def ghzVector (n : ℕ) : QHilbert n :=
