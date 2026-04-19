@@ -1,22 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    ".opencode/rules/project.md"
-  ],
-  "compaction": {
-    "auto": true,
-    "prune": true,
-    "reserved": 18000
-  },
-  "watcher": {
-    "ignore": [
-      ".git/**",
-      "lean/.lake/**",
-      "lean/.cache/**",
-      "references/**"
-    ]
-  },
-  "plugin": [],
   "mcp": {
     "lean_lsp": {
       "type": "local",
@@ -26,38 +9,6 @@
       ],
       "enabled": true,
       "timeout": 15000
-    }
-  },
-  "permission": {
-    "websearch": "ask",
-    "webfetch": "ask"
-  },
-  "agent": {
-    "build": {
-      "steps": 10
-    },
-    "plan": {
-      "steps": 4
-    },
-    "general": {
-      "steps": 6
-    },
-    "explore": {
-      "steps": 4
-    },
-    "compaction": {},
-    "summary": {},
-    "title": {},
-    "lean-proof": {
-      "description": "Lean 4 proof and theorem-debugging subagent for AutoQuantum.",
-      "mode": "subagent",
-      "prompt": "{file:.opencode/prompts/lean-proof.md}",
-      "steps": 8,
-      "permission": {
-        "bash": "deny",
-        "websearch": "deny",
-        "webfetch": "ask"
-      }
     }
   }
 }
