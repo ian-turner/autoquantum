@@ -59,14 +59,6 @@ end QState
 noncomputable def basisState (n : ℕ) (k : Fin (2 ^ n)) : QState n :=
   ⟨EuclideanSpace.single k 1, by simp [PiLp.norm_single]⟩
 
-/-! ## Uniform superposition vector -/
-
-/-- The uniform superposition vector for n qubits: (1/√(2^n)) ∑_{k} |k⟩.
-    This is the underlying (unnormalized-typed) vector; normalization is proved in
-    `Lemmas.Hilbert.hPlusVector_norm`. -/
-noncomputable def hPlusVector (n : ℕ) : QHilbert n :=
-  (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) • ∑ k : Fin (2 ^ n), (basisState n k).vec
-
 /-! ## Tensor product of states -/
 
 /-- The Kronecker (tensor) product of two quantum state vectors.

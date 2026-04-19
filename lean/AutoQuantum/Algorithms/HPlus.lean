@@ -27,11 +27,40 @@ open scoped Kronecker InnerProductSpace
 
 /-! ## The uniform superposition state -/
 
--- `hPlusVector` is defined in `Core.Hilbert`; re-exported here for local convenience.
+/-- The uniform superposition vector for n qubits: `(1/√(2^n)) ∑_k |k⟩`. -/
+noncomputable def hPlusVector (n : ℕ) : QHilbert n :=
+  (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) • ∑ k : Fin (2 ^ n), (basisState n k).vec
+
+/-- The uniform superposition vector has unit norm. -/
+lemma hPlusVector_norm (n : ℕ) : ‖hPlusVector n‖ = 1 := by
+  have hcoord : ∀ j : Fin (2 ^ n), hPlusVector n j = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by
+    intro j
+    simp [hPlusVector, basisState, QState.vec]
+  have hsq : ‖hPlusVector n‖ ^ 2 = 1 := by
+    rw [PiLp.norm_sq_eq_of_L2]
+    calc
+      ∑ j : Fin (2 ^ n), ‖hPlusVector n j‖ ^ 2
+          = ∑ _j : Fin (2 ^ n), ‖(1 / Real.sqrt (2 ^ n : ℝ) : ℂ)‖ ^ 2 := by
+              simp [hcoord]
+      _ = (2 ^ n : ℝ) * ‖(1 / Real.sqrt (2 ^ n : ℝ) : ℂ)‖ ^ 2 := by
+            simp [Nat.cast_pow]
+      _ = (2 ^ n : ℝ) * ((1 / Real.sqrt (2 ^ n : ℝ)) ^ 2) := by
+            simp
+      _ = 1 := by
+            rcases Nat.eq_zero_or_pos (2 ^ n) with hpow | hpow
+            · exfalso
+              exact pow_ne_zero n (by norm_num) hpow
+            · have hpow' : (0 : ℝ) < (2 ^ n : ℝ) := by exact_mod_cast hpow
+              have hsqrt : Real.sqrt (2 ^ n : ℝ) ≠ 0 := Real.sqrt_ne_zero'.mpr hpow'
+              field_simp [hsqrt]
+              rw [Real.sq_sqrt (show (0 : ℝ) ≤ (2 ^ n : ℝ) by positivity)]
+  calc
+    ‖hPlusVector n‖ = Real.sqrt (‖hPlusVector n‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
+    _ = Real.sqrt 1 := by rw [hsq]
+    _ = 1 := Real.sqrt_one
 
 /-- The uniform superposition state |+⟩^⊗n: the equal-weight sum of all basis states.
-    For n = 0 this is the unique 1-dimensional unit vector |∅⟩ = |0⟩.
-    Normalization is proved in `Lemmas.Hilbert.hPlusVector_norm`. -/
+    For n = 0 this is the unique 1-dimensional unit vector |∅⟩ = |0⟩. -/
 noncomputable def hPlusState (n : ℕ) : QState n :=
   QState.mk (hPlusVector n) (hPlusVector_norm n)
 

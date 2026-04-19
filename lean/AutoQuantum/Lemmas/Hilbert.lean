@@ -41,38 +41,4 @@ lemma tensorVec_norm {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m)
     (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1) : ‖tensorVec ψ φ‖ = 1 := by
   sorry
 
-/-! ## Uniform superposition norm -/
-
-/-- The uniform superposition vector has unit norm.
-    Proof sketch:
-      ‖(1/√(2^n)) • ∑_k e_k‖² = (1/(2^n)) * ‖∑_k e_k‖²
-      ‖∑_k e_k‖² = ∑_j ∑_k ⟨e_j, e_k⟩ = ∑_k 1 = 2^n   (by basisState_braket + inner linearity)
-      so the product is 1. -/
-lemma hPlusVector_norm (n : ℕ) : ‖hPlusVector n‖ = 1 := by
-  have hcoord : ∀ j : Fin (2 ^ n), hPlusVector n j = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by
-    intro j
-    simp [hPlusVector, basisState, QState.vec]
-  have hsq : ‖hPlusVector n‖ ^ 2 = 1 := by
-    rw [PiLp.norm_sq_eq_of_L2]
-    calc
-      ∑ j : Fin (2 ^ n), ‖hPlusVector n j‖ ^ 2
-          = ∑ _j : Fin (2 ^ n), ‖(1 / Real.sqrt (2 ^ n : ℝ) : ℂ)‖ ^ 2 := by
-              simp [hcoord]
-      _ = (2 ^ n : ℝ) * ‖(1 / Real.sqrt (2 ^ n : ℝ) : ℂ)‖ ^ 2 := by
-            simp [Nat.cast_pow]
-      _ = (2 ^ n : ℝ) * ((1 / Real.sqrt (2 ^ n : ℝ)) ^ 2) := by
-            simp
-      _ = 1 := by
-            rcases Nat.eq_zero_or_pos (2 ^ n) with hpow | hpow
-            · exfalso
-              exact pow_ne_zero n (by norm_num) hpow
-            · have hpow' : (0 : ℝ) < (2 ^ n : ℝ) := by exact_mod_cast hpow
-              have hsqrt : Real.sqrt (2 ^ n : ℝ) ≠ 0 := Real.sqrt_ne_zero'.mpr hpow'
-              field_simp [hsqrt]
-              rw [Real.sq_sqrt (show (0 : ℝ) ≤ (2 ^ n : ℝ) by positivity)]
-  calc
-    ‖hPlusVector n‖ = Real.sqrt (‖hPlusVector n‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
-    _ = Real.sqrt 1 := by rw [hsq]
-    _ = 1 := Real.sqrt_one
-
 end AutoQuantum

@@ -1,19 +1,18 @@
 # HPlus Correctness Proof Plan
 
-Strategy for eliminating the two `sorry`s in `Algorithms/HPlus.lean`:
-- `hPlusState` normalization — now delegated to `hPlusVector_norm` (`Lemmas/Hilbert.lean:51`)
+Strategy for eliminating the remaining `sorry` in `Algorithms/HPlus.lean`:
+- `hPlusState` normalization is now handled locally in `Algorithms/HPlus.lean` via `hPlusVector_norm`
 - `hPlus_correct` (`HPlus.lean:47`)
 
 ## What was done (2026-04-19)
 
-- Moved `hPlusVector` from `HPlus.lean` to `Core/Hilbert.lean` (foundational state definition)
+- Moved `hPlusVector` and `hPlusVector_norm` back into `Algorithms/HPlus.lean` so `Core/Hilbert.lean` stays focused on shared foundational definitions
 - Added `tensorVec` (raw Kronecker product of Hilbert vectors) to `Core/Hilbert.lean`
 - Added `tensorState` (normalized tensor product, sorry in norm proof) to `Core/Hilbert.lean`
 - Added `tensorVec_norm` (sorry, proof sketch commented) to `Lemmas/Hilbert.lean`
-- Added `hPlusVector_norm` (sorry, proof sketch commented) to `Lemmas/Hilbert.lean`
-- Wired `hPlusState` to use `hPlusVector_norm`, eliminating the inline sorry from `HPlus.lean`
+- Wired `hPlusState` to use the local `hPlusVector_norm`, eliminating the old inline normalization `sorry`
 
-**Sorry count**: reduced from 2 in-algorithm sorries to named sorry lemmas in Lemmas/Hilbert.lean (3 sorries total: `tensorState`, `tensorVec_norm`, `hPlusVector_norm`).
+**Sorry count**: one HPlus algorithm `sorry` remains (`hPlus_correct`); supporting Hilbert gaps are still `tensorState` and `tensorVec_norm`.
 
 ## Proof sketch
 
@@ -48,19 +47,19 @@ lemma tensorState_norm {k m : ℕ} (ψ : QState k) (φ : QState m) :
 Fills the first `sorry` in `hPlusState`. Uses `basisState_braket` (already in `Lemmas/Hilbert.lean`)
 plus orthonormality of the basis sum scaled by `1/√(2^n)`.
 
-Implemented in `Lemmas/Hilbert.lean` by observing that every coordinate of
+Implemented in `Algorithms/HPlus.lean` by observing that every coordinate of
 `hPlusVector n` is the constant amplitude `(1 / √(2^n) : ℂ)`, then applying
 `PiLp.norm_sq_eq_of_L2` and simplifying the resulting finite sum.
 
 ```lean
--- in Lemmas/Hilbert.lean
+-- in Algorithms/HPlus.lean
 lemma hPlusVector_norm (n : ℕ) : ‖hPlusVector n‖ = 1
 ```
 
 ### Gap 3 — State decomposition lemmas
 
 ```lean
--- in Lemmas/Hilbert.lean
+-- likely in Algorithms/HPlus.lean or a dedicated HPlus lemma file
 lemma basisState_zero_tensor (n : ℕ) :
     basisState (1 + n) 0 = tensorState (basisState 1 0) (basisState n 0)
 
@@ -132,8 +131,8 @@ lemma hadamard_apply_zero : applyGate hadamard (basisState 1 0) = hPlusState 1
 | Step | Lemma | File |
 |------|-------|------|
 | 1 | Define `tensorState` | `Core/Hilbert.lean` |
-| 2 | `hPlusVector_norm` | `Lemmas/Hilbert.lean` |
-| 3 | `basisState_zero_tensor`, `hPlusVector_succ` | `Lemmas/Hilbert.lean` |
+| 2 | `hPlusVector_norm` | `Algorithms/HPlus.lean` |
+| 3 | `basisState_zero_tensor`, `hPlusVector_succ` | `Algorithms/HPlus.lean` or a dedicated HPlus lemma file |
 | 4 | `tensorWithId_apply` | `Lemmas/Gate.lean` |
 | 5 | `hadamardAt_zero_eq`, `hadamardAt_succ` | `Lemmas/Gate.lean` |
 | 6 | `hPlusCircuit_succ`, `runCircuit_idTensorWith` | `Lemmas/Circuit.lean` |
