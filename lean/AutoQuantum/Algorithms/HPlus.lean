@@ -27,15 +27,13 @@ open scoped Kronecker InnerProductSpace
 
 /-! ## The uniform superposition state -/
 
-/-- The uniform superposition state |+⟩^⊗n: the equal-weight sum of all basis states.
-    For n = 0 this is the unique 1-dimensional unit vector |∅⟩ = |0⟩. -/
-noncomputable def hPlusVector (n : ℕ) : QHilbert n :=
-  (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) • ∑ k : Fin (2 ^ n), (basisState n k).vec
+-- `hPlusVector` is defined in `Core.Hilbert`; re-exported here for local convenience.
 
-/-- The uniform superposition state, normalized. -/
+/-- The uniform superposition state |+⟩^⊗n: the equal-weight sum of all basis states.
+    For n = 0 this is the unique 1-dimensional unit vector |∅⟩ = |0⟩.
+    Normalization is proved in `Lemmas.Hilbert.hPlusVector_norm`. -/
 noncomputable def hPlusState (n : ℕ) : QState n :=
-  QState.mk (hPlusVector n) (by
-    sorry)
+  QState.mk (hPlusVector n) (hPlusVector_norm n)
 
 /-! ## The uniform superposition circuit -/
 

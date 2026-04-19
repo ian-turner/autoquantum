@@ -1,8 +1,19 @@
 # HPlus Correctness Proof Plan
 
 Strategy for eliminating the two `sorry`s in `Algorithms/HPlus.lean`:
-- `hPlusState` normalization (`HPlus.lean:37`)
-- `hPlus_correct` (`HPlus.lean:49`)
+- `hPlusState` normalization — now delegated to `hPlusVector_norm` (`Lemmas/Hilbert.lean:51`)
+- `hPlus_correct` (`HPlus.lean:47`)
+
+## What was done (2026-04-19)
+
+- Moved `hPlusVector` from `HPlus.lean` to `Core/Hilbert.lean` (foundational state definition)
+- Added `tensorVec` (raw Kronecker product of Hilbert vectors) to `Core/Hilbert.lean`
+- Added `tensorState` (normalized tensor product, sorry in norm proof) to `Core/Hilbert.lean`
+- Added `tensorVec_norm` (sorry, proof sketch commented) to `Lemmas/Hilbert.lean`
+- Added `hPlusVector_norm` (sorry, proof sketch commented) to `Lemmas/Hilbert.lean`
+- Wired `hPlusState` to use `hPlusVector_norm`, eliminating the inline sorry from `HPlus.lean`
+
+**Sorry count**: reduced from 2 in-algorithm sorries to named sorry lemmas in Lemmas/Hilbert.lean (3 sorries total: `tensorState`, `tensorVec_norm`, `hPlusVector_norm`).
 
 ## Proof sketch
 
@@ -19,11 +30,11 @@ hPlusCircuit (n+1) |0…0⟩_{n+1}
 
 ## Required lemmas (by priority)
 
-### Gap 1 — `tensorState` (foundational missing definition)
+### Gap 1 — `tensorState` ✅ scaffolded
 
-No operation `QState k → QState m → QState (k+m)` exists anywhere in the codebase.
-The gate side has `tensorWithId`/`idTensorWith` for Kronecker matrix products but nothing analogous for states.
-Everything below depends on this.
+`tensorVec` and `tensorState` are now defined in `Core/Hilbert.lean`.
+`tensorState` carries a sorry (norm proof); that sorry is in `tensorVec_norm` in `Lemmas/Hilbert.lean`.
+Everything below still depends on completing `tensorVec_norm`.
 
 ```lean
 -- in Core/Hilbert.lean

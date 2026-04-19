@@ -1,4 +1,6 @@
 import AutoQuantum.Core.Hilbert
+import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Algebra.BigOperators.Fin
 
 /-!
 # Hilbert Space Lemmas
@@ -13,6 +15,7 @@ by AI assistants. All definitions it depends on are in `Core.Hilbert`.
 namespace AutoQuantum
 
 open scoped InnerProductSpace
+open Complex
 
 /-- The probability amplitude ⟨φ|ψ⟩ has norm ≤ 1 (Cauchy-Schwarz). -/
 lemma QState.braket_norm_le_one {n : ℕ} (phi psi : QState n) : ‖braket phi psi‖ ≤ 1 := by
@@ -28,5 +31,25 @@ lemma basisState_braket {n : ℕ} (j k : Fin (2 ^ n)) :
     EuclideanSpace.orthonormal_single
   rw [orthonormal_iff_ite] at h
   exact h j k
+
+/-! ## Tensor product norm -/
+
+/-- The tensor product of unit-norm vectors is unit-norm.
+    Proof sketch: ‖tensorVec ψ φ‖² = ∑_{a,b} |ψ a|²|φ b|² = ‖ψ‖²·‖φ‖² = 1.
+    Uses PiLp.norm_sq_eq_of_L2 and Finset.sum_product. -/
+lemma tensorVec_norm {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m)
+    (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1) : ‖tensorVec ψ φ‖ = 1 := by
+  sorry
+
+/-! ## Uniform superposition norm -/
+
+/-- The uniform superposition vector has unit norm.
+    Proof sketch:
+      ‖(1/√(2^n)) • ∑_k e_k‖² = (1/(2^n)) * ‖∑_k e_k‖²
+      ‖∑_k e_k‖² = ∑_j ∑_k ⟨e_j, e_k⟩ = ∑_k 1 = 2^n   (by basisState_braket + inner linearity)
+      so the product is 1. -/
+lemma hPlusVector_norm (n : ℕ) : ‖hPlusVector n‖ = 1 := by
+  simp only [hPlusVector]
+  sorry
 
 end AutoQuantum

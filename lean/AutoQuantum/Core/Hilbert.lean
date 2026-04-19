@@ -2,7 +2,11 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.Orthonormal
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.Complex.Norm
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Data.Fin.Tuple.Basic
+import Mathlib.Data.Fin.Basic
 import Mathlib.LinearAlgebra.Matrix.Hermitian
 import Mathlib.LinearAlgebra.UnitaryGroup
 
@@ -54,6 +58,32 @@ end QState
 /-- The k-th computational basis state |k⟩ in the n-qubit Hilbert space. -/
 noncomputable def basisState (n : ℕ) (k : Fin (2 ^ n)) : QState n :=
   ⟨EuclideanSpace.single k 1, by simp [PiLp.norm_single]⟩
+
+/-! ## Uniform superposition vector -/
+
+/-- The uniform superposition vector for n qubits: (1/√(2^n)) ∑_{k} |k⟩.
+    This is the underlying (unnormalized-typed) vector; normalization is proved in
+    `Lemmas.Hilbert.hPlusVector_norm`. -/
+noncomputable def hPlusVector (n : ℕ) : QHilbert n :=
+  (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) • ∑ k : Fin (2 ^ n), (basisState n k).vec
+
+/-! ## Tensor product of states -/
+
+/-- The Kronecker (tensor) product of two quantum state vectors.
+    The output index set Fin(2^(k+m)) is identified with Fin(2^k) × Fin(2^m) via the standard
+    `finProdFinEquiv` bijection; the (a,b) component of the result is ψ(a)·φ(b). -/
+noncomputable def tensorVec {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) : QHilbert (k + m) :=
+  let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+    finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+  ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m),
+    (ψ a * φ b) • (EuclideanSpace.single (e (a, b)) (1 : ℂ))
+
+/-- The tensor product of two normalized quantum states.
+    Normalization relies on `tensorVec_norm` in `Lemmas.Hilbert`; that proof is not yet
+    complete so this constructor carries a `sorry`. -/
+noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QState (k + m) :=
+  QState.mk (tensorVec ψ.vec φ.vec) (by
+    sorry)
 
 /-! ## Superposition -/
 
