@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Lemmas.Gate
 
 /-!
 # Circuit Composition Lemmas
@@ -27,6 +28,12 @@ lemma circuitMatrix_nil {n : ℕ} : circuitMatrix ([] : Circuit n) = 1 := by
 lemma circuitMatrix_singleton {n : ℕ} (s : GateStep n) :
     circuitMatrix [s] = s.unitary := by
   simp [circuitMatrix]
+
+/-- Running a singleton circuit applies exactly that gate. -/
+@[simp]
+lemma runCircuit_singleton {n : ℕ} (s : GateStep n) (ψ : QState n) :
+    runCircuit [s] ψ = applyGate s.unitary ψ := by
+  simp [runCircuit]
 
 /-! ## Auxiliary lemma for foldl -/
 
@@ -57,6 +64,12 @@ lemma circuitMatrix_append {n : ℕ} (c₁ c₂ : Circuit n) :
 lemma seqComp_matrix {n : ℕ} (c₁ c₂ : Circuit n) :
     circuitMatrix (seqComp c₁ c₂) = circuitMatrix c₂ * circuitMatrix c₁ :=
   circuitMatrix_append c₁ c₂
+
+/-- Running an appended circuit is sequential gate application:
+    run `c₁` first, then run `c₂` on the resulting state. -/
+lemma runCircuit_append {n : ℕ} (c₁ c₂ : Circuit n) (ψ : QState n) :
+    runCircuit (c₁ ++ c₂) ψ = runCircuit c₂ (runCircuit c₁ ψ) := by
+  simp [runCircuit, circuitMatrix_append, applyGate_mul]
 
 /-! ## Circuit inversion -/
 

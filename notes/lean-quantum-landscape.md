@@ -119,7 +119,9 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `ghzCircuit n` — general GHZ preparation circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCircuit_three` — sanity-check specialization to the familiar 3-qubit circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `hadamardAt_fin1_zero`, `ghzState_one_eq_ketPlus`, `apply_hadamard_allZero_one`, `ghzCircuit_prepares_ghz_zero` — 1-qubit GHZ base-case helpers | **Done** (Apr 18, 2026) | `GHZ.lean` |
-| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; the intermediate state family is now defined, so the remaining work is the Hadamard-step lemma into `ghzProgressState n 0 _` and the one-step CNOT extension lemma needed for induction over `ghzCnotChain`) |
+| `lowBitIndex`, `lowBitIndex_val`, `qubitPerm_zeroIndex`, `qubitPerm_lowBitIndex`, `apply_permuteQubits_allZero` — GHZ permutation helpers for the all-zero branch and the swapped single-`1` branch | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `runCircuit_append` — sequential execution lemma for appended circuits | **Done** (Apr 18, 2026) | `Lemmas/Circuit.lean` |
+| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; the new permutation helpers discharge the `permuteQubits`/`allZeroState` bookkeeping, so the remaining work is the general Hadamard-step lemma into `ghzProgressState n 0 _`, the one-step CNOT extension lemma, and the induction over `ghzCnotChain`) |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -430,3 +432,21 @@ Lean 4 parsed that badly enough to produce syntax errors rather than a clean nam
 failure, because `prefix` is also a parser keyword used for notation declarations. Renaming the
 binder to something ordinary like `count` fixed the issue immediately. For routine theorem arguments,
 avoid `prefix` as a bare binder name.
+
+### 30. For permutation gates on basis states, rewrite through `toLin'` and `permMatrix_mulVec`
+While proving the GHZ helper
+```lean
+applyGate (permuteQubits σ) (allZeroState n) = allZeroState n
+```
+the direct `ext i <;> simp [applyGate, permuteQubits, allZeroState, basisState]` approach stalled on
+the `QState.mk`/`Matrix.toEuclideanLin` wrapper rather than exposing the actual permutation action.
+
+The robust pattern was:
+```lean
+show ((Matrix.toEuclideanLin ((qubitPerm σ).permMatrix ℂ) ...).ofLp i) = ...
+rw [Matrix.ofLp_toLpLin, Matrix.toLin'_apply, Matrix.permMatrix_mulVec]
+```
+After that rewrite, the goal becomes a plain `Pi.single` statement, and the rest closes with an
+index equivalence such as `qubitPerm_zeroIndex`. For permutation-based gate proofs, forcing the goal
+down to `Matrix.toLin'`/`mulVec` is substantially more reliable than asking `simp` to see through
+`applyGate` directly.

@@ -123,6 +123,51 @@ private lemma zeroIndex_ne_prefixOnesIndex (n count : ℕ) (hcount : count ≤ n
     simpa [zeroIndex] using congrArg Fin.val h.symm
   exact (Nat.ne_of_gt (prefixOnesIndex_pos n count hcount)) hval
 
+/-- The computational-basis index whose only `1` is in the least-significant bit.
+    This is the state produced before swapping a Hadamarded first qubit back to the front. -/
+noncomputable def lowBitIndex (n : ℕ) : Fin (2 ^ (n + 1)) :=
+  finFunctionFinEquiv (Pi.single (0 : Fin (n + 1)) (1 : Fin 2))
+
+/-- The least-significant-bit basis state has numeric value `1`. -/
+lemma lowBitIndex_val (n : ℕ) : (lowBitIndex n).val = 1 := by
+  simpa [lowBitIndex] using
+    (finFunctionFinEquiv_single (m := 2) (n := n + 1) (i := (0 : Fin (n + 1))) (j := (1 : Fin 2)))
+
+/-- Qubit permutations always fix the all-zero computational-basis index. -/
+lemma qubitPerm_zeroIndex {n : ℕ} (σ : Equiv.Perm (Fin n)) :
+    qubitPerm σ (zeroIndex n) = zeroIndex n := by
+  apply Fin.ext
+  simp [qubitPerm, zeroIndex, finFunctionFinEquiv, Equiv.piCongrLeft_apply]
+
+/-- Swapping the first qubit to the end turns the least-significant-bit `1` state
+    into the branch with a leading `1` and trailing zeros. -/
+lemma qubitPerm_lowBitIndex (n : ℕ) :
+    qubitPerm (Equiv.swap (Fin.last n) (0 : Fin (n + 1))) (lowBitIndex n) =
+      prefixOnesIndex (n + 1) 1 (Nat.succ_le_succ (Nat.zero_le n)) := by
+  apply Fin.ext
+  simp [qubitPerm, lowBitIndex]
+  have hfun :
+      (Equiv.piCongrLeft (fun _ : Fin (n + 1) => Fin 2)
+        (Equiv.swap (Fin.last n) (0 : Fin (n + 1)))) (Pi.single (0 : Fin (n + 1)) (1 : Fin 2))
+      = Pi.single (Fin.last n) (1 : Fin 2) := by
+    ext i
+    by_cases hlast : i = Fin.last n
+    · subst hlast
+      have hswap : (Equiv.swap (Fin.last n) (0 : Fin (n + 1))) (Fin.last n) = 0 := by
+        simp
+      rw [Equiv.piCongrLeft_apply]
+      simp [Pi.single_apply, hswap]
+    · by_cases hzero : i = 0
+      · subst hzero
+        simp [Equiv.piCongrLeft_apply, Equiv.swap_apply_def, hlast]
+      · simp [Equiv.piCongrLeft_apply, Equiv.swap_apply_def, hlast, hzero]
+  rw [hfun]
+  rw [prefixOnesIndex]
+  have hsingle :=
+    (finFunctionFinEquiv_single (m := 2) (n := n + 1) (i := Fin.last n) (j := (1 : Fin 2)))
+  rw [Fin.val_last] at hsingle
+  simpa [pow_succ, Nat.mul_comm] using hsingle.trans (by omega)
+
 /-- The `n`-qubit GHZ state. For `n = 0` this is defined as the unique basis state;
     for `n + 1` it is `( |0...0⟩ + |1...1⟩ ) / √2`. -/
 noncomputable def ghzState : (n : ℕ) → QState n
@@ -190,6 +235,24 @@ theorem ghzCircuit_three :
        ⟨controlledAt 0 1 (by decide) pauliX⟩,
        ⟨controlledAt 1 2 (by decide) pauliX⟩] := by
   rfl
+
+/-- Permuting qubits leaves the all-zero basis state unchanged. -/
+lemma apply_permuteQubits_allZero {n : ℕ} (σ : Equiv.Perm (Fin n)) :
+    applyGate (permuteQubits σ) (allZeroState n) = allZeroState n := by
+  apply Subtype.ext
+  ext i
+  show ((Matrix.toEuclideanLin ((qubitPerm σ).permMatrix ℂ)
+      (EuclideanSpace.single (zeroIndex n) (1 : ℂ))).ofLp i) =
+    (EuclideanSpace.single (zeroIndex n) (1 : ℂ)).ofLp i
+  rw [Matrix.ofLp_toLpLin, Matrix.toLin'_apply, Matrix.permMatrix_mulVec]
+  have hcond : (qubitPerm σ) i = zeroIndex n ↔ i = zeroIndex n := by
+    constructor
+    · intro h
+      apply (qubitPerm σ).injective
+      simpa [qubitPerm_zeroIndex σ] using h
+    · intro h
+      simpa [h] using qubitPerm_zeroIndex σ
+  simp [PiLp.ofLp_single, Pi.single_apply, hcond]
 
 /-- On a one-qubit register, `hadamardAt 0` reduces to the plain Hadamard gate. -/
 lemma hadamardAt_fin1_zero : hadamardAt (0 : Fin 1) = hadamard := by
