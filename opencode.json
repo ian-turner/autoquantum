@@ -16,9 +16,7 @@
       "references/**"
     ]
   },
-  "plugin": [
-    "opencode-dynamic-context-pruning"
-  ],
+  "plugin": [],
   "mcp": {
     "lean_lsp": {
       "type": "local",
