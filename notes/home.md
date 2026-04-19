@@ -26,6 +26,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026 |
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now also includes `qftLayers`, `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`, `circuitMatrix_liftCircuit`, `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB) rather than the existing `liftGate` / `liftCircuit` suffix embedding; remaining gaps are `qft_correct` and `qft2_correct` |
+| `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; normalization lemma and correctness proofs are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit`, and correctness theorems for n=0,1,2 with `ghz_correct_zero` proved. |
 
 ## Topics
 
