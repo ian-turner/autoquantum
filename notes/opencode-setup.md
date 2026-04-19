@@ -1,25 +1,46 @@
-# OpenCode Setup
+# MCP Setup
 
-This repo now keeps the OpenCode setup minimal: repo-local config only wires in Lean theorem-proving tools and leaves general OpenCode behavior to the user's own defaults.
+Both Claude Code and OpenCode are configured to use the same set of MCP servers, defined under `.mcp/`.
 
 ## Goals
 
-- Expose useful Lean-local tooling for theorem proving.
+- Expose Lean build and LSP tooling through MCP so all agents share one implementation.
 - Avoid repo-level overrides for web access, general agents, or compaction behavior.
 - Keep model and runtime behavior user-controlled unless Lean tooling needs local wiring.
 
 ## Layout
 
-- `opencode.json` enables two MCP servers:
-  - `lean` (`.mcp/lean-tools/run.sh`) provides `lean_build` and `lean_check_file` tools.
-  - `lean_lsp` (`.opencode/bin/run-lean-lsp-mcp.sh`) provides LSP-based tools (`lean_lsp_*`).
-- The custom TypeScript tools (`.opencode/tools/lean.ts`) have been retired; their functionality is now provided by the `lean` MCP server.
-- `.opencode/bin/run-lean-lsp-mcp.sh` launches `lean-lsp-mcp` with `LEAN_PROJECT_PATH` resolved to this repo's `lean/` directory and a defensive PATH setup for common local binary locations. It prefers an installed `lean-lsp-mcp` executable and falls back to `uvx lean-lsp-mcp`.
+```
+.mcp/
+  lean-tools/
+    server.py          # FastMCP server — exposes build and check_file tools
+    run.sh             # Launcher: sets PATH (elan, homebrew) and runs server.py via uv
+  run-lean-lsp-mcp.sh  # Launcher for lean-lsp-mcp LSP server
+```
 
-## Notes
+### `lean` server
 
-- `.opencode/package.json` declares the `@opencode-ai/plugin` helper needed by the local custom tools (currently unused). OpenCode should run `bun install` for these local dependencies at startup.
-- The Lean MCP launcher disables the heaviest remote-search tools by default and biases the agent toward `lean_goal`, diagnostics, file outline, and local search first.
-- Both `mcp.lean` (build/check tools) and `mcp.lean_lsp` (LSP tools) are enabled. The `lean` MCP server is implemented in Python and runs via `uv`; the `lean_lsp` server uses the installed `lean-lsp-mcp` executable (or `uvx` fallback).
-- The previous `lean_tools` MCP server (with prefixed tool names) is disabled in config; any remaining `lean_tools_*` tools will disappear after OpenCode restart.
-- As of April 19, 2026, repo-local OpenCode config no longer overrides web permissions, compaction policy, or subagent definitions; those now fall back to the user's standard OpenCode configuration.
+Registered as `mcp.lean` in `opencode.json` and `mcpServers.lean_tools` in `.claude/settings.json`.
+
+Provides two tools:
+
+| Tool | What it runs |
+|------|-------------|
+| `build(target="AutoQuantum")` | `lake build <target>` in `lean/` |
+| `check_file(file="AutoQuantum/Gate.lean")` | `lake env lean <file>` in `lean/` |
+
+Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate install needed.
+
+### `lean_lsp` server
+
+Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, which:
+- Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
+- Disables the heaviest remote-search tools by default.
+- Biases the agent toward `lean_goal`, diagnostics, file outline, and local search.
+- Prefers an installed `lean-lsp-mcp` binary and falls back to `uvx lean-lsp-mcp`.
+
+Note: `lean_lsp` is currently only wired into OpenCode. Claude Code uses `lean_goal` etc. through the same server if added to `.claude/settings.json`.
+
+## Agent instructions
+
+See the **MCP Tools** section in `AGENTS.md` for how agents should use these tools when writing or verifying Lean code.

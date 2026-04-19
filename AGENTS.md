@@ -24,11 +24,40 @@ autoquantum/
 │       ├── Circuit.lean          -- Circuit composition & semantics
 │       └── Algorithms/
 │           └── QFT.lean          -- Quantum Fourier Transform
+├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
+│   ├── lean-tools/     -- build/check tools (Python, runs via uv)
+│   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp LSP server
 ├── notes/              # Research wiki — start at notes/home.md
 └── scripts/            # Generation / verification pipeline scripts (future)
 ```
 
+## MCP Tools
+
+Two MCP servers are registered for this project and available to all agents.
+
+### `lean` — build and type-check tools
+
+**Prefer these over raw bash for all Lean build and check operations.**
+
+| Tool | Equivalent bash | Purpose |
+|------|----------------|---------|
+| `build(target="AutoQuantum")` | `cd lean && lake build AutoQuantum` | Build after editing Lean files |
+| `check_file(file="AutoQuantum/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Gate.lean` | Quick typecheck of a single file |
+
+`file` paths are relative to `lean/`. The server handles PATH setup for `lake` automatically.
+
+### `lean_lsp` — LSP-based proof tools
+
+Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and Mathlib API lookups:
+
+- `lean_goal` — inspect the proof state at a position
+- `lean_diagnostic_messages` — get elaboration errors/warnings for a file
+- `lean_file_outline` — list top-level definitions in a file
+- `lean_local_search` — search local Mathlib index before trying remote tools
+
 ## Build
+
+For initial setup or after changing `lean-toolchain`:
 
 ```bash
 cd lean
@@ -37,7 +66,7 @@ lake exe cache get   # download prebuilt .oleans — DO NOT skip this
 lake build           # compile only our library
 ```
 
-`lake build` with no target defaults to a no-op if nothing has changed; use `lake build AutoQuantum` to force compilation.
+`lake build` with no target defaults to a no-op if nothing has changed; use the `build` MCP tool (or `lake build AutoQuantum`) to force compilation.
 
 ## Lean 4 Conventions
 
@@ -87,8 +116,9 @@ When generating or verifying a quantum circuit proof, follow this template:
 
 ## Testing
 
-- `cd lean && lake build AutoQuantum` must succeed with 0 errors (`sorry`s are allowed during scaffolding).
-- To check a single file: `lake env lean AutoQuantum/<File>.lean`
+- After any Lean edit, run the `build` MCP tool (`target="AutoQuantum"`) — it must succeed with 0 errors (`sorry`s are allowed during scaffolding).
+- To check a single file quickly, use the `check_file` MCP tool (`file="AutoQuantum/<File>.lean"`).
+- If MCP tools are unavailable, fall back to: `cd lean && lake build AutoQuantum` / `lake env lean AutoQuantum/<File>.lean`.
 
 ## Git Conventions
 
