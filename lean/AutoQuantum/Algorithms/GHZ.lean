@@ -36,6 +36,44 @@ def zeroIndex (n : ℕ) : Fin (2 ^ n) :=
 def onesIndex (n : ℕ) : Fin (2 ^ n) :=
   ⟨2 ^ n - 1, Nat.sub_lt (Nat.two_pow_pos n) (by decide)⟩
 
+/-- The computational-basis index with `count` leading ones followed by trailing
+    zeros on `n` qubits. -/
+def prefixOnesIndex (n count : ℕ) (_hcount : count ≤ n) : Fin (2 ^ n) :=
+  ⟨2 ^ n - 2 ^ (n - count), Nat.sub_lt (Nat.two_pow_pos n) (Nat.two_pow_pos (n - count))⟩
+
+/-- The basis state with `count` leading ones followed by trailing zeros on `n`
+    qubits. -/
+noncomputable def prefixOnesState (n count : ℕ) (hcount : count ≤ n) : QState n :=
+  basisState n (prefixOnesIndex n count hcount)
+
+/-- Zero leading ones recovers the all-zero basis index. -/
+lemma prefixOnesIndex_zero (n : ℕ) :
+    prefixOnesIndex n 0 (Nat.zero_le n) = zeroIndex n := by
+  apply Fin.ext
+  simp [prefixOnesIndex, zeroIndex]
+
+/-- Filling the whole register with ones recovers the all-ones basis index. -/
+lemma prefixOnesIndex_all (n : ℕ) :
+    prefixOnesIndex n n le_rfl = onesIndex n := by
+  apply Fin.ext
+  simp [prefixOnesIndex, onesIndex]
+
+/-- The recursive form of `prefixOnesIndex`: one more leading one adds the top bit
+    and leaves the remaining prefix unchanged. -/
+lemma prefixOnesIndex_succ_val (n count : ℕ) (hcount : count ≤ n) :
+    (prefixOnesIndex (n + 1) (count + 1) (Nat.succ_le_succ hcount)).val =
+      2 ^ n + (prefixOnesIndex n count hcount).val := by
+  have hpow : 2 ^ (n - count) ≤ 2 ^ n := by
+    exact Nat.pow_le_pow_right (by decide) (Nat.sub_le _ _)
+  dsimp [prefixOnesIndex]
+  calc
+    2 ^ (n + 1) - 2 ^ (n + 1 - (count + 1))
+        = 2 ^ n + 2 ^ n - 2 ^ (n - count) := by
+            rw [pow_succ, Nat.mul_comm (2 ^ n) 2, two_mul]
+            simp
+    _ = 2 ^ n + (2 ^ n - 2 ^ (n - count)) := by
+      rw [Nat.add_sub_assoc hpow]
+
 /-- The all-zero basis state `|0...0⟩`. -/
 noncomputable def allZeroState (n : ℕ) : QState n :=
   basisState n (zeroIndex n)
@@ -43,6 +81,16 @@ noncomputable def allZeroState (n : ℕ) : QState n :=
 /-- The all-one basis state `|1...1⟩`. -/
 noncomputable def allOneState (n : ℕ) : QState n :=
   basisState n (onesIndex n)
+
+/-- Zero leading ones recovers the all-zero basis state. -/
+lemma prefixOnesState_zero (n : ℕ) :
+    prefixOnesState n 0 (Nat.zero_le n) = allZeroState n := by
+  simp [prefixOnesState, allZeroState, prefixOnesIndex_zero]
+
+/-- Filling the whole register with ones recovers the all-one basis state. -/
+lemma prefixOnesState_all (n : ℕ) :
+    prefixOnesState n n le_rfl = allOneState n := by
+  simp [prefixOnesState, allOneState, prefixOnesIndex_all]
 
 private lemma one_lt_two_pow_succ (n : ℕ) : 1 < 2 ^ (n + 1) := by
   calc
@@ -59,6 +107,21 @@ private lemma zeroIndex_ne_onesIndex (n : ℕ) : zeroIndex (n + 1) ≠ onesIndex
     dsimp [onesIndex]
     exact Nat.sub_pos_of_lt (one_lt_two_pow_succ n)
   exact (Nat.ne_of_gt hpos) hval
+
+private lemma prefixOnesIndex_pos (n count : ℕ) (hcount : count ≤ n) :
+    0 < (prefixOnesIndex (n + 1) (count + 1) (Nat.succ_le_succ hcount)).val := by
+  dsimp [prefixOnesIndex]
+  apply Nat.sub_pos_of_lt
+  have hexp : (n + 1) - (count + 1) < n + 1 := by
+    exact Nat.sub_lt (Nat.succ_pos n) (Nat.succ_pos count)
+  simpa using Nat.pow_lt_pow_right Nat.one_lt_two hexp
+
+private lemma zeroIndex_ne_prefixOnesIndex (n count : ℕ) (hcount : count ≤ n) :
+    zeroIndex (n + 1) ≠ prefixOnesIndex (n + 1) (count + 1) (Nat.succ_le_succ hcount) := by
+  intro h
+  have hval : (prefixOnesIndex (n + 1) (count + 1) (Nat.succ_le_succ hcount)).val = 0 := by
+    simpa [zeroIndex] using congrArg Fin.val h.symm
+  exact (Nat.ne_of_gt (prefixOnesIndex_pos n count hcount)) hval
 
 /-- The `n`-qubit GHZ state. For `n = 0` this is defined as the unique basis state;
     for `n + 1` it is `( |0...0⟩ + |1...1⟩ ) / √2`. -/
@@ -79,6 +142,34 @@ noncomputable def ghzState : (n : ℕ) → QState n
               norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
             nlinarith [hcoef]
         )
+
+/-- Intermediate GHZ superposition on `n + 1` qubits: the second branch has
+    `count + 1` leading ones and trailing zeros. This is the natural induction
+    target after the initial Hadamard and the first `count` CNOTs. -/
+noncomputable def ghzProgressState (n count : ℕ) (hcount : count ≤ n) : QState (n + 1) :=
+  QState.mk
+    (superpose ((1 : ℂ) / Real.sqrt 2) ((1 : ℂ) / Real.sqrt 2)
+      (allZeroState (n + 1)).vec
+      (prefixOnesState (n + 1) (count + 1) (Nat.succ_le_succ hcount)).vec)
+    (by
+      apply superpose_norm_eq_one
+      · exact QState.norm_eq_one (allZeroState (n + 1))
+      · exact QState.norm_eq_one (prefixOnesState (n + 1) (count + 1) (Nat.succ_le_succ hcount))
+      · have hb := basisState_braket (n := n + 1) (zeroIndex (n + 1))
+            (prefixOnesIndex (n + 1) (count + 1) (Nat.succ_le_succ hcount))
+        simpa [prefixOnesState, QState.braket, zeroIndex_ne_prefixOnesIndex n count hcount] using hb
+      · have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
+          rw [Complex.normSq_div]
+          norm_num [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by positivity)]
+        nlinarith [hcoef]
+    )
+
+/-- The terminal intermediate state is the GHZ target state. -/
+lemma ghzProgressState_terminal (n : ℕ) :
+    ghzProgressState n n le_rfl = ghzState (n + 1) := by
+  apply Subtype.ext
+  ext i
+  simp [ghzProgressState, ghzState, prefixOnesState_all, allOneState]
 
 /-- The nearest-neighbor CNOT chain on `n + 1` qubits:
     `CX 0 1; CX 1 2; ...; CX (n-1) n`. -/

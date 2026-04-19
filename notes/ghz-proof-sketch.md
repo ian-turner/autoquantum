@@ -80,16 +80,26 @@ The theorem is still `sorry`, but the 1-qubit base case is now proved in Lean:
 
 So the remaining gap is now the genuinely general part rather than the degenerate `n = 0` endpoint.
 
-What is missing is a clean inductive family of intermediate states, something like:
+That intermediate family is now named in Lean:
 
-- after the Hadamard: `( |0...0⟩ + |10...0⟩ ) / √2`
-- after `k` CNOTs: `( |0...0⟩ + |11...10...0⟩ ) / √2`
+- `prefixOnesIndex n count` and `prefixOnesState n count` for the branch with `count` leading ones
+- `ghzProgressState n count` for the normalized superposition
+  `( |0...0⟩ + |11...10...0⟩ ) / √2`
+  where the second branch has `count + 1` leading ones on `n + 1` qubits
+
+The file also now proves the endpoint identifications:
+
+- `prefixOnesIndex_zero`, `prefixOnesState_zero`
+- `prefixOnesIndex_all`, `prefixOnesState_all`
+- `ghzProgressState_terminal`
 
 The next useful Lean milestones are:
 
-- define the intermediate basis index/state with a prefix of ones and trailing zeros
-- prove the nontrivial Hadamard-step lemma on `n + 1` qubits
-- prove one CNOT-step extension lemma for that intermediate family
+- prove the nontrivial Hadamard-step lemma
+  `applyGate (hadamardAt 0) (allZeroState (n + 1)) = ghzProgressState n 0 (Nat.zero_le n)`
+- prove one CNOT-step extension lemma
+  sending `ghzProgressState n k hk` to `ghzProgressState n (k + 1) _`
+  under the `k`th gate of `ghzCnotChain`
 
 Once those states are named and those two transition lemmas exist, the rest should be a
 straightforward induction over the nearest-neighbor CNOT chain.

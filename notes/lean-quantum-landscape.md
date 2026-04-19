@@ -112,12 +112,14 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `zeroIndex`, `onesIndex`, `allZeroState`, `allOneState` — canonical GHZ basis indices and endpoint states | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `prefixOnesIndex`, `prefixOnesState`, `prefixOnesIndex_zero`, `prefixOnesIndex_all`, `prefixOnesIndex_succ_val`, `prefixOnesState_zero`, `prefixOnesState_all` — GHZ induction scaffolding for a branch with leading ones and trailing zeros | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzState n` — general GHZ target state with a special `n = 0` case | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzProgressState`, `ghzProgressState_terminal` — intermediate GHZ superposition family aligned with the CNOT chain | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCnotChain n` — nearest-neighbor `CX 0 1; ...; CX n-1 n` chain | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCircuit n` — general GHZ preparation circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCircuit_three` — sanity-check specialization to the familiar 3-qubit circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `hadamardAt_fin1_zero`, `ghzState_one_eq_ketPlus`, `apply_hadamard_allZero_one`, `ghzCircuit_prepares_ghz_zero` — 1-qubit GHZ base-case helpers | **Done** (Apr 18, 2026) | `GHZ.lean` |
-| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; the base case is now proved, so the remaining work is the Hadamard-step lemma on nonempty registers plus induction over `ghzCnotChain`) |
+| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; the intermediate state family is now defined, so the remaining work is the Hadamard-step lemma into `ghzProgressState n 0 _` and the one-step CNOT extension lemma needed for induction over `ghzCnotChain`) |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -418,3 +420,13 @@ Fin.divNat, Fin.modNat
 ```
 to the simp set. That is enough to collapse the residual indexing arithmetic on `Fin 1`; without it,
 the proof looks more complicated than it really is.
+
+### 29. `prefix` is a bad binder name in grouped argument syntax
+While adding the GHZ induction scaffolding, the first draft used grouped binders like
+```lean
+def prefixOnesIndex (n prefix : ℕ) ...
+```
+Lean 4 parsed that badly enough to produce syntax errors rather than a clean name-resolution
+failure, because `prefix` is also a parser keyword used for notation declarations. Renaming the
+binder to something ordinary like `count` fixed the issue immediately. For routine theorem arguments,
+avoid `prefix` as a bare binder name.
