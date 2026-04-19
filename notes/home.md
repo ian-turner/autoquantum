@@ -37,6 +37,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Gate.lean`
+- [OpenCode Setup](opencode-setup.md) — Project-local OpenCode config, Lean MCP launcher, and compact-context setup for theorem-proving sessions
 - [QFT API Roadmap](qft-api-roadmap.md) — Required gate and circuit abstractions for the full decomposed QFT circuit: qubit permutations, arbitrary placement, and bit-reversal
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Qubit.lean`
 
