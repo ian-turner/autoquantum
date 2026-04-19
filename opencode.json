@@ -14,7 +14,7 @@
       "type": "local",
       "command": [
         "bash",
-        ".opencode/bin/run-lean-lsp-mcp.sh"
+        ".mcp/run-lean-lsp-mcp.sh"
       ],
       "enabled": true,
       "timeout": 15000
