@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 18, 2026 (Mathlib v4.29.0).
+Last updated: April 19, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -111,7 +111,7 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| GHZ state vector, circuit, and correctness scaffolding | Partial | `Algorithms/GHZ.lean` |
+| GHZ state vector, circuit, and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 

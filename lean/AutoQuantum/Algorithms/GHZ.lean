@@ -28,7 +28,7 @@ which coincides with the 1-qubit GHZ state.
 
 namespace AutoQuantum.GHZ
 
-open Matrix AutoQuantum
+open Matrix AutoQuantum Complex
 open scoped Kronecker
 
 /-! ## The GHZ state vector -/
@@ -82,8 +82,12 @@ noncomputable def ghzState (n : ℕ) : QState n :=
   match n with
   | 0 => basisState 0 0
   | n + 1 => QState.mk ((1 / Real.sqrt 2 : ℂ) • ghzVector (n + 1)) (by
-      simp [norm_smul, norm_ghzVector]
-      sorry)
+      have hpos : Real.sqrt 2 > 0 := Real.sqrt_pos.mpr (by norm_num : (0 : ℝ) < 2)
+      calc
+        ‖(1 / Real.sqrt 2 : ℂ) • ghzVector (n + 1)‖ = |Real.sqrt 2|⁻¹ * Real.sqrt 2 := by
+          simp [norm_smul, norm_ghzVector]
+        _ = (Real.sqrt 2)⁻¹ * Real.sqrt 2 := by rw [abs_of_pos hpos]
+        _ = 1 := by field_simp [hpos.ne'])
 
 /-! ## The GHZ preparation circuit -/
 
