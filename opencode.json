@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "lean_lsp": {
+      "type": "local",
+      "command": [
+        "bash",
+        ".opencode/bin/run-lean-lsp-mcp.sh"
+      ],
+      "enabled": true,
+      "timeout": 15000
+    }
+  }
+}

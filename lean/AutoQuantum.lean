@@ -14,3 +14,4 @@ import AutoQuantum.Lemmas.Circuit
 
 -- Algorithms: circuit implementations and correctness theorems
 import AutoQuantum.Algorithms.QFT
+import AutoQuantum.Algorithms.GHZ
