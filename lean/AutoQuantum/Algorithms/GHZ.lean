@@ -35,19 +35,15 @@ open scoped Kronecker
 
 /-- The index of the all-ones computational basis state: |1…1⟩. -/
 def allOnesIndex (n : ℕ) : Fin (2 ^ n) :=
-  ⟨2 ^ n - 1, by
-    have h : 0 < 2 ^ n := pow_pos (by norm_num : 0 < 2) n
-    exact Nat.pred_lt (ne_of_gt h)⟩
+  ⟨2 ^ n - 1, Nat.pred_lt (pow_pos (by norm_num : (0 : ℕ) < 2) n).ne'⟩
 
 lemma allOnesIndex_ne_zero {n : ℕ} (hn : n ≥ 1) : allOnesIndex n ≠ 0 := by
   intro h
-  have hpos : 0 < 2 ^ n := pow_pos (by norm_num : 0 < 2) n
   have : (allOnesIndex n).val = (0 : Fin (2 ^ n)).val := congrArg Fin.val h
   simp [allOnesIndex] at this
-  have hpow : 2 ^ n ≥ 2 := by
-    calc
-      2 ^ n ≥ 2 ^ 1 := Nat.pow_le_pow_right (by norm_num) hn
-      _ = 2 := by norm_num
+  have : 2 ^ n ≥ 2 := by
+    calc 2 ^ n ≥ 2 ^ 1 := Nat.pow_le_pow_right (by norm_num) hn
+         _ = 2           := by norm_num
   omega
 
 /-- The GHZ state vector (unnormalized): |0…0⟩ + |1…1⟩. -/
@@ -56,7 +52,30 @@ noncomputable def ghzVector (n : ℕ) : QHilbert n :=
 
 /-- The GHZ state vector has norm √2 when n ≥ 1, and norm 2 when n = 0. -/
 lemma norm_ghzVector (n : ℕ) : ‖ghzVector n‖ = if n = 0 then 2 else Real.sqrt 2 := by
-  sorry
+  simp only [ghzVector, superpose, one_smul]
+  split_ifs with h
+  · -- n = 0: allOnesIndex 0 = 0, so both summands are the same basis state
+    subst h
+    have heq : allOnesIndex 0 = 0 := Fin.ext (by simp [allOnesIndex])
+    rw [heq, ← two_smul ℂ (basisState 0 0).vec, norm_smul,
+        (basisState 0 0).norm_eq_one, mul_one]
+    norm_num
+  · -- n ≥ 1: the two basis states are orthogonal, so ‖u + v‖ = √(‖u‖² + ‖v‖²) = √2
+    have hn : n ≥ 1 := by omega
+    have hne : (0 : Fin (2 ^ n)) ≠ allOnesIndex n := (allOnesIndex_ne_zero hn).symm
+    have horth : @inner ℂ (QHilbert n) _ (basisState n 0).vec
+        (basisState n (allOnesIndex n)).vec = 0 := by
+      have hb := basisState_braket (n := n) (0 : Fin (2 ^ n)) (allOnesIndex n)
+      simp only [QState.braket, QState.vec] at hb
+      rw [if_neg hne] at hb
+      exact hb
+    have hkey : ‖(basisState n 0).vec + (basisState n (allOnesIndex n)).vec‖ ^ 2 = 2 := by
+      have expand := @norm_add_sq ℂ (QHilbert n) _ _ _
+                      (basisState n 0).vec (basisState n (allOnesIndex n)).vec
+      rw [horth, map_zero, mul_zero, add_zero] at expand
+      rw [expand, (basisState n 0).norm_eq_one, (basisState n (allOnesIndex n)).norm_eq_one]
+      norm_num
+    rw [← Real.sqrt_sq (norm_nonneg _), hkey]
 
 /-- The normalized GHZ state. -/
 noncomputable def ghzState (n : ℕ) : QState n :=
@@ -70,21 +89,14 @@ noncomputable def ghzState (n : ℕ) : QState n :=
 
 /-- The GHZ circuit on n qubits.
     For n = 0: empty circuit (trivial)
-    For n = 1: just a Hadamard on qubit 0
-    For n ≥ 2: Hadamard on qubit 0 followed by CNOT from qubit 0 to each qubit i > 0. -/
+    For n ≥ 1: Hadamard on qubit 0, then CNOT from qubit 0 to each qubit i.succ. -/
 noncomputable def ghzCircuit (n : ℕ) : Circuit n :=
   match n with
   | 0 => []
-  | 1 => [⟨hadamardAt 0⟩]
-  | n' + 2 =>
-      let hadamardStep : Circuit (n' + 2) := [⟨hadamardAt 0⟩]
-      let cnotSteps : Circuit (n' + 2) :=
-        ((List.finRange (n' + 2)).filterMap fun i =>
-          if h : i ≠ 0 then
-            let h' : (0 : Fin (n' + 2)) ≠ i := Ne.symm h
-            some ⟨controlledAt (0 : Fin (n' + 2)) i h' pauliX⟩
-          else none)
-      hadamardStep ++ cnotSteps
+  | n + 1 =>
+      [⟨hadamardAt 0⟩] ++
+      (List.finRange n).map fun i =>
+        ⟨controlledAt 0 i.succ (Ne.symm (Fin.succ_ne_zero i)) pauliX⟩
 
 /-! ## Correctness theorem -/
 
