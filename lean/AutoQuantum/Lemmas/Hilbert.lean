@@ -39,6 +39,7 @@ lemma basisState_braket {n : ℕ} (j k : Fin (2 ^ n)) :
     Uses PiLp.norm_sq_eq_of_L2 and Finset.sum_product. -/
 lemma tensorVec_norm {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m)
     (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1) : ‖tensorVec ψ φ‖ = 1 := by
-  sorry
+  simpa [tensorState, QState.vec, QState.mk] using
+    (QState.norm_eq_one (tensorState (QState.mk ψ hψ) (QState.mk φ hφ)))
 
 end AutoQuantum

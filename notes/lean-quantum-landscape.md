@@ -111,7 +111,8 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (`hPlusVector_norm` done; correctness still open) | `Algorithms/HPlus.lean` |
+| `tensorState`, `tensorVec_norm` | **Done** (Apr 19, 2026) | `Hilbert.lean` / `Lemmas/Hilbert.lean` |
+| `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (tensor support done; correctness still open) | `Algorithms/HPlus.lean` |
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
@@ -218,6 +219,7 @@ have harg : 2 * (Real.pi : ℂ) * Complex.I / (2 ^ 1 : ℂ) = (Real.pi : ℂ) * 
 and then rewrite with `rw [harg, Complex.exp_pi_mul_I]`.
 
 ### 16. `Complex.exp_nat_mul` introduces `↑(2^n)` while the original denominator may stay as `(2 : ℂ)^n`
+
 In `omega_pow_two_pow`, rewriting
 ```lean
 (Complex.exp (2 * Real.pi * Complex.I / (2 ^ n : ℂ))) ^ (2 ^ n)
@@ -235,7 +237,16 @@ field_simp [show ((2 : ℂ) ^ n) ≠ 0 by exact pow_ne_zero n (by norm_num)]
 ```
 This mixed-shape issue is easy to miss because both sides pretty-print as `2 ^ n`.
 
-### 17. End-placement embeddings are not enough for textbook circuit definitions
+### 17. Coordinatewise `PiLp` tensor proofs need `WithLp.ofLp_sum` before `Pi.single` simplification
+For finite `EuclideanSpace` / `PiLp` vectors, evaluating a finite sum of basis vectors at a coordinate does not always reduce with `Finset.sum_apply` directly because the expression is still wrapped in `WithLp.ofLp`. In the `tensorState` normalization proof, the stable route was:
+```lean
+rw [WithLp.ofLp_sum]
+simp_rw [WithLp.ofLp_sum]
+simp [WithLp.ofLp_smul, Pi.single_apply]
+```
+This exposes the underlying coordinatewise `if` expression so `Finset.sum_eq_single` can collapse the tensor-basis expansion.
+
+### 18. End-placement embeddings are not enough for textbook circuit definitions
 For the decomposed QFT, `tensorWithId`, `idTensorWith`, and a fixed-layout `controlled` constructor are still too low-level: they only place gates at the ends of the register. The missing abstraction is a qubit-permutation layer
 ```lean
 Equiv.Perm (Fin n) -> Equiv.Perm (Fin (2 ^ n))

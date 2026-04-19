@@ -71,11 +71,73 @@ noncomputable def tensorVec {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) : QH
     (ψ a * φ b) • (EuclideanSpace.single (e (a, b)) (1 : ℂ))
 
 /-- The tensor product of two normalized quantum states.
-    Normalization relies on `tensorVec_norm` in `Lemmas.Hilbert`; that proof is not yet
-    complete so this constructor carries a `sorry`. -/
+    Normalization follows by reindexing to the product basis and factoring the squared norm. -/
 noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QState (k + m) :=
   QState.mk (tensorVec ψ.vec φ.vec) (by
-    sorry)
+    let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+      finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+    have hψsq : ∑ a : Fin (2 ^ k), ‖ψ.vec a‖ ^ 2 = 1 := by
+      rw [← PiLp.norm_sq_eq_of_L2, ψ.norm_eq_one, one_pow]
+    have hφsq : ∑ b : Fin (2 ^ m), ‖φ.vec b‖ ^ 2 = 1 := by
+      rw [← PiLp.norm_sq_eq_of_L2, φ.norm_eq_one, one_pow]
+    have hcoord :
+        ∀ p : Fin (2 ^ k) × Fin (2 ^ m), tensorVec ψ.vec φ.vec (e p) = ψ.vec p.1 * φ.vec p.2 := by
+      intro p
+      rcases p with ⟨a, b⟩
+      unfold tensorVec
+      rw [WithLp.ofLp_sum]
+      simp_rw [WithLp.ofLp_sum]
+      simp [WithLp.ofLp_smul, Pi.single_apply]
+      change
+        ∑ x : Fin (2 ^ k), ∑ y : Fin (2 ^ m),
+          (if e (a, b) = e (x, y) then ψ.vec x * φ.vec y else 0) = ψ.vec a * φ.vec b
+      rw [Finset.sum_eq_single a]
+      · rw [Finset.sum_eq_single b]
+        · simp
+        · intro y _ hyb
+          have hneq : e (a, b) ≠ e (a, y) := by
+            intro h
+            apply hyb
+            exact (congrArg Prod.snd (e.injective h)).symm
+          simp [hneq]
+        · intro hb
+          exfalso
+          exact hb (Finset.mem_univ b)
+      · intro x _ hxa
+        apply Finset.sum_eq_zero
+        intro y _
+        have hneq : e (a, b) ≠ e (x, y) := by
+          intro h
+          apply hxa
+          exact (congrArg Prod.fst (e.injective h)).symm
+        simp [hneq]
+      · intro ha
+        exfalso
+        exact ha (Finset.mem_univ a)
+    have hsq : ‖tensorVec ψ.vec φ.vec‖ ^ 2 = 1 := by
+      rw [PiLp.norm_sq_eq_of_L2]
+      calc
+        ∑ i : Fin (2 ^ (k + m)), ‖tensorVec ψ.vec φ.vec i‖ ^ 2
+            = ∑ p : Fin (2 ^ k) × Fin (2 ^ m), ‖tensorVec ψ.vec φ.vec (e p)‖ ^ 2 := by
+                symm
+                exact Fintype.sum_equiv e _ _ (fun p => rfl)
+        _ = ∑ p : Fin (2 ^ k) × Fin (2 ^ m), ‖ψ.vec p.1 * φ.vec p.2‖ ^ 2 := by
+              simp [hcoord]
+        _ = ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m), ‖ψ.vec a * φ.vec b‖ ^ 2 := by
+              rw [Fintype.sum_prod_type]
+        _ = ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m), (‖ψ.vec a‖ ^ 2) * (‖φ.vec b‖ ^ 2) := by
+              congr with a
+              congr with b
+              rw [norm_mul]
+              ring
+        _ = (∑ a : Fin (2 ^ k), ‖ψ.vec a‖ ^ 2) * ∑ b : Fin (2 ^ m), ‖φ.vec b‖ ^ 2 := by
+              rw [Finset.sum_mul_sum]
+        _ = 1 := by simp [hψsq, hφsq]
+    calc
+      ‖tensorVec ψ.vec φ.vec‖ = Real.sqrt (‖tensorVec ψ.vec φ.vec‖ ^ 2) :=
+        (Real.sqrt_sq (norm_nonneg _)).symm
+      _ = Real.sqrt 1 := by rw [hsq]
+      _ = 1 := Real.sqrt_one)
 
 /-! ## Superposition -/
 
