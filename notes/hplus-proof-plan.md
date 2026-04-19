@@ -43,10 +43,14 @@ lemma tensorState_norm {k m : ℕ} (ψ : QState k) (φ : QState m) :
     ‖(tensorState ψ φ).vec‖ = 1
 ```
 
-### Gap 2 — `hPlusVector` normalization
+### Gap 2 — `hPlusVector` normalization ✅ complete
 
 Fills the first `sorry` in `hPlusState`. Uses `basisState_braket` (already in `Lemmas/Hilbert.lean`)
 plus orthonormality of the basis sum scaled by `1/√(2^n)`.
+
+Implemented in `Lemmas/Hilbert.lean` by observing that every coordinate of
+`hPlusVector n` is the constant amplitude `(1 / √(2^n) : ℂ)`, then applying
+`PiLp.norm_sq_eq_of_L2` and simplifying the resulting finite sum.
 
 ```lean
 -- in Lemmas/Hilbert.lean

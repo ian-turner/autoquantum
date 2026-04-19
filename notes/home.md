@@ -27,7 +27,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now also includes `qftLayers`, `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`, `circuitMatrix_liftCircuit`, `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB) rather than the existing `liftGate` / `liftCircuit` suffix embedding; remaining gaps are `qft_correct` and `qft2_correct` |
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
-| `Algorithms/HPlus.lean` | No | Uniform superposition |+⟩^⊗n scaffolding added April 19, 2026; `hPlusVector`, `hPlusState`, `hPlusCircuit` defined; normalization proof and `hPlus_correct` are `sorry`-tagged pending proof. |
+| `Algorithms/HPlus.lean` | No | Uniform superposition |+⟩^⊗n scaffolding added April 19, 2026; `hPlusVector_norm` is now proved, so `hPlusState` is normalized without a local `sorry`; remaining HPlus gaps are `tensorVec_norm`/`tensorState` support and `hPlus_correct`. |
 
 ## Topics
 

@@ -111,6 +111,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (`hPlusVector_norm` done; correctness still open) | `Hilbert.lean`, `Algorithms/HPlus.lean` |
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
@@ -361,3 +362,11 @@ tensorWithId 1
 ```
 rather than `liftGate` / `idTensorWith 1`. This distinction is easy to miss because both are
 “attach one idle qubit” operations, but they are different Kronecker/reindex conventions.
+### 20. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
+For the uniform-superposition normalization proof, the pointwise identity
+```lean
+have hcoord : ∀ j : Fin (2 ^ n), hPlusVector n j = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by
+  intro j
+  simp [hPlusVector, basisState, QState.vec]
+```
+closed directly. An earlier attempt added `EuclideanSpace.single_apply`, but in Mathlib v4.29 that lemma is deprecated in favor of `PiLp.single_apply`, and it was not needed anyway because `simp` already unfolds the basis-state coordinates through the subtype wrapper.
