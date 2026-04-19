@@ -47,3 +47,4 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 - [QFT Recursion Indexing](qft-recursion-indexing.md) — Why the unfinished general proof appears to need `tensorWithId 1` rather than the older suffix-lift helper
 - [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem
 - [QFT General Proof Obligations](qft-general-proof-obligations.md) — Exact circuit-side lemma inventory needed to finish `qftCircuit_succ_matrix` without depending on `qft2_correct`
+- [HPlus Proof Plan](hplus-proof-plan.md) — Lemma inventory and recommended order for proving `hPlus_correct` via tensor-product induction; 7 gaps identified across Core/Hilbert, Lemmas/Gate, Lemmas/Circuit
