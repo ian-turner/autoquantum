@@ -111,7 +111,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| GHZ state vector, circuit, and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
+| GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 

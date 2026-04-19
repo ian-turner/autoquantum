@@ -85,37 +85,34 @@ noncomputable def ghzState (n : ℕ) : QState n :=
 
 /-! ## The GHZ preparation circuit -/
 
-/-- The GHZ circuit on n qubits.
-    For n = 0: empty circuit (trivial)
-    For n ≥ 1: Hadamard on qubit 0, then CNOT from qubit 0 to each qubit i.succ. -/
-noncomputable def ghzCircuit (n : ℕ) : Circuit n :=
-  match n with
-  | 0 => []
-  | n + 1 =>
+/-- The GHZ circuit on n qubits (requires n ≥ 1).
+    Hadamard on qubit 0, then CNOT from qubit 0 to each qubit i.succ. -/
+noncomputable def ghzCircuit (n : ℕ) (hn : n ≥ 1) : Circuit n :=
+  match n, hn with
+  | 0, h => by
+      exfalso
+      omega
+  | n + 1, _ =>
       [⟨hadamardAt 0⟩] ++
       (List.finRange n).map fun i =>
         ⟨controlledAt 0 i.succ (Ne.symm (Fin.succ_ne_zero i)) pauliX⟩
 
 /-! ## Correctness theorem -/
 
-theorem ghz_correct_zero :
-    runCircuit (ghzCircuit 0) (basisState 0 0) = ghzState 0 := by
-  simp [ghzCircuit, ghzState, runCircuit, circuitMatrix, applyGate]
-  apply Subtype.ext
-  rfl
+
 
 theorem ghz_correct_one :
-    runCircuit (ghzCircuit 1) (basisState 1 0) = ghzState 1 := by
+    runCircuit (ghzCircuit 1 (by omega)) (basisState 1 0) = ghzState 1 := by
   simp [ghzCircuit, ghzState, ghzVector, allOnesIndex, superpose]
   sorry
 
 theorem ghz_correct_two :
-    runCircuit (ghzCircuit 2) (basisState 2 0) = ghzState 2 := by
+    runCircuit (ghzCircuit 2 (by omega)) (basisState 2 0) = ghzState 2 := by
   sorry
 
 /-- The GHZ circuit applied to |0…0⟩ yields the GHZ state. -/
-theorem ghz_correct (n : ℕ) :
-    runCircuit (ghzCircuit n) (basisState n 0) = ghzState n := by
+theorem ghz_correct (n : ℕ) (hn : n ≥ 1) :
+    runCircuit (ghzCircuit n hn) (basisState n 0) = ghzState n := by
   sorry
 
 end AutoQuantum.GHZ
