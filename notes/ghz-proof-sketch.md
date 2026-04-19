@@ -71,13 +71,25 @@ The intended proof is:
 
 ## Current Blocker
 
-The theorem is still `sorry`, but the remaining gap is now conceptual bookkeeping rather than
-low-level tensor normalization.
+The theorem is still `sorry`, but the 1-qubit base case is now proved in Lean:
+
+- `hadamardAt_fin1_zero`
+- `ghzState_one_eq_ketPlus`
+- `apply_hadamard_allZero_one`
+- `ghzCircuit_prepares_ghz_zero`
+
+So the remaining gap is now the genuinely general part rather than the degenerate `n = 0` endpoint.
 
 What is missing is a clean inductive family of intermediate states, something like:
 
 - after the Hadamard: `( |0...0⟩ + |10...0⟩ ) / √2`
 - after `k` CNOTs: `( |0...0⟩ + |11...10...0⟩ ) / √2`
 
-Once those states are named, the proof should be a straightforward induction over the
-nearest-neighbor CNOT chain.
+The next useful Lean milestones are:
+
+- define the intermediate basis index/state with a prefix of ones and trailing zeros
+- prove the nontrivial Hadamard-step lemma on `n + 1` qubits
+- prove one CNOT-step extension lemma for that intermediate family
+
+Once those states are named and those two transition lemmas exist, the rest should be a
+straightforward induction over the nearest-neighbor CNOT chain.

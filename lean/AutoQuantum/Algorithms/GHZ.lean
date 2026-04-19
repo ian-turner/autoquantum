@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Core.Qubit
 import AutoQuantum.Lemmas.Gate
 import AutoQuantum.Lemmas.Hilbert
 
@@ -99,15 +100,55 @@ theorem ghzCircuit_three :
        ⟨controlledAt 1 2 (by decide) pauliX⟩] := by
   rfl
 
+/-- On a one-qubit register, `hadamardAt 0` reduces to the plain Hadamard gate. -/
+lemma hadamardAt_fin1_zero : hadamardAt (0 : Fin 1) = hadamard := by
+  apply Subtype.ext
+  ext i j
+  fin_cases i <;> fin_cases j
+  · simp [hadamardAt, onQubit, permuteGate, permuteQubits, qubitPerm, idTensorWith,
+      hadamard, hadamardMatrix, finProdFinEquiv, Fin.divNat, Fin.modNat]
+  · simp [hadamardAt, onQubit, permuteGate, permuteQubits, qubitPerm, idTensorWith,
+      hadamard, hadamardMatrix, finProdFinEquiv, Fin.divNat, Fin.modNat]
+  · simp [hadamardAt, onQubit, permuteGate, permuteQubits, qubitPerm, idTensorWith,
+      hadamard, hadamardMatrix, finProdFinEquiv, Fin.divNat, Fin.modNat]
+  · simp [hadamardAt, onQubit, permuteGate, permuteQubits, qubitPerm, idTensorWith,
+      hadamard, hadamardMatrix, finProdFinEquiv, Fin.divNat, Fin.modNat]
+
+/-- The 1-qubit GHZ target state is the usual `|+⟩` state. -/
+lemma ghzState_one_eq_ketPlus : ghzState 1 = ketPlus := by
+  apply Subtype.ext
+  ext i
+  fin_cases i <;>
+    simp [ghzState, allZeroState, allOneState, ketPlus, ket0, ket1, basisState,
+      QState.vec, QState.mk, superpose, zeroIndex, onesIndex]
+
+/-- The initial Hadamard step prepares the 1-qubit GHZ state from `|0⟩`. -/
+lemma apply_hadamard_allZero_one :
+    applyGate (hadamardAt (0 : Fin 1)) (allZeroState 1) = ghzState 1 := by
+  rw [hadamardAt_fin1_zero, ghzState_one_eq_ketPlus]
+  simpa [allZeroState, zeroIndex, ket0] using
+    (show applyGate hadamard ket0 = ketPlus by
+      apply Subtype.ext
+      ext i
+      fin_cases i <;>
+        simp [applyGate, hadamard, hadamardMatrix, ket0, ket1, ketPlus, basisState,
+          QState.vec, QState.mk, superpose])
+
+/-- Base case of GHZ correctness: on one qubit the circuit is just Hadamard on `|0⟩`. -/
+theorem ghzCircuit_prepares_ghz_zero :
+    runCircuit (ghzCircuit 1) (allZeroState 1) = ghzState 1 := by
+  simpa [runCircuit, ghzCircuit, ghzCnotChain, circuitMatrix] using apply_hadamard_allZero_one
+
 /-- Correctness sketch for GHZ preparation on `n + 1` qubits.
 
     Proof strategy:
-    1. show `hadamardAt 0` maps `|0...0⟩` to
+    1. the base case `n = 0` is `ghzCircuit_prepares_ghz_zero`;
+    2. show `hadamardAt 0` maps `|0...0⟩` to
        `( |0...0⟩ + |10...0⟩ ) / √2`;
-    2. prove by induction over `ghzCnotChain n` that after the `k`-th CNOT,
+    3. prove by induction over `ghzCnotChain n` that after the `k`-th CNOT,
        the superposition is `( |0...0⟩ + |1...10...0⟩ ) / √2` with `k + 1`
        leading ones in the second branch;
-    3. conclude that the final state is `( |0...0⟩ + |1...1⟩ ) / √2`.
+    4. conclude that the final state is `( |0...0⟩ + |1...1⟩ ) / √2`.
 
     This theorem is intentionally left as `sorry`: the point of the GHZ module
     is to expose a substantially simpler correctness target than QFT while still

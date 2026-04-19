@@ -116,7 +116,8 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `ghzCnotChain n` — nearest-neighbor `CX 0 1; ...; CX n-1 n` chain | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCircuit n` — general GHZ preparation circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
 | `ghzCircuit_three` — sanity-check specialization to the familiar 3-qubit circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
-| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; proof should induct over `ghzCnotChain`) |
+| `hadamardAt_fin1_zero`, `ghzState_one_eq_ketPlus`, `apply_hadamard_allZero_one`, `ghzCircuit_prepares_ghz_zero` — 1-qubit GHZ base-case helpers | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; the base case is now proved, so the remaining work is the Hadamard-step lemma on nonempty registers plus induction over `ghzCnotChain`) |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -401,3 +402,19 @@ ghzState (n + 1) := (|0...0⟩ + |1...1⟩) / √2
 ```
 and then state the main correctness theorem on `n + 1` qubits instead of trying to force the
 nonempty-register argument through the degenerate zero-qubit case.
+
+### 28. Even the `Fin 1` reduction for embedded gates may need `Fin.divNat` and `Fin.modNat` in the simp set
+While proving the GHZ base-case helper
+```lean
+hadamardAt (0 : Fin 1) = hadamard
+```
+the direct `Subtype.ext; ext i j; fin_cases i <;> fin_cases j; simp [...]` proof still did not close
+after unfolding `hadamardAt`, `onQubit`, `idTensorWith`, and `finProdFinEquiv`. The remaining goals
+stayed in terms like `Matrix.vecCons ... (Fin.modNat 0)` and `(Fin.divNat 1, Fin.modNat 1)`.
+
+For this tiny-width special case, the fix was simply to add
+```lean
+Fin.divNat, Fin.modNat
+```
+to the simp set. That is enough to collapse the residual indexing arithmetic on `Fin 1`; without it,
+the proof looks more complicated than it really is.
