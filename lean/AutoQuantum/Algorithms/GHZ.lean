@@ -29,7 +29,7 @@ which coincides with the 1-qubit GHZ state.
 namespace AutoQuantum.GHZ
 
 open Matrix AutoQuantum Complex
-open scoped Kronecker
+open scoped Kronecker InnerProductSpace
 
 /-! ## The GHZ state vector -/
 
@@ -63,17 +63,11 @@ lemma norm_ghzVector (n : ℕ) : ‖ghzVector n‖ = if n = 0 then 2 else Real.s
   · -- n ≥ 1: the two basis states are orthogonal, so ‖u + v‖ = √(‖u‖² + ‖v‖²) = √2
     have hn : n ≥ 1 := by omega
     have hne : (0 : Fin (2 ^ n)) ≠ allOnesIndex n := (allOnesIndex_ne_zero hn).symm
-    have horth : @inner ℂ (QHilbert n) _ (basisState n 0).vec
-        (basisState n (allOnesIndex n)).vec = 0 := by
-      have hb := basisState_braket (n := n) (0 : Fin (2 ^ n)) (allOnesIndex n)
-      simp only [QState.braket, QState.vec] at hb
-      rw [if_neg hne] at hb
-      exact hb
+    have horth : @inner ℂ (QHilbert n) _ (basisState n 0).vec (basisState n (allOnesIndex n)).vec = 0 := by
+      simpa [hne] using basisState_braket (n := n) (0 : Fin (2 ^ n)) (allOnesIndex n)
     have hkey : ‖(basisState n 0).vec + (basisState n (allOnesIndex n)).vec‖ ^ 2 = 2 := by
-      have expand := @norm_add_sq ℂ (QHilbert n) _ _ _
-                      (basisState n 0).vec (basisState n (allOnesIndex n)).vec
-      rw [horth, map_zero, mul_zero, add_zero] at expand
-      rw [expand, (basisState n 0).norm_eq_one, (basisState n (allOnesIndex n)).norm_eq_one]
+      rw [@norm_add_sq ℂ (QHilbert n) _ _ _, horth]
+      simp
       norm_num
     rw [← Real.sqrt_sq (norm_nonneg _), hkey]
 
