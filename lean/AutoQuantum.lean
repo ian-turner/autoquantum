@@ -13,4 +13,5 @@ import AutoQuantum.Lemmas.Gate
 import AutoQuantum.Lemmas.Circuit
 
 -- Algorithms: circuit implementations and correctness theorems
+import AutoQuantum.Algorithms.GHZ
 import AutoQuantum.Algorithms.QFT

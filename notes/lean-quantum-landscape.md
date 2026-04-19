@@ -111,6 +111,12 @@ Last updated: April 18, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
+| `zeroIndex`, `onesIndex`, `allZeroState`, `allOneState` — canonical GHZ basis indices and endpoint states | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzState n` — general GHZ target state with a special `n = 0` case | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzCnotChain n` — nearest-neighbor `CX 0 1; ...; CX n-1 n` chain | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzCircuit n` — general GHZ preparation circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzCircuit_three` — sanity-check specialization to the familiar 3-qubit circuit | **Done** (Apr 18, 2026) | `GHZ.lean` |
+| `ghzCircuit_prepares_ghz` — state-preparation theorem for `n + 1` qubits | Partial | `GHZ.lean` (one remaining `sorry`; proof should induct over `ghzCnotChain`) |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -360,3 +366,38 @@ tensorWithId 1
 ```
 rather than `liftGate` / `idTensorWith 1`. This distinction is easy to miss because both are
 “attach one idle qubit” operations, but they are different Kronecker/reindex conventions.
+
+### 26. Concrete `tensorWithId` / `idTensorWith` goals can get stuck on `finProdFinEquiv.symm`, `Fin.divNat`, and `Fin.modNat`
+In `Algorithms/GHZ.lean`, the natural first proof attempt was to evaluate the three state-transition
+lemmas directly from
+```lean
+tensorWithId 2 hadamard
+tensorWithId 1 cnot
+idTensorWith 1 cnot
+```
+using `Subtype.ext`, `ext i`, and `fin_cases i`. That gets surprisingly far, but the remaining goals
+do not simplify to clean coordinate equalities. Instead they stop in shapes like:
+```lean
+vecCons ... (Fin.divNat 4) * 1 (Fin.divNat 4, Fin.modNat 4).2 ... = ...
+```
+This is a signal that the proof should switch from “more `simp`” to an explicit matrix bridge. For
+small fixed-width examples, the better next step is to prove matrix-level specializations for the
+embedded gates first, and only then do the state-coordinate calculation.
+
+### 27. The GHZ superposition formula needs a special `n = 0` branch
+When `GHZ.lean` was generalized from a 3-qubit example to an `n`-qubit family, the obvious first
+definition was
+```lean
+ghzState n := (|0...0⟩ + |1...1⟩) / √2
+```
+for all `n`. That does **not** work at `n = 0`. On zero qubits, `|0...0⟩` and `|1...1⟩` collapse to
+the same unique basis vector in `Fin (2 ^ 0) = Fin 1`, so the orthogonality proof needed by
+`superpose_norm_eq_one` is false.
+
+The stable formalization is:
+```lean
+ghzState 0 := allZeroState 0
+ghzState (n + 1) := (|0...0⟩ + |1...1⟩) / √2
+```
+and then state the main correctness theorem on `n + 1` qubits instead of trying to force the
+nonempty-register argument through the degenerate zero-qubit case.

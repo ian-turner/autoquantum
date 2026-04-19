@@ -11,13 +11,13 @@ Central index for all project notes. Start here.
 ## Build Status
 
 Mathlib pinned to **v4.29.0** (`lean/lean-toolchain`). `lake build AutoQuantum` succeeds with 0 errors.
-All non-`sorry` linter warnings in the Lean sources were cleaned up on April 17, 2026; current warnings come from the unfinished QFT development.
+All non-`sorry` linter warnings in the Lean sources were cleaned up on April 17, 2026; current warnings come from the unfinished QFT and GHZ development.
 
 ```bash
 cd lean && lake update && lake exe cache get && lake build AutoQuantum
 ```
 
-### Sorry status (April 2026)
+### Sorry status (April 18, 2026)
 
 | File | Sorry-free? | Notes |
 |------|-------------|-------|
@@ -25,6 +25,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
 | `Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026 |
 | `Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
+| `Algorithms/GHZ.lean` | No | General `n`-qubit GHZ development added on April 18, 2026. The file now defines `zeroIndex`, `onesIndex`, `allZeroState`, `allOneState`, `ghzState`, the nearest-neighbor `ghzCnotChain`, and the general `ghzCircuit`. Only the main theorem `ghzCircuit_prepares_ghz` remains a `sorry`; the intended proof is induction over the CNOT chain on `n + 1` qubits |
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now also includes `qftLayers`, `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`, `circuitMatrix_liftCircuit`, `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB) rather than the existing `liftGate` / `liftCircuit` suffix embedding; remaining gaps are `qft_correct` and `qft2_correct` |
 
 ## Topics
@@ -40,6 +41,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Qubit.lean`
 
 ### Algorithms
+- [GHZ Proof Sketch](ghz-proof-sketch.md) — General `n`-qubit GHZ circuit, state definitions, and the inductive proof plan used in `Algorithms/GHZ.lean`
 - [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles
 - [QFT Recursion Indexing](qft-recursion-indexing.md) — Why the unfinished general proof appears to need `tensorWithId 1` rather than the older suffix-lift helper
 - [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem
