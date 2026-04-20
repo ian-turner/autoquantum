@@ -102,4 +102,30 @@ lemma cnot_mul_self : cnot * cnot = (1 : QGate 2) := by
   fin_cases i <;> fin_cases j <;>
     simp [cnot, cnotMatrix]
 
+/-! ## hadamardAt placement identities -/
+
+/-- `permuteQubits` of the identity permutation is the identity gate. -/
+private lemma permuteQubits_refl {n : ℕ} :
+    permuteQubits (Equiv.refl (Fin n)) = (1 : QGate n) := by
+  apply Subtype.ext
+  show (qubitPerm (Equiv.refl (Fin n))).permMatrix ℂ = 1
+  simp [qubitPerm, Equiv.piCongrLeft_refl]
+
+/-- Placing a Hadamard on the last qubit of an (n+1)-qubit register is the same as
+    `I_n ⊗ H` (Hadamard acts on the last qubit, identity on the first n). -/
+lemma hadamardAt_last_eq (n : ℕ) :
+    hadamardAt (Fin.last n) = idTensorWith n hadamard := by
+  -- `onQubit` pattern-matches on n+1; `show` does the kernel reduction to the succ branch.
+  show permuteGate (Equiv.swap (Fin.last n) (Fin.last n)) (idTensorWith n hadamard) = _
+  rw [Equiv.swap_self]
+  have hinv : (Equiv.refl (Fin (n + 1)))⁻¹ = Equiv.refl (Fin (n + 1)) := rfl
+  simp only [permuteGate, hinv, permuteQubits_refl, one_mul, mul_one]
+
+/-- Placing a Hadamard on qubit `castSucc i` of an (n+1)-qubit register is the same as
+    `(hadamardAt i) ⊗ I₁` (Hadamard acts on qubit i of the first n qubits, identity on the extra qubit).
+    This is the key identity for shifting a gate away from the front of the circuit. -/
+lemma hadamardAt_castSucc_eq (n : ℕ) (i : Fin n) :
+    (hadamardAt (Fin.castSucc i) : QGate (n + 1)) = tensorWithId 1 (hadamardAt i) := by
+  sorry
+
 end AutoQuantum

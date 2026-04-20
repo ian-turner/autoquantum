@@ -96,6 +96,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `hadamard_apply_ket0` — H\|0⟩ = \|+⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `hadamard_apply_ket1` — H\|1⟩ = \|−⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `tensorWithId`, `idTensorWith`, `controlled` | Done | `Core/Gate.lean` |
+| `tensorWithId_apply`, `idTensorWith_apply` — action on tensor states | Done | `Lemmas/Tensor.lean` |
 | `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Core/Gate.lean` (Apr 18, 2026) |
@@ -463,6 +464,10 @@ simp [hadamardAt, onQubit, Equiv.swap_self, permuteGate, permuteQubits]
 ```
 Then induct from the back of `hPlusCircuit` and prove `idTensorWith_apply` (the companion
 to `tensorWithId_apply`, same proof pattern) to close `hPlus_correct`.
+
+### 36. `idTensorWith_apply` proof uses `Finset.mul_sum` where `tensorWithId_apply` used `Finset.sum_mul`
+
+When mirroring the `tensorWithId_apply` proof to obtain `idTensorWith_apply`, the factorization of the double sum changes order: `∑_x ∑_y (Im a x * ψ x) * (U b y * φ y) = (∑_x Im a x * ψ x) * (∑_y U b y * φ y)`. After collapsing the identity matrix sum to `ψ a`, we need to factor `ψ a` out of the remaining sum over `y`. This is `Finset.mul_sum` (factor on the left) rather than `Finset.sum_mul` (factor on the right). The rest of the proof is identical.
 
 ### 29. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
 For the uniform-superposition normalization proof, the pointwise identity

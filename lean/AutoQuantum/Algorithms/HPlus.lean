@@ -113,6 +113,37 @@ lemma basisState_zero_tensor (n : ℕ) :
       fun h => ha (congrArg Prod.fst (e.injective (h.trans he00.symm)))
     simp [ha, hb, this]
 
+/-- The all-zero basis state in an (n+1)-qubit system equals the tensor product
+    of the zero states in n-qubit and 1-qubit systems. -/
+lemma basisState_zero_tensor' (n : ℕ) :
+    basisState (n + 1) 0 = tensorState (basisState n 0) (basisState 1 0) := by
+  apply Subtype.ext
+  let e : Fin (2 ^ n) × Fin (2 ^ 1) ≃ Fin (2 ^ (n + 1)) :=
+    finProdFinEquiv.trans (finCongr (pow_add 2 n 1).symm)
+  have he00 : e (0, 0) = (0 : Fin (2 ^ (n + 1))) := Fin.ext (by simp [e])
+  ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
+  change (basisState (n + 1) 0).vec (e (a, b)) =
+      (tensorState (basisState n 0) (basisState 1 0)).vec (e (a, b))
+  have hten : (tensorState (basisState n 0) (basisState 1 0)).vec (e (a, b)) =
+      (basisState n 0).vec a * (basisState 1 0).vec b := by
+    show tensorVec (basisState n 0).vec (basisState 1 0).vec (e (a, b)) = _
+    exact tensorVec_apply _ _ a b
+  rw [hten]
+  simp only [QState.vec, basisState, PiLp.single_apply]
+  by_cases ha : a = 0 <;> by_cases hb : b = 0
+  · subst ha hb; simp [he00]
+  · subst ha
+    have : e (0, b) ≠ 0 :=
+      fun h => hb (congrArg Prod.snd (e.injective (h.trans he00.symm)))
+    simp [hb, this]
+  · subst hb
+    have : e (a, 0) ≠ 0 :=
+      fun h => ha (congrArg Prod.fst (e.injective (h.trans he00.symm)))
+    simp [ha, this]
+  · have : e (a, b) ≠ 0 :=
+      fun h => ha (congrArg Prod.fst (e.injective (h.trans he00.symm)))
+    simp [ha, hb, this]
+
 /-- The (1+n)-qubit uniform superposition vector equals the tensor product
     of the 1-qubit and n-qubit uniform superpositions. -/
 lemma hPlusVector_succ (n : ℕ) :
@@ -135,6 +166,27 @@ lemma hPlusVector_succ (n : ℕ) :
   rw [hlhs, hten, h1, hn, pow_add, pow_one, Real.sqrt_mul (by norm_num : (0 : ℝ) ≤ 2)]
   push_cast; field_simp
 
+/-- The (n+1)-qubit uniform superposition vector equals the tensor product
+    of the n-qubit and 1-qubit uniform superpositions. -/
+lemma hPlusVector_succ' (n : ℕ) :
+    hPlusVector (n + 1) = (tensorState (hPlusState n) (hPlusState 1)).vec := by
+  let e : Fin (2 ^ n) × Fin (2 ^ 1) ≃ Fin (2 ^ (n + 1)) :=
+    finProdFinEquiv.trans (finCongr (pow_add 2 n 1).symm)
+  ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
+  have hten : (tensorState (hPlusState n) (hPlusState 1)).vec (e (a, b)) =
+      (hPlusState n).vec a * (hPlusState 1).vec b := by
+    show tensorVec (hPlusState n).vec (hPlusState 1).vec (e (a, b)) = _
+    exact tensorVec_apply _ _ a b
+  have hlhs : hPlusVector (n + 1) (e (a, b)) = (1 / Real.sqrt (2 ^ (n + 1) : ℝ) : ℂ) :=
+    by simp [hPlusVector, basisState, QState.vec]
+  have hn : (hPlusState n).vec a = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by
+    simp [hPlusState, QState.mk, QState.vec, hPlusVector, basisState]
+  have h1 : (hPlusState 1).vec b = (1 / Real.sqrt (2 ^ 1 : ℝ) : ℂ) := by
+    simp [hPlusState, QState.mk, QState.vec, hPlusVector, basisState]
+    fin_cases b <;> simp
+  rw [hlhs, hten, hn, h1, pow_add, pow_one, Real.sqrt_mul (by positivity : (0 : ℝ) ≤ 2 ^ n)]
+  push_cast; field_simp
+
 /-- Applying a Hadamard to every qubit of |0…0⟩ yields the uniform superposition state. -/
 theorem hPlus_correct (n : ℕ) :
     runCircuit (hPlusCircuit n) (basisState n 0) = hPlusState n := by
@@ -146,8 +198,31 @@ theorem hPlus_correct (n : ℕ) :
     ext i; fin_cases i
     simp [basisState, hPlusState, hPlusVector, QState.vec, QState.mk]
   | succ n ih =>
-    -- Blocked: requires hadamardAt_last_eq + idTensorWith_apply.
-    -- See notes/proof-attempts.md (Attempt 2) for the back-induction strategy.
-    sorry
+    -- Split circuit: last gate is hadamardAt (Fin.last n) = I_n ⊗ H
+    have hcircuit : hPlusCircuit (n + 1) =
+        ((List.finRange n).map fun i => (⟨hadamardAt (Fin.castSucc i)⟩ : GateStep (n + 1))) ++
+        [⟨hadamardAt (Fin.last n)⟩] := by
+      simp only [hPlusCircuit, List.finRange_succ_last, List.map_append, List.map_map,
+        List.map_cons, List.map_nil, Function.comp_def]
+    rw [hcircuit]
+    simp only [runCircuit, circuitMatrix_append, circuitMatrix_singleton, applyGate_mul]
+    -- Replace last gate by idTensorWith n hadamard
+    rw [hadamardAt_last_eq]
+    -- Split the input state: |0^(n+1)⟩ = |0^n⟩ ⊗ |0⟩
+    rw [basisState_zero_tensor']
+    -- Apply init circuit; blocked on hadamardAt_castSucc_eq
+    have hinit : applyGate
+        (circuitMatrix ((List.finRange n).map fun i => (⟨hadamardAt (Fin.castSucc i)⟩ : GateStep (n + 1))))
+        (tensorState (basisState n 0) (basisState 1 0)) =
+        tensorState (hPlusState n) (basisState 1 0) := by
+      sorry  -- blocked on hadamardAt_castSucc_eq
+    rw [hinit, idTensorWith_apply]
+    -- H|0⟩ = |+⟩ = hPlusState 1
+    rw [show applyGate hadamard (basisState 1 0) = hPlusState 1 from by
+      rw [show (basisState 1 0 : QState 1) = ket0 from rfl,
+          hadamard_apply_ket0, ketPlus_eq_hPlusState_one]]
+    -- Conclude: |+⟩^n ⊗ |+⟩ = |+⟩^(n+1)
+    apply Subtype.ext
+    exact (hPlusVector_succ' n).symm
 
 end AutoQuantum.HPlus
