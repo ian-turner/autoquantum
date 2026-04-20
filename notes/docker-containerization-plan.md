@@ -2,7 +2,7 @@
 
 **Status**: ✅ **Implemented and verified** (2025‑04‑20)
 
-All steps have been completed. The container runs OpenCode server with MCP tools `lean` and `lean_lsp` fully functional. Lean builds succeed inside container; host can connect via `opencode --hostname localhost --port 4096`.
+All steps have been completed. The container runs OpenCode server with MCP tools `lean` and `lean_lsp` fully functional. Lean builds succeed inside container; host can connect via `opencode attach http://localhost:4096`.
 
 ## Goal
 Create a fully reproducible, sandboxed environment where the **entire OpenCode session** (agent + Lean toolchain + MCP servers) runs inside a Docker container. The host only interacts with the container via mounted directories and Git operations; all file edits, builds, and proof verification happen in isolation.
@@ -92,7 +92,7 @@ Create `docker‑compose.yml` with:
 ### 3. Helper Scripts
 - **`scripts/docker‑build.sh`** – builds the image, tags it `opencode‑autoquantum:latest`
 - **`scripts/docker‑compose‑up.sh`** – starts the OpenCode server in the background (`docker‑compose up -d`)
-- **`scripts/docker‑compose‑connect.sh`** – launches `opencode --hostname localhost --port 4096` on the host (requires OpenCode installed on host)
+- **`scripts/docker‑compose‑connect.sh`** – launches `opencode attach http://localhost:4096` on the host (requires OpenCode installed on host)
 - **`.mcp/` script updates** – ensure `run.sh` and `run‑lean‑lsp‑mcp.sh` work inside container (they already use relative paths; may need PATH adjustments)
 
 ### 4. OpenCode Configuration
@@ -109,7 +109,7 @@ docker-compose build
 docker-compose up -d
 
 # On the host, connect to the container’s OpenCode server
-opencode --hostname localhost --port 4096
+opencode attach http://localhost:4096
 # → OpenCode TUI starts on the host, but all tool execution happens inside the container
 
 # Through the TUI, the agent can:

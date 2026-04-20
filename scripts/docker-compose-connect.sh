@@ -12,4 +12,4 @@ echo "Connecting to AutoQuantum OpenCode server at localhost:4096..."
 echo "If this is the first connection, you may need to configure a provider."
 echo "Press Ctrl+C to exit the TUI; the server will stay running."
 echo ""
-opencode --hostname localhost --port 4096
+opencode attach http://localhost:4096
