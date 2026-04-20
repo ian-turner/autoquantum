@@ -71,16 +71,23 @@ lemma hPlusVector_succ (n : ℕ) :
 `∑_{k : Fin(2^{n+1})} |k⟩ = (∑_a |a⟩₁) ⊗ (∑_b |b⟩ₙ)` together with the scalar
 `1/√(2^{n+1}) = (1/√2)(1/√(2^n))`.
 
-### Gap 4 — Gate action on tensor-product state
+### Gap 4 — Gate action on tensor-product state ✅ complete
 
-**Likely the most technically painful gap.** Requires unraveling the `reindex` encoding
-inside `tensorWithId` (`Core/Gate.lean:249`).
+`tensorWithId_apply` is proved in `Lemmas/Gate.lean` (April 20, 2026).
 
 ```lean
 -- in Lemmas/Gate.lean
 lemma tensorWithId_apply {k m : ℕ} (U : QGate k) (ψ : QState k) (φ : QState m) :
     applyGate (tensorWithId m U) (tensorState ψ φ) = tensorState (applyGate U ψ) φ
 ```
+
+**Proof sketch**: `apply Subtype.ext; ext i; obtain ⟨⟨a,b⟩,rfl⟩ := e.surjective i`.
+After `show` to `.vec` form, use `applyGate_vec_apply`, `tensorVec_apply`, reindex the sum via
+`Fintype.sum_equiv`, expand entries via `Matrix.reindex_apply` + `Matrix.submatrix_apply` +
+`Matrix.kronecker_apply` (all `rfl`), collapse `Im b y = if b = y then 1 else 0` by `rfl`,
+then `Finset.sum_ite_eq` (no prime — pattern `a = x`). The key constraint: define `e` with
+`show 2^k * 2^m = 2^(k+m) by rw [pow_add]` (exact copy of `tensorWithId`'s internal `e`) so
+that `Equiv.symm_apply_apply` fires inside `simp`.
 
 ### Gap 5 — `hadamardAt` gate identities
 

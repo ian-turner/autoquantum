@@ -379,6 +379,17 @@ obtain ⟨a, b, rfl⟩   := e.surjective j   -- ❌ pattern mismatch
 ```
 After this line, `j` is replaced everywhere by `e (a, b)` and the goal is restated in terms of `a` and `b`.
 
+### 33. `Finset.sum_ite_eq` and `sum_ite_eq'` have swapped naming vs. expectation
+In Mathlib v4.29.0 the two lemmas are:
+```lean
+Finset.sum_ite_eq  : ∑ x in s, (if a = x then f x else 0) = if a ∈ s then f a else 0  -- constant = variable
+Finset.sum_ite_eq' : ∑ x in s, (if x = a then f x else 0) = if a ∈ s then f a else 0  -- variable = constant
+```
+The "prime" variant has `x = a` (variable on the left), and the non-prime variant has `a = x` (constant on the left). This is the **opposite** of the usual convention where the prime adds commutativity. If your inner sum is `∑ y, if b = y then ... else 0` (constant `b` on the left), use `Finset.sum_ite_eq` (no prime).
+
+### 34. The `e` in a `show` or `hmat` proof must match the internal `e` in `tensorWithId` syntactically
+`tensorWithId` uses `finProdFinEquiv.trans <| finCongr (show 2^k * 2^m = 2^(k+m) by rw [pow_add])`. When proving matrix-entry lemmas by `show (Matrix.reindex e e ...) (e (a,b)) (e (x,y)) = _`, the local `e` must be defined **identically** (same expression) as the internal one. Using `(pow_add 2 k m).symm` instead of `show ... by rw [pow_add]` creates a different proof term; `Equiv.symm_apply_apply` then fails because the two `e`s are not syntactically unified. Copy the exact `let e :=` from the `tensorWithId` definition.
+
 ### 25. The recursive `target.succ` QFT layers appear to require `tensorWithId 1`, not the older suffix-lift helper
 During the next general-proof pass, `QFT.lean` was refactored to expose
 ```lean
