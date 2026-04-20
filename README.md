@@ -55,6 +55,21 @@ autoquantum/
 
 A Docker container provides a fully reproducible environment with the Lean toolchain, Mathlib cache, and MCP servers pre-configured.
 
+### Configuration
+
+Create a `.env` file in the project root (gitignored) before starting the container:
+
+```bash
+# Model selection — defaults to deepseek/deepseek-reasoner if unset
+# Other options: deepseek/deepseek-chat, anthropic/claude-sonnet-4-6, openai/gpt-4o
+OPENCODE_MODEL=
+
+# API keys — set whichever provider you're using
+DEEPSEEK_API_KEY=
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+```
+
 ```bash
 docker compose build                        # Build the image (once, ~5 min)
 docker compose up -d                        # Start the OpenCode server
