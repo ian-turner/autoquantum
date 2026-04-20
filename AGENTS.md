@@ -215,8 +215,9 @@ When generating or verifying a quantum circuit proof, follow this template:
 
 ## Testing
 
-- After any Lean edit, run the `build` MCP tool (`target="AutoQuantum"`) — it must succeed with 0 errors (`sorry`s are allowed during scaffolding).
-- To check a single file quickly, use the `check_file` MCP tool (`file="AutoQuantum/<File>.lean"`).
+- After any Lean edit, immediately call `lean_lsp_lean_diagnostic_messages` (fast, interactive) to check for errors — do **not** reach for `build` or `check_file` mid-proof.
+- To typecheck a completed proof block, use the `check_file` MCP tool (`file="AutoQuantum/<File>.lean"`). This is slow (60–180 s); only use it after finishing a proof, not while developing tactics.
+- Full build: `build` MCP tool (`target="AutoQuantum"`). Use only at end of session to verify nothing is broken.
 - If MCP tools are unavailable, fall back to: `cd lean && lake build AutoQuantum` / `lake env lean AutoQuantum/<File>.lean`.
 
 ## Git Conventions
