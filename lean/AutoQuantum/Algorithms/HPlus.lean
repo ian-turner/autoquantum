@@ -140,24 +140,14 @@ theorem hPlus_correct (n : ℕ) :
     runCircuit (hPlusCircuit n) (basisState n 0) = hPlusState n := by
   induction n with
   | zero =>
-    -- n = 0: empty circuit
-    simp only [hPlusCircuit, List.finRange_zero, List.map_nil, circuitMatrix_nil]
-    rw [runCircuit, applyGate_one]
-    have : hPlusVector 0 = (basisState 0 0).vec := by simp [hPlusVector]
-    apply Subtype.ext; exact this
+    simp only [hPlusCircuit, List.finRange_zero, List.map_nil]
+    rw [runCircuit, circuitMatrix_nil, applyGate_one]
+    apply Subtype.ext
+    ext i; fin_cases i
+    simp [basisState, hPlusState, hPlusVector, QState.vec, QState.mk]
   | succ n ih =>
-    -- hPlusCircuit (1+n) = [hadamardAt 0] ++ hPlusCircuit n
-    simp only [hPlusCircuit, List.finRange_succ, List.map, List.cons_append]
-    rw [runCircuit, circuitMatrix_append]
-    rw [applyGate_mul]
-    -- Split |0...0⟩ = |0⟩ ⊗ |0...0⟩
-    rw [basisState_zero_tensor n]
-    -- Need: applyGate hadamardAt 0 (|0⟩ ⊗ |0...0⟩) = |+⟩ ⊗ |0...0⟩
-    -- This requires proving that hadamardAt 0 acts on the first factor of a tensor product.
-    -- The lemma is: applyGate (hadamardAt (0 : Fin (1+n))) (tensorState ket0 φ) = tensorState ketPlus φ
-    -- Proving this requires unfolding onQubit → permuteGate (swap last 0) → idTensorWith, and
-    -- showing that permuting, applying tensorWithId, and permuting back applies H to the first factor.
-    -- This is nontrivial due to the permutation matrix interaction with tensorVec.
+    -- Blocked: requires hadamardAt_last_eq + idTensorWith_apply.
+    -- See notes/proof-attempts.md (Attempt 2) for the back-induction strategy.
     sorry
 
 end AutoQuantum.HPlus
