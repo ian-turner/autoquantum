@@ -64,73 +64,21 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 ### 4. CI Integration
 **Design for CI** – the same image will be usable in GitHub Actions (non‑interactive, `lake build`). However, CI‑specific optimizations (e.g., caching strategy) can be deferred until needed.
 
-## Implementation Steps
+## Implementation
 
-### 1. Dockerfile
-Create `Dockerfile` at repo root with:
-- Base: `ubuntu:22.04` (or `debian:stable`)
-- Install: curl, git, python3, python3‑pip, nodejs, npm, cargo (if needed)
-- Install elan, set default toolchain to `leanprover/lean4:v4.29.0`
-- Install `uv` globally, then `mcp>=1.0.0`
-- Install `lean‑lsp‑mcp` via `npm install -g lean‑lsp‑mcp`
-- Install OpenCode CLI globally (`npm install -g @anomalyco/opencode`)
-- Create user `opencode` with UID 501, GID 20 (match host)
-- Set working directory `/workspace`
-- Entrypoint: `opencode serve --hostname 0.0.0.0 --port 4096` (headless HTTP server)
+All steps are complete. The `Dockerfile` and `docker-compose.yml` at the repo root implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `.mcp/` scripts; `opencode.json` is unchanged.
 
-### 2. Docker Compose Configuration
-Create `docker‑compose.yml` with:
-- Service `opencode` using the built image
-- Mount host’s `autoquantum/` directory as `/workspace/autoquantum`
-- Mount host’s `~/.gitconfig` (read‑only) if present
-- Define named volumes for `elan‑cache` (`.elan`) and `mathlib‑cache` (`.cache/lean`)
-- Set environment variables: `LEAN_PROJECT_PATH=/workspace/autoquantum/lean`, `LEAN_TOOLS_REPO_ROOT=/workspace/autoquantum`
-  - Optionally, set `OPENCODE_SERVER_PASSWORD` (and `OPENCODE_SERVER_USERNAME`) to protect the server with HTTP basic auth.
-- Expose port `4096:4096` (container server → host)
-- Optionally, include a health‑check that runs `lake build AutoQuantum`
-
-### 3. Helper Scripts
-- **`scripts/docker‑build.sh`** – builds the image, tags it `opencode‑autoquantum:latest`
-- **`scripts/docker‑compose‑up.sh`** – starts the OpenCode server in the background (`docker‑compose up -d`)
-- **`scripts/docker‑compose‑connect.sh`** – launches `opencode attach http://localhost:4096` on the host (requires OpenCode installed on host)
-- **`.mcp/` script updates** – ensure `run.sh` and `run‑lean‑lsp‑mcp.sh` work inside container (they already use relative paths; may need PATH adjustments)
-
-### 4. OpenCode Configuration
-- `opencode.json` unchanged – MCP server commands execute inside container.
-- MCP servers (`lean` and `lean_lsp`) are launched via the same `.mcp/` scripts (now running inside container).
-
-## Expected Workflow
+## Workflow
 
 ```bash
-# Build the image once
-docker-compose build
-
-# Start the OpenCode server in the background
-docker-compose up -d
-
-# On the host, connect to the container’s OpenCode server
-opencode attach http://localhost:4096
-# → OpenCode TUI starts on the host, but all tool execution happens inside the container
-
-# Through the TUI, the agent can:
-#   – edit files (host sees changes immediately via mounted volume)
-#   – run lake build (uses cached Mathlib .oleans inside container)
-#   – commit (using host’s Git name/email; agent adds itself as co‑author)
-
-# Stop the container when done
-docker-compose down
+docker compose build                        # Build the image (once)
+docker compose up -d                        # Start the OpenCode server
+opencode attach http://localhost:4096       # Connect from the host
+docker compose down                         # Stop when done
 ```
 
-## Next Steps
-1. Write `Dockerfile` following the above spec.
-2. Create `docker‑compose.yml` with volume definitions.
-3. Write helper scripts (`scripts/docker‑build.sh`, `scripts/docker‑compose‑up.sh`, `scripts/docker‑compose‑connect.sh`).
-4. Test that `lake build AutoQuantum` works inside container.
-5. Test that OpenCode’s MCP tools (`lean_build`, `lean_lsp_*`) work.
-6. Update `notes/home.md` to link to this plan and add a “Container Usage” section.
-7. Optionally, add a pre‑commit hook that warns if Lean files are edited outside the container.
+The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
 
-## Risks & Mitigations
-- **Performance** – mounting the entire repo as a volume may cause I/O overhead on macOS/Windows; use `cached` mount option.
-- **Cache staleness** – if Mathlib version changes, need to prune the cache volume.
-- **User‑ID mismatch** – if host UID/GID differs, container may not have write permission; script should detect and adjust.
+## Operational Notes
+- **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.
+- **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.

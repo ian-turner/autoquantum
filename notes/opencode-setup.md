@@ -22,12 +22,13 @@ Both Claude Code and OpenCode are configured to use the same set of MCP servers,
 
 Registered as `mcp.lean` in `opencode.json` and `mcpServers.lean_tools` in `.claude/settings.json`.
 
-Provides two tools:
+Provides three tools:
 
 | Tool | What it runs |
 |------|-------------|
 | `build(target="AutoQuantum")` | `lake build <target>` in `lean/` |
 | `check_file(file="AutoQuantum/Core/Gate.lean")` | `lake env lean <file>` in `lean/` |
+| `sorry_count()` | `grep -r sorry lean/AutoQuantum` — count remaining sorries |
 
 Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate install needed.
 
@@ -39,7 +40,7 @@ Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-
   - Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
 - Prefers an installed `lean-lsp-mcp` binary and falls back to `uvx lean-lsp-mcp`.
 
-Note: `lean_lsp` is currently only wired into OpenCode. Claude Code uses `lean_goal` etc. through the same server if added to `.claude/settings.json`.
+Note: `lean_lsp` is registered in `.claude/settings.json` and is available to both Claude Code and OpenCode agents.
 
 ## Agent instructions
 

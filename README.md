@@ -28,40 +28,43 @@ autoquantum/
 │   ├── lakefile.lean
 │   ├── lean-toolchain       -- pins leanprover/lean4:v4.29.0
 │   └── AutoQuantum/
-│       ├── Hilbert.lean     -- Hilbert spaces, quantum state types
-│       ├── Qubit.lean       -- Single-qubit primitives and basis states
-│       ├── Gate.lean        -- Quantum gate definitions and properties
-│       ├── Circuit.lean     -- Circuit composition and semantics
+│       ├── Core/
+│       │   ├── Hilbert.lean     -- Hilbert spaces, QState, basisState
+│       │   ├── Qubit.lean       -- Single-qubit primitives and basis states
+│       │   ├── Gate.lean        -- Gate definitions, placement API, permutations
+│       │   └── Circuit.lean     -- Circuit composition and semantics
+│       ├── Lemmas/
+│       │   ├── Hilbert.lean     -- tensorState, tensorVec_norm
+│       │   ├── Qubit.lean       -- Basis orthonormality
+│       │   ├── Gate.lean        -- applyGate lemmas, hadamard_apply_ket*
+│       │   └── Circuit.lean     -- circuitMatrix lemmas
 │       └── Algorithms/
-│           └── QFT.lean     -- Quantum Fourier Transform
-├── notes/                  # Wiki — start at notes/home.md
-│   ├── home.md
-│   ├── research-references.md
-│   ├── lean-quantum-landscape.md
-│   └── qft-formalization-plan.md
+│           ├── QFT.lean         -- Quantum Fourier Transform
+│           ├── GHZ.lean         -- GHZ state and circuit
+│           └── HPlus.lean       -- Uniform superposition |+⟩^⊗n
+├── .mcp/                   # MCP servers (lean build/check tools, lean_lsp)
+├── notes/                  # Research wiki — start at notes/home.md
+├── references/             # Local PDFs (gitignored — see notes/reference-assets.md)
+├── Dockerfile
+├── docker-compose.yml
 ├── AGENTS.md               # All instructions for AI agents working here
 └── CLAUDE.md               # Points to AGENTS.md
 ```
 
 ## Docker Development Environment
 
-To run Lean and MCP tools in Docker:
+A Docker container provides a fully reproducible environment with the Lean toolchain, Mathlib cache, and MCP servers pre-configured.
 
 ```bash
-docker compose up -d     # Start the dev container
-docker compose exec dev lake build  # Build the Lean project
+docker compose build                        # Build the image (once, ~5 min)
+docker compose up -d                        # Start the OpenCode server
+opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on host)
+docker compose down                         # Stop when done
 ```
-
-The container includes the Lean toolchain, MCP servers for `lean` and `lean_lsp`, and is pre-configured for use with OpenCode. Connect by adding the workspace in OpenCode and pointing it to this repository.
 
 ### Local Development
 
-#### Prerequisites
-
-- [Lean 4 + elan](https://leanprover.github.io/lean4/doc/setup.html)
-- `lake` (bundled with elan)
-
-### Build
+**Prerequisites:** [Lean 4 + elan](https://leanprover.github.io/lean4/doc/setup.html), `lake` (bundled with elan).
 
 ```bash
 cd lean
@@ -72,36 +75,32 @@ lake build           # compile only our library (~seconds)
 
 > **Note:** `lake exe cache get` is essential. Without it, `lake build` will attempt to compile all of Mathlib from source.
 
-### Explore
-
-```bash
-# Open in VS Code with the lean4 extension for interactive proof state
-code lean/AutoQuantum/Algorithms/QFT.lean
-```
-
 ## Current Status
 
-| Module | Status |
-|--------|--------|
-| `Hilbert.lean` | Builds — `QState`, `QHilbert`, `basisState`, `superpose`; norm proofs sorry'd |
-| `Qubit.lean` | Builds — `ket0`, `ket1`, `ketPlus`, `ketMinus`, Bloch sphere; proofs sorry'd |
-| `Gate.lean` | Builds — Pauli X/Y/Z, H, R_k, CNOT, SWAP defined; `applyGate` body deferred (EuclideanSpace/PiLp bridge) |
-| `Circuit.lean` | Builds — `circuitMatrix`, `runCircuit`, `circuitMatrix_append` proved |
-| `QFT.lean` | Builds — `qftMatrix`, `qftGate`, `qftCircuit` defined; correctness sorry'd |
+`lake build AutoQuantum` succeeds with 0 errors. Mathlib pinned to **v4.29.0**.
 
-All `sorry`s carry a comment describing the proof strategy. `lake build` completes with 0 errors.
+| Module | Sorry-free? | Notes |
+|--------|-------------|-------|
+| `Core/Hilbert.lean` | Yes | `QState`, `QHilbert`, `basisState`, `superpose`; all norm proofs complete |
+| `Core/Qubit.lean` | Yes | `ket0`, `ket1`, `ketPlus`, `ketMinus`, Bloch sphere; all proofs complete |
+| `Core/Gate.lean` | Yes | Gates, `applyGate`, full placement API (`onQubit`, `controlledPhaseAt`, `bitReverse`, etc.) |
+| `Lemmas/Gate.lean` | Yes | `applyGate_vec_apply`, `hadamard_apply_ket0/1`, basis-state apply |
+| `Core/Circuit.lean` | Yes | `circuitMatrix`, `circuitMatrix_append`, `CorrectFor` |
+| `Algorithms/QFT.lean` | **No** | 2 sorries: `qft_correct`, `qft2_correct` |
+| `Algorithms/GHZ.lean` | **No** | 3 sorries: correctness for n=1, n=2, general case |
+| `Algorithms/HPlus.lean` | **No** | 1 sorry: `hPlus_correct` |
 
 ## Key Design Decisions
 
 - **States as unit vectors** in `EuclideanSpace ℂ (Fin (2^n))` — integrates with Mathlib's inner product space machinery.
 - **Gates as `Matrix.unitaryGroup` members** — unitary constraints are type-level, not runtime checks.
 - **Circuits as `abbrev` list** — `abbrev Circuit (n : ℕ) := List (GateStep n)` ensures `List` instances (`++`, induction) work without manual unfolding.
-- **Inner product via `braket`** — `QState.braket` wraps `@inner ℂ (QHilbert n) _` to avoid shadowing Mathlib's `inner`.
-- **Tensor products via Kronecker** — `Matrix.kroneckerMap` computes multi-qubit gate embeddings (gate embedding deferred).
+- **Gate placement via permutation conjugation** — `onQubit`, `controlledAt`, `controlledPhaseAt`, `bitReverse` are expressed as `P⁻¹ * U * P` rather than ad hoc `SWAP` chains.
+- **Tensor products via Kronecker** — `Matrix.kroneckerMap` computes multi-qubit gate embeddings, reindexed through `finProdFinEquiv`.
 
 ## References
 
-See [`notes/research-references.md`](notes/research-references.md) for the full literature survey.
+See [`notes/research-references.md`](notes/research-references.md) for the full literature survey and [`notes/lean-quantum-landscape.md`](notes/lean-quantum-landscape.md) for the current Lean API state.
 
 Key inspirations:
 - [LeanQuantum](https://github.com/inQWIRE/LeanQuantum) — Lean 4 quantum gate library on Mathlib
@@ -109,6 +108,4 @@ Key inspirations:
 - [QWIRE (Coq)](https://github.com/inQWIRE/QWIRE) — foundational quantum circuit formalization patterns
 - [MerLean](https://arxiv.org/abs/2602.16554) — LLM autoformalization pipeline for quantum computing
 
-## Contributing
-
-See [AGENTS.md](./AGENTS.md) for conventions on Lean code style, proof strategy, and how to add new algorithms.
+See [AGENTS.md](./AGENTS.md) for Lean code style, proof strategy, and how to add new algorithms.

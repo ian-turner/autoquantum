@@ -257,7 +257,7 @@ Equiv.Perm (Fin n) -> Equiv.Perm (Fin (2 ^ n))
 ```
 plus gate conjugation by those permutations. Once that exists, arbitrary `hadamardAt`, `controlledPhaseAt`, and `bitReverse` constructors can be defined cleanly instead of by hand-built swap chains.
 
-### 18. `Matrix.mem_unitaryGroup_iff` exposes the `A * star A = 1` orientation directly
+### 19b. `Matrix.mem_unitaryGroup_iff` exposes the `A * star A = 1` orientation directly
 In `qftMatrix_isUnitary`, the first working proof attempt was organized as though the goal were
 `star A * A = 1`, matching the usual column-orthogonality presentation of the DFT. But
 `Matrix.mem_unitaryGroup_iff` produced the row-oriented identity
@@ -407,7 +407,7 @@ PiLp.single_apply (p : ENNReal) (𝕜 : Type*) (i a j)
 ```
 Note the slightly different argument order and that `p` and `𝕜` are now explicit. In practice `simp [PiLp.single_apply]` works identically to the old usage; just rename every `EuclideanSpace.single_apply` occurrence.
 
-### 20. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
+### 29. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
 For the uniform-superposition normalization proof, the pointwise identity
 ```lean
 have hcoord : ∀ j : Fin (2 ^ n), hPlusVector n j = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by

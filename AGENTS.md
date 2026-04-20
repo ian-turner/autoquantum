@@ -21,22 +21,24 @@ autoquantum/
 │       ├── Core/
 │       │   ├── Hilbert.lean          -- Hilbert space & quantum state types
 │       │   ├── Qubit.lean            -- Single-qubit primitives
-│       │   ├── Gate.lean             -- Gate definitions & properties
+│       │   ├── Gate.lean             -- Gate definitions, placement API, permutations
 │       │   └── Circuit.lean          -- Circuit composition & semantics
 │       ├── Lemmas/
-│       │   ├── Hilbert.lean
-│       │   ├── Qubit.lean
-│       │   ├── Gate.lean
-│       │   └── Circuit.lean
+│       │   ├── Hilbert.lean          -- tensorState, tensorVec_norm
+│       │   ├── Qubit.lean            -- Basis orthonormality
+│       │   ├── Gate.lean             -- applyGate lemmas, hadamard_apply_ket*
+│       │   └── Circuit.lean          -- circuitMatrix lemmas
 │       └── Algorithms/
 │           ├── QFT.lean          -- Quantum Fourier Transform
-│           ├── GHZ.lean
-│           └── HPlus.lean
+│           ├── GHZ.lean          -- GHZ state and circuit
+│           └── HPlus.lean        -- Uniform superposition |+⟩^⊗n
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
-│   ├── lean-tools/     -- build/check tools (Python, runs via uv)
+│   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
 │   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp LSP server
 ├── notes/              # Research wiki — start at notes/home.md
-└── scripts/            # Generation / verification pipeline scripts (future)
+├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
+├── Dockerfile
+└── docker-compose.yml
 ```
 
 ## MCP Tools
@@ -80,7 +82,7 @@ Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and M
 
 **Additional tools** (less frequently needed): `lean_declaration_file`, `lean_references`, `lean_get_widgets`, `lean_profile_proof`.
 
-**Note:** All `lean_lsp` tool names have the prefix `lean_lsp_` in the actual MCP interface (e.g., `lean_lsp_lean_goal`). The shorthand names above are used throughout this document for readability.
+**Note:** All `lean_lsp` tool names have the prefix `lean_lsp_` in the actual MCP interface (e.g., `lean_lsp_lean_goal`). The shorthand names above are used throughout this document for readability. Both `lean_tools` and `lean_lsp` are registered in `.claude/settings.json` and available to Claude Code agents.
 
 ## Build
 
