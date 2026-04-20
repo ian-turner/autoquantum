@@ -35,6 +35,7 @@ autoquantum/
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
 │   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp LSP server
+├── .opencode/rules/    # OpenCode agent rules (proof workflow and patterns)
 ├── notes/              # Research wiki — start at notes/home.md
 ├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
 ├── Dockerfile
@@ -76,7 +77,7 @@ Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and M
 
 **Interactive proof assistance:**
 - `lean_multi_attempt` — try multiple tactic snippets without modifying the file (returns goal states for each)
-- `lean_code_actions` — get LSP quick fixes and “Try this” suggestions at a line
+- `lean_code_actions` — get LSP quick fixes and "Try this" suggestions at a line
 - `lean_verify` — check theorem axioms and scan source for suspicious patterns
 - `lean_completions` — IDE autocompletions (use on incomplete code after `.` or partial name)
 
@@ -108,84 +109,14 @@ lake build           # compile only our library
 - **Docstrings**: Add `/-- ... -/` docstrings to all top-level definitions and major lemmas.
 - **Modularity**: Each file should be independently importable with explicit `import` headers.
 
-## Key API Notes (confirmed against Mathlib v4.29.0)
+## Proof Workflow and Patterns
 
-- **Inner product notation**: Use `⟪x, y⟫_ℂ` (expands to `@inner ℂ _ _ x y`). Avoid defining local functions named `inner` — it shadows the notation. Use `braket` or a qualified name instead.
-- **EuclideanSpace and mulVec**: `EuclideanSpace ℂ (Fin n) = PiLp 2 (fun _ => ℂ)` is a newtype wrapper, not `Fin n → ℂ`. `Matrix.mulVec` cannot accept it directly. Bridge via `Matrix.toEuclideanLin` (preferred) or `WithLp.equiv 2 (Fin n → ℂ)`.
-- **Norm of basis vector**: `EuclideanSpace.norm_single` is deprecated — use `PiLp.norm_single`.
-- **Complex conjugate**: In `open Complex` context, `conj` may not resolve to a function. Use `star` (from the `Star` typeclass) for complex conjugation in expressions.
-- **4×4 matrix sums**: `fin_cases i <;> fin_cases j <;> simp [...]` leaves unsolved `∑` goals for 4×4 matrices. Add `Fin.sum_univ_four` to the simp set.
-- **Imports that don't exist**: `Mathlib.Data.Complex.Exponential` and `Mathlib.Algebra.GeomSum` are not valid module paths in Mathlib 4.29. Use `Mathlib.Analysis.SpecialFunctions.Exp` and look for geometric sum lemmas under `Mathlib.RingTheory.RootsOfUnity` or `Mathlib.Algebra.BigOperators`.
+The canonical proof workflow, MCP tool decision tree, confirmed API patterns, and known pitfalls live in the OpenCode rules files (also readable by any agent):
 
-## Iterative Proof Workflow (mandatory)
+- **`.opencode/rules/lean-workflow.md`** — iterative tactic workflow, tool decision tree, file path conventions, stop conditions
+- **`.opencode/rules/lean-proof-patterns.md`** — tensor-product coordinate patterns, gate placement patterns, circuit decomposition patterns, pitfalls table
 
-**Never write a whole proof body and hope it compiles.** Use the LSP tools to verify each tactic cluster before proceeding:
-
-1. Write the first 1–3 tactics.
-2. Call `lean_goal` at the position after those tactics to confirm the goal state is what you expect.
-3. If the goal matches your plan, proceed. If not, diagnose and adjust before adding more tactics.
-4. For exploring which tactic to use next, call `lean_multi_attempt` with 3–5 candidates — it returns the resulting goal state for each without modifying the file.
-5. Use `lean_local_search` to verify a lemma name exists before writing `rw [...]` or `exact ...` with it.
-
-This iterative check-before-proceed loop is especially important for tensor-product coordinate proofs, which are sensitive to whether types are abstract or concrete.
-
-## Tensor-Product Coordinate Proof Patterns
-
-These patterns are confirmed working in Mathlib v4.29.0 against the AutoQuantum types. Use them exactly; small deviations cause hard-to-diagnose failures.
-
-### Pattern 1: Abstract-type lemmas for `tensorVec_apply`
-
-The `change` tactic **fails** when `ψ` or `φ` are concrete (e.g., `hPlusState 1`), because Lean reduces the term during definitional equality checking. Always state and prove tensor coordinate lemmas with **abstract** `ψ : QHilbert k` and `φ : QHilbert m`, then instantiate:
-
-```lean
--- ✅ correct: abstract types, then instantiate
-lemma myLemma {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) (a : Fin (2^k)) (b : Fin (2^m)) :
-    tensorVec ψ φ (e (a, b)) = ψ a * φ b := tensorVec_apply ψ φ a b
-
--- ❌ fails: concrete type causes `change` to mismatch
-lemma myLemma (a : Fin 2) (b : Fin (2^n)) :
-    tensorVec (hPlusState 1).vec φ (e (a, b)) = (hPlusState 1).vec a * φ b := ...
-```
-
-When bridging from a `.vec`-qualified goal to `tensorVec`, use `show`:
-```lean
-have hten : (tensorState ψ φ).vec (e (a, b)) = ψ.vec a * φ.vec b := by
-  show tensorVec ψ.vec φ.vec (e (a, b)) = _
-  exact tensorVec_apply _ _ a b
-```
-
-### Pattern 2: `subst` before `simp` for case hypotheses
-
-When you have `ha : a = 0` and need `simp` to substitute `a` into a term like `e (a, b)`, `simp [ha]` is **not reliable** — it may not substitute inside complex expressions. Use `subst ha` first:
-
-```lean
--- ❌ unreliable
-simp [ha, hb, this]
-
--- ✅ correct
-subst ha  -- eliminates `a` everywhere in the goal
-simp [hb, this]
-```
-
-### Pattern 3: Product surjection decomposition
-
-When destructuring a surjection `e : A × B ≃ C`, the correct `obtain` form is:
-```lean
--- ✅ correct: nested angle brackets for the pair
-obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
-
--- ❌ wrong: Lean sees ∃ p : A×B, not ∃ a b
-obtain ⟨a, b, rfl⟩ := e.surjective j
-```
-
-### Pattern 4: The standard tensor-coordinate equivalence
-
-For all tensor-product proofs, define `e` once and use it consistently:
-```lean
-let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-  finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
-```
-Note: `finCongr` takes the **symmetric** form (`(pow_add 2 k m).symm`) because `pow_add` states `2^(k+m) = 2^k * 2^m` but `finCongr` needs `2^k * 2^m = 2^(k+m)`.
+Read these before starting any proof work.
 
 ## Proof Strategy for Quantum Circuit Correctness
 
