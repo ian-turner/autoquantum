@@ -350,6 +350,35 @@ open scoped Kronecker
 ```
 inside every file that uses `⊗ₖ`, even if some imported file already opened that scope locally.
 
+### 30. `change` fails for concrete-type tensor lemmas; use abstract `ψ : QHilbert k` instead
+When a lemma involves `tensorVec ψ φ` and `ψ` or `φ` is a concrete term (e.g., `(hPlusState 1).vec`), the `change` tactic fails during the coordinatewise proof because Lean reduces the concrete term during definitional equality checking, causing a mismatch. The fix is to always state and prove tensor coordinate lemmas with **abstract** `ψ : QHilbert k` and `φ : QHilbert m`, then instantiate them:
+```lean
+-- fails if ψ is concrete:
+change ∑ x, ∑ y, (if e (a, b) = e (x, y) then ψ x * φ y else 0) = ψ a * φ b
+
+-- works: prove with abstract ψ φ, then call:
+exact tensorVec_apply _ _ a b
+```
+When bridging from a `.vec`-qualified goal to `tensorVec`, prepend `show tensorVec ψ.vec φ.vec (e (a,b)) = _` before `exact tensorVec_apply _ _ a b`.
+
+### 31. `simp [ha]` where `ha : a = 0` does not reliably substitute inside complex expressions; use `subst ha` first
+After a `by_cases ha : a = 0`, writing `simp [ha, ...]` does not always rewrite `a` inside subterms like `e (a, b)`. The goal silently stays with `a` rather than `0`, so `this : e (0, b) ≠ 0` does not unify with the goal `¬ e (a, b) = 0`. Fix: call `subst ha` (or `subst hb`) immediately after the case split, which eliminates the variable everywhere:
+```lean
+by_cases ha : a = 0
+· subst ha   -- ← eliminates `a` everywhere before have/simp
+  have : e (0, b) ≠ 0 := ...
+  simp [hb, this]
+```
+`subst` only works when `ha` has the form `variable = expr` (not `expr = variable`). If the hypothesis is reversed, use `subst ha.symm` or `simp only [ha]` carefully.
+
+### 32. `obtain ⟨a, b, rfl⟩ := e.surjective j` fails; surjectivity of `A × B ≃ C` yields `∃ p : A × B`, not `∃ a b`
+For an equivalence `e : A × B ≃ C`, `e.surjective j` has type `∃ p : A × B, e p = j`. The destructuring pattern must use **nested** angle brackets:
+```lean
+obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j   -- ✅
+obtain ⟨a, b, rfl⟩   := e.surjective j   -- ❌ pattern mismatch
+```
+After this line, `j` is replaced everywhere by `e (a, b)` and the goal is restated in terms of `a` and `b`.
+
 ### 25. The recursive `target.succ` QFT layers appear to require `tensorWithId 1`, not the older suffix-lift helper
 During the next general-proof pass, `QFT.lean` was refactored to expose
 ```lean
