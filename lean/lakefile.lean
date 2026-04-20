@@ -7,5 +7,8 @@ package «AutoQuantum» where
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4" @ "v4.29.0"
 
+require repl from git
+  "https://github.com/leanprover-community/repl" @ "v4.29.0"
+
 lean_lib «AutoQuantum» where
   globs := #[.andSubmodules `AutoQuantum]
