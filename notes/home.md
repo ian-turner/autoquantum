@@ -72,6 +72,7 @@ For HPlus, Gaps 1–4 are all complete. The blocker is Gap 5: `hadamardAt_zero_e
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 
 ### Algorithms
+- [Proof Attempt Log](proof-attempts.md) — running log of approaches tried per sorry; brief new agent sessions from here
 - [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles
 - [QFT Recursion Indexing](qft-recursion-indexing.md) — Why the unfinished general proof appears to need `tensorWithId 1` rather than the older suffix-lift helper
 - [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem
