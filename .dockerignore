@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+.npm
+.opencode
+
+# Python
+__pycache__
+*.pyc
+.python-version
+.venv
+env
+
+# Lean
+lean/lake-packages
+lean/build
+lean/.lake
+*.olean
+
+# Local notes and references
+notes/.obsidian
+references/*.pdf
+
+# Docker
+.dockerignore
+Dockerfile
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode
+.idea

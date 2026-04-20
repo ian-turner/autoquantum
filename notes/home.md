@@ -30,6 +30,28 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
 | `Algorithms/HPlus.lean` | No | Uniform superposition |+⟩^⊗n scaffolding added April 19, 2026; the algorithm file now owns `hPlusVector`, `hPlusVector_norm`, and `hPlusState`, keeping `Core/Hilbert.lean` focused on shared foundational definitions; tensor-product normalization support (`tensorState`, `tensorVec_norm`) is now proved, leaving `hPlus_correct` as the remaining gap. |
 
+## Container Usage
+
+A Docker‑based sandboxed environment is available for fully reproducible OpenCode sessions. See the [Docker Containerization Plan](docker-containerization-plan.md) for the complete design.
+
+**Quick start:**
+
+```bash
+# Build the image (once)
+./scripts/docker-build.sh
+
+# Start the OpenCode server in the background
+./scripts/docker-compose-up.sh
+
+# Connect from your host (requires OpenCode CLI installed on host)
+./scripts/docker-compose-connect.sh
+
+# Stop the container when done
+docker-compose down
+```
+
+**Prerequisites:** Docker, Docker Compose, OpenCode CLI on the host.
+
 ## Topics
 
 ### Research & Literature
