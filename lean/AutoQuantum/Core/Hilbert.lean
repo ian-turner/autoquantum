@@ -70,6 +70,27 @@ noncomputable def tensorVec {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) : QH
   ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m),
     (ψ a * φ b) • (EuclideanSpace.single (e (a, b)) (1 : ℂ))
 
+/-- The coordinate formula for tensorVec: at index e(a,b), the value is ψ(a)·φ(b). -/
+lemma tensorVec_apply {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) (a : Fin (2^k)) (b : Fin (2^m)) :
+    let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+      finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+    tensorVec ψ φ (e (a, b)) = ψ a * φ b := by
+  intro e; unfold tensorVec
+  rw [WithLp.ofLp_sum]; simp_rw [WithLp.ofLp_sum]
+  simp [WithLp.ofLp_smul, Pi.single_apply]
+  change ∑ x : Fin (2 ^ k), ∑ y : Fin (2 ^ m),
+      (if e (a, b) = e (x, y) then ψ x * φ y else 0) = ψ a * φ b
+  rw [Finset.sum_eq_single a]
+  · rw [Finset.sum_eq_single b]
+    · simp
+    · intro y _ hyb
+      simp [show e (a, b) ≠ e (a, y) from fun h => hyb (congrArg Prod.snd (e.injective h)).symm]
+    · exact fun h => absurd (Finset.mem_univ b) h
+  · intro x _ hxa
+    exact Finset.sum_eq_zero fun y _ => by
+      simp [show e (a, b) ≠ e (x, y) from fun h => hxa (congrArg Prod.fst (e.injective h)).symm]
+  · exact fun h => absurd (Finset.mem_univ a) h
+
 /-- The tensor product of two normalized quantum states.
     Normalization follows by reindexing to the product basis and factoring the squared norm. -/
 noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QState (k + m) :=

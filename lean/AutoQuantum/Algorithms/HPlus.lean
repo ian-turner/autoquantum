@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Core.Qubit
 import AutoQuantum.Lemmas.Circuit
 import AutoQuantum.Lemmas.Hilbert
 import Mathlib.Algebra.BigOperators.Fin
@@ -71,6 +72,66 @@ noncomputable def hPlusCircuit (n : ℕ) : Circuit n :=
   (List.finRange n).map fun i => ⟨hadamardAt i⟩
 
 /-! ## Correctness theorem -/
+
+/-- The 1-qubit plus state equals the uniform superposition state for 1 qubit. -/
+lemma ketPlus_eq_hPlusState_one : ketPlus = hPlusState 1 := by
+  apply Subtype.ext
+  ext i
+  fin_cases i <;> simp [ketPlus, hPlusState, hPlusVector, ket0, ket1, basisState, superpose, QState.vec]
+
+/-- The all-zero basis state in a (1+n)-qubit system equals the tensor product
+    of the zero states in 1-qubit and n-qubit systems. -/
+lemma basisState_zero_tensor (n : ℕ) :
+    basisState (1 + n) 0 = tensorState (basisState 1 0) (basisState n 0) := by
+  apply Subtype.ext
+  let e : Fin (2 ^ 1) × Fin (2 ^ n) ≃ Fin (2 ^ (1 + n)) :=
+    finProdFinEquiv.trans (finCongr (pow_add 2 1 n).symm)
+  have he00 : e (0, 0) = (0 : Fin (2 ^ (1 + n))) := Fin.ext (by simp [e])
+  ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
+  -- Normalize to .vec form so rw can match
+  change (basisState (1 + n) 0).vec (e (a, b)) =
+      (tensorState (basisState 1 0) (basisState n 0)).vec (e (a, b))
+  have hten : (tensorState (basisState 1 0) (basisState n 0)).vec (e (a, b)) =
+      (basisState 1 0).vec a * (basisState n 0).vec b := by
+    show tensorVec (basisState 1 0).vec (basisState n 0).vec (e (a, b)) = _
+    exact tensorVec_apply _ _ a b
+  rw [hten]
+  simp only [QState.vec, basisState, PiLp.single_apply]
+  by_cases ha : a = 0 <;> by_cases hb : b = 0
+  · subst ha hb; simp [he00]
+  · subst ha
+    have : e (0, b) ≠ 0 :=
+      fun h => hb (congrArg Prod.snd (e.injective (h.trans he00.symm)))
+    simp [hb, this]
+  · subst hb
+    have : e (a, 0) ≠ 0 :=
+      fun h => ha (congrArg Prod.fst (e.injective (h.trans he00.symm)))
+    simp [ha, this]
+  · have : e (a, b) ≠ 0 :=
+      fun h => ha (congrArg Prod.fst (e.injective (h.trans he00.symm)))
+    simp [ha, hb, this]
+
+/-- The (1+n)-qubit uniform superposition vector equals the tensor product
+    of the 1-qubit and n-qubit uniform superpositions. -/
+lemma hPlusVector_succ (n : ℕ) :
+    hPlusVector (1 + n) = (tensorState (hPlusState 1) (hPlusState n)).vec := by
+  let e : Fin (2 ^ 1) × Fin (2 ^ n) ≃ Fin (2 ^ (1 + n)) :=
+    finProdFinEquiv.trans (finCongr (pow_add 2 1 n).symm)
+  ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
+  have hten : (tensorState (hPlusState 1) (hPlusState n)).vec (e (a, b)) =
+      (hPlusState 1).vec a * (hPlusState n).vec b := by
+    show tensorVec (hPlusState 1).vec (hPlusState n).vec (e (a, b)) = _
+    exact tensorVec_apply _ _ a b
+  -- Both sides are 1/√(2^(1+n))
+  have hlhs : hPlusVector (1 + n) (e (a, b)) = (1 / Real.sqrt (2 ^ (1 + n) : ℝ) : ℂ) :=
+    by simp [hPlusVector, basisState, QState.vec]
+  have h1 : (hPlusState 1).vec a = (1 / Real.sqrt (2 ^ 1 : ℝ) : ℂ) := by
+    simp [hPlusState, QState.mk, QState.vec, hPlusVector, basisState]
+    fin_cases a <;> simp
+  have hn : (hPlusState n).vec b = (1 / Real.sqrt (2 ^ n : ℝ) : ℂ) := by
+    simp [hPlusState, QState.mk, QState.vec, hPlusVector, basisState]
+  rw [hlhs, hten, h1, hn, pow_add, pow_one, Real.sqrt_mul (by norm_num : (0 : ℝ) ≤ 2)]
+  push_cast; field_simp
 
 /-- Applying a Hadamard to every qubit of |0…0⟩ yields the uniform superposition state. -/
 theorem hPlus_correct (n : ℕ) :
