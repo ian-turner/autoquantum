@@ -32,14 +32,4 @@ lemma basisState_braket {n : ℕ} (j k : Fin (2 ^ n)) :
   rw [orthonormal_iff_ite] at h
   exact h j k
 
-/-! ## Tensor product norm -/
-
-/-- The tensor product of unit-norm vectors is unit-norm.
-    Proof sketch: ‖tensorVec ψ φ‖² = ∑_{a,b} |ψ a|²|φ b|² = ‖ψ‖²·‖φ‖² = 1.
-    Uses PiLp.norm_sq_eq_of_L2 and Finset.sum_product. -/
-lemma tensorVec_norm {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m)
-    (hψ : ‖ψ‖ = 1) (hφ : ‖φ‖ = 1) : ‖tensorVec ψ φ‖ = 1 := by
-  simpa [tensorState, QState.vec, QState.mk] using
-    (QState.norm_eq_one (tensorState (QState.mk ψ hψ) (QState.mk φ hφ)))
-
 end AutoQuantum

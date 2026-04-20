@@ -1,6 +1,8 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Core.Tensor
 import AutoQuantum.Lemmas.Circuit
 import AutoQuantum.Lemmas.Hilbert
+import AutoQuantum.Lemmas.Tensor
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
 

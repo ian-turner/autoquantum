@@ -2,12 +2,14 @@
 --
 -- Core: human-verifiable definitions and axioms (import to check the formalization)
 import AutoQuantum.Core.Hilbert
+import AutoQuantum.Core.Tensor
 import AutoQuantum.Core.Qubit
 import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Circuit
 
 -- Lemmas: AI-generated proofs of mathematical properties
 import AutoQuantum.Lemmas.Hilbert
+import AutoQuantum.Lemmas.Tensor
 import AutoQuantum.Lemmas.Qubit
 import AutoQuantum.Lemmas.Gate
 import AutoQuantum.Lemmas.Circuit
