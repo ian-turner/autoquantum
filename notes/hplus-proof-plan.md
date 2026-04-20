@@ -74,7 +74,7 @@ lemma hPlusVector_succ (n : ℕ) :
 ### Gap 4 — Gate action on tensor-product state
 
 **Likely the most technically painful gap.** Requires unraveling the `reindex` encoding
-inside `tensorWithId` (`Gate.lean:249`).
+inside `tensorWithId` (`Core/Gate.lean:249`).
 
 ```lean
 -- in Lemmas/Gate.lean
@@ -142,6 +142,6 @@ lemma hadamard_apply_zero : applyGate hadamard (basisState 1 0) = hPlusState 1
 ## Known hard points
 
 - **Gap 4** (`tensorWithId_apply`) is the hardest: it requires connecting the `Matrix.reindex`-encoded
-  Kronecker structure in `Gate.lean:249–270` to the vector-level `tensorState` definition.
+  Kronecker structure in `Core/Gate.lean:249–270` to the vector-level `tensorState` definition.
 - **Gap 5** (`hadamardAt` identities) requires reasoning about `permuteGate` and `Equiv.swap`
   acting on `Fin (n+1)`.

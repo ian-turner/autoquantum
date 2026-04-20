@@ -27,7 +27,7 @@ Provides two tools:
 | Tool | What it runs |
 |------|-------------|
 | `build(target="AutoQuantum")` | `lake build <target>` in `lean/` |
-| `check_file(file="AutoQuantum/Gate.lean")` | `lake env lean <file>` in `lean/` |
+| `check_file(file="AutoQuantum/Core/Gate.lean")` | `lake env lean <file>` in `lean/` |
 
 Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate install needed.
 
@@ -36,7 +36,7 @@ Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate
 Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, which:
 - Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
 - Disables the heaviest remote-search tools by default.
-- Biases the agent toward `lean_goal`, diagnostics, file outline, and local search.
+  - Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
 - Prefers an installed `lean-lsp-mcp` binary and falls back to `uvx lean-lsp-mcp`.
 
 Note: `lean_lsp` is currently only wired into OpenCode. Claude Code uses `lean_goal` etc. through the same server if added to `.claude/settings.json`.

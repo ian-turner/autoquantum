@@ -18,12 +18,20 @@ autoquantum/
 ├── lean/               # Lean 4 project (lakefile.lean + source)
 │   ├── lean-toolchain   -- pins leanprover/lean4:v4.29.0
 │   └── AutoQuantum/    # Core Lean library
-│       ├── Hilbert.lean          -- Hilbert space & quantum state types
-│       ├── Qubit.lean            -- Single-qubit primitives
-│       ├── Gate.lean             -- Gate definitions & properties
-│       ├── Circuit.lean          -- Circuit composition & semantics
+│       ├── Core/
+│       │   ├── Hilbert.lean          -- Hilbert space & quantum state types
+│       │   ├── Qubit.lean            -- Single-qubit primitives
+│       │   ├── Gate.lean             -- Gate definitions & properties
+│       │   └── Circuit.lean          -- Circuit composition & semantics
+│       ├── Lemmas/
+│       │   ├── Hilbert.lean
+│       │   ├── Qubit.lean
+│       │   ├── Gate.lean
+│       │   └── Circuit.lean
 │       └── Algorithms/
-│           └── QFT.lean          -- Quantum Fourier Transform
+│           ├── QFT.lean          -- Quantum Fourier Transform
+│           ├── GHZ.lean
+│           └── HPlus.lean
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/     -- build/check tools (Python, runs via uv)
 │   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp LSP server
@@ -42,7 +50,7 @@ Two MCP servers are registered for this project and available to all agents.
 | Tool | Equivalent bash | Purpose |
 |------|----------------|---------|
 | `build(target="AutoQuantum")` | `cd lean && lake build AutoQuantum` | Build after editing Lean files |
-| `check_file(file="AutoQuantum/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Gate.lean` | Quick typecheck of a single file |
+| `check_file(file="AutoQuantum/Core/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Core/Gate.lean` | Quick typecheck of a single file |
 | `sorry_count()` | `grep -r sorry lean/AutoQuantum` | Count remaining sorrys across all source files |
 
 `file` paths are relative to `lean/`. The server handles PATH setup for `lake` automatically.
@@ -51,15 +59,28 @@ Two MCP servers are registered for this project and available to all agents.
 
 Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and Mathlib API lookups:
 
-- `lean_goal` — inspect the proof state at a position
+**Core proof state tools:**
+- `lean_goal` — inspect the proof state at a position (goals before/after a tactic)
+- `lean_term_goal` — get the expected type at a position (useful for `refine`, `have`, `show`)
 - `lean_diagnostic_messages` — get elaboration errors/warnings for a file
-- `lean_file_outline` — list top-level definitions in a file
-- `lean_local_search` — search local Mathlib index first
-- `lean_loogle` — type-signature-based Mathlib lemma search (use when you know the type shape)
-- `lean_leansearch` — semantic natural-language Mathlib search (use when you know the concept)
-- `lean_state_search` — find tactics/lemmas that close a specific proof goal
+- `lean_file_outline` — list top-level definitions in a file (imports + declarations)
+- `lean_hover_info` — type signature and documentation for a symbol
 
-**Search priority**: `lean_local_search` → `lean_loogle` / `lean_leansearch` → `lean_state_search`.
+**Search tools (in priority order):**
+1. `lean_local_search` — fast local search to verify declarations exist (use before trying a lemma name)
+2. `lean_loogle` — type‑signature‑based Mathlib lemma search (use when you know the type shape)
+3. `lean_leansearch` — semantic natural‑language Mathlib search (use when you know the concept)
+4. `lean_state_search` — find tactics/lemmas that close a specific proof goal (most specific)
+
+**Interactive proof assistance:**
+- `lean_multi_attempt` — try multiple tactic snippets without modifying the file (returns goal states for each)
+- `lean_code_actions` — get LSP quick fixes and “Try this” suggestions at a line
+- `lean_verify` — check theorem axioms and scan source for suspicious patterns
+- `lean_completions` — IDE autocompletions (use on incomplete code after `.` or partial name)
+
+**Additional tools** (less frequently needed): `lean_declaration_file`, `lean_references`, `lean_get_widgets`, `lean_profile_proof`.
+
+**Note:** All `lean_lsp` tool names have the prefix `lean_lsp_` in the actual MCP interface (e.g., `lean_lsp_lean_goal`). The shorthand names above are used throughout this document for readability.
 
 ## Build
 
@@ -115,7 +136,7 @@ When generating or verifying a quantum circuit proof, follow this template:
 ## Adding New Algorithms
 
 1. Create `lean/AutoQuantum/Algorithms/<AlgorithmName>.lean`.
-2. Put `import AutoQuantum.Circuit` (and any Mathlib imports) at the very top, before the module doc comment.
+2. Put `import AutoQuantum.Core.Circuit` (and any Mathlib imports) at the very top, before the module doc comment.
 3. Define the circuit, state the correctness theorem, and prove (or `sorry`) it.
 4. Add an entry in `lean/AutoQuantum.lean`.
 5. Add a kebab-case note in `notes/` and link it from `notes/home.md` if the algorithm has non-trivial prerequisites.

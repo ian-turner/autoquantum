@@ -14,10 +14,11 @@
       "type": "local",
       "command": [
         "bash",
-        ".mcp/run-lean-lsp-mcp.sh"
+        "-c",
+        "LEAN_LOOGLE_LOCAL=false .mcp/run-lean-lsp-mcp.sh"
       ],
       "enabled": true,
-      "timeout": 15000
+      "timeout": 60000
     }
   }
 }

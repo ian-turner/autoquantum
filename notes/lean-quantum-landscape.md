@@ -74,35 +74,35 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| `QHilbert n` — `EuclideanSpace ℂ (Fin (2^n))` | Done | `Hilbert.lean` |
-| `QState n` — unit vector subtype | Done | `Hilbert.lean` |
-| `QState.braket` — inner product wrapper | Done | `Hilbert.lean` |
-| `basisState_braket` — basis orthonormality | **Done** (c4dcc6b) | `Hilbert.lean` |
-| `basisState n k` — computational basis state | Done | `Hilbert.lean` |
-| `superpose` — linear combination of vectors | Done | `Hilbert.lean` |
-| `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Hilbert.lean` |
-| `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Qubit.lean` (lint-cleaned Apr 17, 2026) |
-| `ketPlus_braket_ketMinus` | Done | `Qubit.lean` |
-| Bloch sphere parameterization | Done | `Qubit.lean` |
-| `QGate k` — unitary gate type | Done | `Gate.lean` |
-| Pauli X, Y, Z gates + unitarity proofs | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
-| Hadamard gate + unitarity proof | Done | `Gate.lean` |
-| Phase rotation R_k + unitarity proof | Done | `Gate.lean` |
-| CNOT gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
-| SWAP gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
-| `applyGate` — gate application to state | Done | `Gate.lean` |
+| `QHilbert n` — `EuclideanSpace ℂ (Fin (2^n))` | Done | `Core/Hilbert.lean` |
+| `QState n` — unit vector subtype | Done | `Core/Hilbert.lean` |
+| `QState.braket` — inner product wrapper | Done | `Core/Hilbert.lean` |
+| `basisState_braket` — basis orthonormality | **Done** (c4dcc6b) | `Core/Hilbert.lean` |
+| `basisState n k` — computational basis state | Done | `Core/Hilbert.lean` |
+| `superpose` — linear combination of vectors | Done | `Core/Hilbert.lean` |
+| `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Core/Hilbert.lean` |
+| `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Core/Qubit.lean` (lint-cleaned Apr 17, 2026) |
+| `ketPlus_braket_ketMinus` | Done | `Core/Qubit.lean` |
+| Bloch sphere parameterization | Done | `Core/Qubit.lean` |
+| `QGate k` — unitary gate type | Done | `Core/Gate.lean` |
+| Pauli X, Y, Z gates + unitarity proofs | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
+| Hadamard gate + unitarity proof | Done | `Core/Gate.lean` |
+| Phase rotation R_k + unitarity proof | Done | `Core/Gate.lean` |
+| CNOT gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
+| SWAP gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
+| `applyGate` — gate application to state | Done | `Core/Gate.lean` |
 | `applyGate_vec_apply` — coordinate formula for gate application | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `applyGate_basisState_vec_apply` — gate on basis state gives matrix column | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `hadamard_apply_ket0` — H\|0⟩ = \|+⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `hadamard_apply_ket1` — H\|1⟩ = \|−⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
-| `tensorWithId`, `idTensorWith`, `controlled` | Done | `Gate.lean` |
-| `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Gate.lean` (Apr 18, 2026) |
-| `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Gate.lean` (Apr 18, 2026) |
-| `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Gate.lean` (Apr 18, 2026) |
-| `Circuit n` — list of gate steps | Done | `Circuit.lean` |
-| `circuitMatrix` — product of gate matrices | Done | `Circuit.lean` |
-| `circuitMatrix_append` — composition lemma | Done | `Circuit.lean` |
-| `Circuit.CorrectFor` — correctness predicate | Done | `Circuit.lean` (unitary witness intentionally unused) |
+| `tensorWithId`, `idTensorWith`, `controlled` | Done | `Core/Gate.lean` |
+| `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Core/Gate.lean` (Apr 18, 2026) |
+| `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Core/Gate.lean` (Apr 18, 2026) |
+| `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Core/Gate.lean` (Apr 18, 2026) |
+| `Circuit n` — list of gate steps | Done | `Core/Circuit.lean` |
+| `circuitMatrix` — product of gate matrices | Done | `Core/Circuit.lean` |
+| `circuitMatrix_append` — composition lemma | Done | `Core/Circuit.lean` |
+| `Circuit.CorrectFor` — correctness predicate | Done | `Core/Circuit.lean` (unitary witness intentionally unused) |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
 | `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
 | `dft_orthogonality` — DFT orthogonality sum | **Done** (Apr 18, 2026) | `QFT.lean` |
@@ -115,7 +115,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
 | `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `tensorState`, `tensorVec_norm` | **Done** (Apr 19, 2026) | `Hilbert.lean` / `Lemmas/Hilbert.lean` |
+| `tensorState`, `tensorVec_norm` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` / `Lemmas/Hilbert.lean` |
 | `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (tensor support done; correctness still open) | `Algorithms/HPlus.lean` |
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
@@ -172,7 +172,7 @@ exact h j k
 `orthonormal_iff_ite` requires `[DecidableEq ι]`; for `Fin n` this is always satisfied automatically.
 
 ### 10. `field_simp` stalls on `Complex.normSq ((1 : ℂ) / √2)`
-In `Qubit.lean`, the coefficient obligation for `ketPlus` normalization does not fully close with `field_simp`; Lean can stop at a scalar goal like `Complex.normSq (1 / ↑√2) * (1 + 1) = 1`. The robust route is to prove the scalar fact first:
+In `Core/Qubit.lean`, the coefficient obligation for `ketPlus` normalization does not fully close with `field_simp`; Lean can stop at a scalar goal like `Complex.normSq (1 / ↑√2) * (1 + 1) = 1`. The robust route is to prove the scalar fact first:
 ```lean
 have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
   rw [Complex.normSq_div]
@@ -181,7 +181,7 @@ have hcoef : Complex.normSq (((1 : ℂ) / Real.sqrt 2)) = 1 / 2 := by
 and then finish the sum with `nlinarith`.
 
 ### 11. `QState.mk` must often be unfolded in pointwise vector proofs
-When a goal mentions `(blochState θ φ).vec` or another state built with `QState.mk`, `fin_cases` plus `simp` may stop at terms like `↑(QState.mk v h)` instead of reducing to `v`. In `Qubit.lean`, the pole lemmas only closed once `QState.vec` and `QState.mk` were both added to the simp set:
+When a goal mentions `(blochState θ φ).vec` or another state built with `QState.mk`, `fin_cases` plus `simp` may stop at terms like `↑(QState.mk v h)` instead of reducing to `v`. In `Core/Qubit.lean`, the pole lemmas only closed once `QState.vec` and `QState.mk` were both added to the simp set:
 ```lean
 fin_cases i <;> simp [QState.vec, QState.mk, blochState, superpose, ket0, ket1, basisState]
 ```
@@ -337,7 +337,7 @@ embedded_suffix_bitReverse * final_swap_0_last
 This is not just cosmetic proof organization; it is the structural step that makes the recursive
 statement line up with the existing induction hypothesis.
 
-### 24. `⊗ₖ` notation is file-local syntax: importing `Gate.lean` does not automatically open the Kronecker scope in `QFT.lean`
+### 24. `⊗ₖ` notation is file-local syntax: importing `Core/Gate.lean` does not automatically open the Kronecker scope in `QFT.lean`
 When the new suffix-lift helper `liftGate` was first written in `QFT.lean`, the definition used
 ```lean
 (1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)

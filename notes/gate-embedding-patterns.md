@@ -1,6 +1,6 @@
 # Gate Embedding Patterns
 
-Reusable proof and definition patterns from the completed gate-embedding work in `Gate.lean`.
+Reusable proof and definition patterns from the completed gate-embedding work in `Core/Gate.lean`.
 
 ## Tensor Embeddings
 

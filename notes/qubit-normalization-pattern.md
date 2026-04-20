@@ -1,6 +1,6 @@
 # Qubit Normalization Pattern
 
-This note records the proof patterns used to discharge the `ketPlus`, `ketMinus`, and `blochState` proofs in `lean/AutoQuantum/Qubit.lean`.
+This note records the proof patterns used to discharge the `ketPlus`, `ketMinus`, and `blochState` proofs in `lean/AutoQuantum/Core/Qubit.lean`.
 
 ## Pattern
 
@@ -10,7 +10,7 @@ For a state of the form
 superpose a b ket0.vec ket1.vec
 ```
 
-prefer reusing `superpose_norm_eq_one` from `Hilbert.lean` rather than expanding the `EuclideanSpace` norm directly. The proof obligations then separate cleanly into:
+prefer reusing `superpose_norm_eq_one` from `Core/Hilbert.lean` rather than expanding the `EuclideanSpace` norm directly. The proof obligations then separate cleanly into:
 
 1. `QState.norm_eq_one ket0` and `QState.norm_eq_one ket1`
 2. Orthogonality via `simpa [QState.braket] using ket0_braket_ket1`

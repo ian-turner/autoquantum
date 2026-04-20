@@ -6,7 +6,7 @@ Required gate- and circuit-level abstractions for constructing the standard deco
 
 ## Why the Current API Is Not Enough
 
-`Gate.lean` currently supports:
+`Core/Gate.lean` currently supports:
 
 - end-placement embeddings via `tensorWithId` and `idTensorWith`
 - a fixed-layout 2-qubit `controlled` constructor

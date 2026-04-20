@@ -89,7 +89,7 @@ The key proof engineering point is that `Matrix.mem_unitaryGroup_iff` exposes th
 
 ### Step 5: Define gate embeddings (done)
 
-`tensorWithId`, `idTensorWith`, and `controlled` in `Gate.lean` are now available. The working pattern is Kronecker product plus reindexing through `finProdFinEquiv` / `finCongr`, and `controlled` is implemented as a block-diagonal matrix reindexed from `Fin 2 ⊕ Fin 2` to `Fin 4`.
+`tensorWithId`, `idTensorWith`, and `controlled` in `Core/Gate.lean` are now available. The working pattern is Kronecker product plus reindexing through `finProdFinEquiv` / `finCongr`, and `controlled` is implemented as a block-diagonal matrix reindexed from `Fin 2 ⊕ Fin 2` to `Fin 4`.
 
 ### Step 6: Define the QFT circuit ✓ (done)
 
