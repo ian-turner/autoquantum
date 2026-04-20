@@ -7,7 +7,7 @@ FROM ubuntu:22.04
 # Install system dependencies as root
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository universe && \
-    apt-get update && apt-get install -y \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
     bash \
     curl \
     git \
@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     npm \
     cargo \
     ripgrep \
+    tzdata \
+    && ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv (fast Python package manager) and Python mcp package globally

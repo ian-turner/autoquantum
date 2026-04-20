@@ -9,7 +9,7 @@ export LEAN_MCP_INSTRUCTIONS="${LEAN_MCP_INSTRUCTIONS:-Prefer lean_goal, lean_di
 export LEAN_REPL="${LEAN_REPL:-true}"
 export LEAN_LOOGLE_LOCAL="${LEAN_LOOGLE_LOCAL:-true}"
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.elan/bin:$HOME/.local/bin:$PATH"
 
 if command -v lean-lsp-mcp >/dev/null 2>&1; then
   exec lean-lsp-mcp
