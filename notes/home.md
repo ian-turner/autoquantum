@@ -28,7 +28,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Core/Circuit.lean` | **Yes** | All proofs complete; `CorrectFor` keeps an intentionally unused unitary witness |
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now also includes `qftLayers`, `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`, `circuitMatrix_liftCircuit`, `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB) rather than the existing `liftGate` / `liftCircuit` suffix embedding; remaining gaps are `qft_correct` and `qft2_correct` |
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
-| `Algorithms/HPlus.lean` | No | Uniform superposition |+⟩^⊗n scaffolding added April 19, 2026; the algorithm file now owns `hPlusVector`, `hPlusVector_norm`, and `hPlusState`, keeping `Core/Hilbert.lean` focused on shared foundational definitions; tensor-product normalization support (`tensorState`, `tensorVec_norm`) is now proved, leaving `hPlus_correct` as the remaining gap. |
+| `Algorithms/HPlus.lean` | No | All supporting lemmas proved (Gaps 1–4: `tensorState`, `hPlusVector_norm`, `basisState_zero_tensor`, `hPlusVector_succ`, `tensorWithId_apply`). `hPlus_correct` has a structured inductive proof with n=0 base case complete; inductive step blocked on Gap 5 (`hadamardAt_zero_eq` — relating `onQubit 0` to `tensorWithId` via permutation algebra). |
 
 ## Container Usage
 
@@ -55,7 +55,7 @@ Current sorry count: **6** (as of April 20, 2026).
 
 For QFT, the recommended next step is proving explicit 4×4 matrix lemmas for `hadamardAt 0`, `hadamardAt 1`, `controlledPhaseAt 1 0 2`, and `bitReverse`, then assembling `qft2_correct`. The general proof requires shifted-gate-placement lemmas (`hadamardAt q.succ = tensorWithId 1 ...`) plus recursive bit-reversal decomposition — see [QFT Recursion Indexing](qft-recursion-indexing.md).
 
-For HPlus, the blocker is `tensorWithId_apply` in `Lemmas/Gate.lean` (Gap 4 in the proof plan).
+For HPlus, Gaps 1–4 are all complete. The blocker is Gap 5: `hadamardAt_zero_eq` — proving that `hadamardAt (0 : Fin (1+n))` equals `tensorWithId n hadamard` as gate matrices. This requires working through the `permuteGate (swap last 0) (idTensorWith n hadamard)` permutation algebra. An easier alternative: induct from the back of the circuit using `hadamardAt (Fin.last n) = idTensorWith n hadamard` (the swap is trivial there) and add `idTensorWith_apply`. See [HPlus Proof Plan](hplus-proof-plan.md).
 
 ## Topics
 

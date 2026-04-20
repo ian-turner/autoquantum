@@ -56,10 +56,11 @@ Implemented in `Algorithms/HPlus.lean` by observing that every coordinate of
 lemma hPlusVector_norm (n : ℕ) : ‖hPlusVector n‖ = 1
 ```
 
-### Gap 3 — State decomposition lemmas
+### Gap 3 — State decomposition lemmas ✅ complete
+
+Both proved in `Algorithms/HPlus.lean` (April 20, 2026).
 
 ```lean
--- likely in Algorithms/HPlus.lean or a dedicated HPlus lemma file
 lemma basisState_zero_tensor (n : ℕ) :
     basisState (1 + n) 0 = tensorState (basisState 1 0) (basisState n 0)
 
@@ -67,9 +68,7 @@ lemma hPlusVector_succ (n : ℕ) :
     hPlusVector (1 + n) = (tensorState (hPlusState 1) (hPlusState n)).vec
 ```
 
-`hPlusVector_succ` is the combinatorial core: the identity
-`∑_{k : Fin(2^{n+1})} |k⟩ = (∑_a |a⟩₁) ⊗ (∑_b |b⟩ₙ)` together with the scalar
-`1/√(2^{n+1}) = (1/√2)(1/√(2^n))`.
+`hPlusVector_succ` uses `tensorVec_apply` (abstract-type pattern), `pow_add`, and `Real.sqrt_mul`.
 
 ### Gap 4 — Gate action on tensor-product state ✅ complete
 
@@ -89,19 +88,34 @@ then `Finset.sum_ite_eq` (no prime — pattern `a = x`). The key constraint: def
 `show 2^k * 2^m = 2^(k+m) by rw [pow_add]` (exact copy of `tensorWithId`'s internal `e`) so
 that `Equiv.symm_apply_apply` fires inside `simp`.
 
-### Gap 5 — `hadamardAt` gate identities
+### Gap 5 — `hadamardAt` gate identities ← current blocker
 
-Both require unfolding `onQubit` → `permuteGate` → `idTensorWith` and showing the
-permutation-conjugation simplifies correctly.
+**Status (April 20, 2026):** DeepSeek attempted this via OpenCode and could not close it after ~6 approaches. The front-qubit route (proving `hadamardAt 0 = tensorWithId n hadamard`) requires working through `qubitPerm` / `finFunctionFinEquiv` matrix algebra and is confirmed hard.
+
+**Easier alternative — induct from the back:**
+
+`hadamardAt (Fin.last n)` in an `(n+1)`-qubit system unfolds to
+`permuteGate (Equiv.swap (Fin.last n) (Fin.last n)) (idTensorWith n hadamard)`.
+Since `Equiv.swap x x = Equiv.refl`, the permutation is trivial and
+`permuteGate refl V = V`. Therefore:
 
 ```lean
--- in Lemmas/Gate.lean
+lemma hadamardAt_last_eq (n : ℕ) :
+    hadamardAt (Fin.last n) = idTensorWith n hadamard
+-- Proof: unfold hadamardAt/onQubit, simp [Equiv.swap_self, permuteGate, permuteQubits]
+```
 
--- H on qubit 0 of (n+1) = H ⊗ Iₙ
+This only requires `idTensorWith_apply` (the companion to the already-proved
+`tensorWithId_apply`) instead of the hard permutation proof.
+
+**Original front-qubit lemmas (harder):**
+
+```lean
+-- H on qubit 0 of (n+1) = H ⊗ Iₙ  (requires qubitPerm algebra)
 lemma hadamardAt_zero_eq (n : ℕ) :
     (hadamardAt (0 : Fin (n+1)) : QGate (n+1)) = tensorWithId n hadamard
 
--- H on qubit i+1 of (n+1) = I₁ ⊗ (H on qubit i of n-qubit system)
+-- H on qubit i+1 of (n+1) = I₁ ⊗ (H on qubit i of n)  (requires qubitPerm algebra)
 lemma hadamardAt_succ {n : ℕ} (i : Fin n) :
     (hadamardAt (i.succ : Fin (n+1)) : QGate (n+1)) = idTensorWith 1 (hadamardAt i)
 ```
@@ -146,9 +160,26 @@ lemma hadamard_apply_zero : applyGate hadamard (basisState 1 0) = hPlusState 1
 | 7 | `hadamard_apply_zero` | `Lemmas/Gate.lean` |
 | 8 | Assemble `hPlus_correct` by induction | `Algorithms/HPlus.lean` |
 
+## Session history
+
+### April 20, 2026
+
+- Gaps 1–4 all complete.
+- DeepSeek (via OpenCode) attempted `hPlus_correct` with the front-qubit induction strategy.
+  - n=0 base case proved successfully (empty circuit + `applyGate_one`).
+  - Inductive step scaffolded: `circuitMatrix_append`, `applyGate_mul`, `basisState_zero_tensor` applied.
+  - Blocked on `hadamardAt 0` permutation algebra (Gap 5 front-qubit route). ~6 tactic attempts all
+    ended in `sorry`. DeepSeek also failed to use `lean_lsp_lean_goal` (root cause: 15 s MCP timeout
+    caused tool failures on first call, making the model abandon interactive tools).
+- OpenCode tooling fixes applied: timeouts raised, rules files added, plugin with `lean_proof_step`
+  and `lean_find_sorry` tools created. See `notes/opencode-setup.md`.
+- Recommended next approach: **induct from the back** via `hadamardAt_last_eq` + `idTensorWith_apply`,
+  which avoids the hard `qubitPerm` algebra entirely.
+
 ## Known hard points
 
-- **Gap 4** (`tensorWithId_apply`) is the hardest: it requires connecting the `Matrix.reindex`-encoded
-  Kronecker structure in `Core/Gate.lean:249–270` to the vector-level `tensorState` definition.
-- **Gap 5** (`hadamardAt` identities) requires reasoning about `permuteGate` and `Equiv.swap`
-  acting on `Fin (n+1)`.
+- **Gap 5 front route** (`hadamardAt_zero_eq`): requires unpacking `qubitPerm (swap last 0)` through
+  `finFunctionFinEquiv` to show it swaps tensor factors. Confirmed difficult for LLM agents.
+- **Gap 5 back route** (`hadamardAt_last_eq` + `idTensorWith_apply`): `hadamardAt_last_eq` is easy
+  (`Equiv.swap_self`); `idTensorWith_apply` mirrors `tensorWithId_apply` (already proved) and should
+  follow the same Matrix.reindex + Kronecker entry calculation pattern.

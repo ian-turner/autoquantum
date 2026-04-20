@@ -447,6 +447,23 @@ PiLp.single_apply (p : ENNReal) (𝕜 : Type*) (i a j)
 ```
 Note the slightly different argument order and that `p` and `𝕜` are now explicit. In practice `simp [PiLp.single_apply]` works identically to the old usage; just rename every `EuclideanSpace.single_apply` occurrence.
 
+### 35. `hadamardAt 0` via `permuteGate (swap last 0) (idTensorWith n H)` resists direct proof; induct from the back instead
+
+Proving `hadamardAt (0 : Fin (1+n)) = tensorWithId n hadamard` requires showing that
+`qubitPerm (Equiv.swap (Fin.last n) 0)` maps the tensor-factor basis index
+`e₁(a, b) : Fin (2^1) × Fin (2^n) → Fin (2^(1+n))` to the swapped form
+`e₂(b, a)`. This involves unpacking `finFunctionFinEquiv` bitstring encoding and is
+confirmed hard to automate (DeepSeek failed after ~6 attempts, April 20, 2026).
+
+The easier route: use `hadamardAt (Fin.last n)` instead.
+`Equiv.swap (Fin.last n) (Fin.last n) = Equiv.refl` eliminates the permutation entirely,
+giving `hadamardAt (Fin.last n) = idTensorWith n hadamard` with a one-liner proof:
+```lean
+simp [hadamardAt, onQubit, Equiv.swap_self, permuteGate, permuteQubits]
+```
+Then induct from the back of `hPlusCircuit` and prove `idTensorWith_apply` (the companion
+to `tensorWithId_apply`, same proof pattern) to close `hPlus_correct`.
+
 ### 29. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
 For the uniform-superposition normalization proof, the pointwise identity
 ```lean
