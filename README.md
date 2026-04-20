@@ -43,9 +43,20 @@ autoquantum/
 └── CLAUDE.md               # Points to AGENTS.md
 ```
 
-## Getting Started
+## Docker Development Environment
 
-### Prerequisites
+To run Lean and MCP tools in Docker:
+
+```bash
+docker compose up -d     # Start the dev container
+docker compose exec dev lake build  # Build the Lean project
+```
+
+The container includes the Lean toolchain, MCP servers for `lean` and `lean_lsp`, and is pre-configured for use with OpenCode. Connect by adding the workspace in OpenCode and pointing it to this repository.
+
+### Local Development
+
+#### Prerequisites
 
 - [Lean 4 + elan](https://leanprover.github.io/lean4/doc/setup.html)
 - `lake` (bundled with elan)
