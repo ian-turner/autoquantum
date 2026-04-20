@@ -60,15 +60,13 @@ A Docker container provides a fully reproducible environment with the Lean toolc
 Create a `.env` file in the project root (gitignored) before starting the container:
 
 ```bash
-# Model selection — defaults to deepseek/deepseek-reasoner if unset
-# Other options: deepseek/deepseek-chat, anthropic/claude-sonnet-4-6, openai/gpt-4o
-OPENCODE_MODEL=
-
 # API keys — set whichever provider you're using
 DEEPSEEK_API_KEY=
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 ```
+
+To switch models, edit the `"model"` field in `opencode.json` (e.g. `deepseek/deepseek-chat`, `anthropic/claude-sonnet-4-6`).
 
 ```bash
 docker compose build                        # Build the image (once, ~5 min)
