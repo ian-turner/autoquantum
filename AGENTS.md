@@ -43,6 +43,7 @@ Two MCP servers are registered for this project and available to all agents.
 |------|----------------|---------|
 | `build(target="AutoQuantum")` | `cd lean && lake build AutoQuantum` | Build after editing Lean files |
 | `check_file(file="AutoQuantum/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Gate.lean` | Quick typecheck of a single file |
+| `sorry_count()` | `grep -r sorry lean/AutoQuantum` | Count remaining sorrys across all source files |
 
 `file` paths are relative to `lean/`. The server handles PATH setup for `lake` automatically.
 
@@ -53,7 +54,12 @@ Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and M
 - `lean_goal` — inspect the proof state at a position
 - `lean_diagnostic_messages` — get elaboration errors/warnings for a file
 - `lean_file_outline` — list top-level definitions in a file
-- `lean_local_search` — search local Mathlib index before trying remote tools
+- `lean_local_search` — search local Mathlib index first
+- `lean_loogle` — type-signature-based Mathlib lemma search (use when you know the type shape)
+- `lean_leansearch` — semantic natural-language Mathlib search (use when you know the concept)
+- `lean_state_search` — find tactics/lemmas that close a specific proof goal
+
+**Search priority**: `lean_local_search` → `lean_loogle` / `lean_leansearch` → `lean_state_search`.
 
 ## Build
 

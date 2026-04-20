@@ -59,6 +59,25 @@ def build(target: str = "AutoQuantum") -> str:
 
 
 @mcp.tool()
+def sorry_count() -> str:
+    """Count remaining `sorry`s across all Lean source files in AutoQuantum/."""
+    lean_root = _lean_root()
+    src_dir = lean_root / "AutoQuantum"
+    files = sorted(src_dir.rglob("*.lean"))
+    rows = []
+    total = 0
+    for f in files:
+        text = f.read_text(errors="replace")
+        count = text.count("sorry")
+        if count:
+            rows.append(f"  {f.relative_to(lean_root)}: {count}")
+            total += count
+    if not rows:
+        return "No sorrys found."
+    return "\n".join([f"Total: {total}"] + rows)
+
+
+@mcp.tool()
 def check_file(file: str) -> str:
     """Typecheck a single Lean file with lake env lean.
 
