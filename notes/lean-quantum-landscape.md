@@ -91,6 +91,10 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | CNOT gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
 | SWAP gate + unitarity proof | Done | `Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Gate.lean` |
+| `applyGate_vec_apply` — coordinate formula for gate application | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
+| `applyGate_basisState_vec_apply` — gate on basis state gives matrix column | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
+| `hadamard_apply_ket0` — H\|0⟩ = \|+⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
+| `hadamard_apply_ket1` — H\|1⟩ = \|−⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `tensorWithId`, `idTensorWith`, `controlled` | Done | `Gate.lean` |
 | `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Gate.lean` (Apr 18, 2026) |
 | `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Gate.lean` (Apr 18, 2026) |
@@ -373,6 +377,36 @@ tensorWithId 1
 ```
 rather than `liftGate` / `idTensorWith 1`. This distinction is easy to miss because both are
 “attach one idle qubit” operations, but they are different Kronecker/reindex conventions.
+### 26. `ext` on `PiLp`/`EuclideanSpace` after `Subtype.ext` produces `(↑...).ofLp i`, not `(applyGate ...).vec.ofLp i`
+After `apply Subtype.ext; ext i` on a `QState` equality, the goal takes the form
+```lean
+(↑(applyGate hadamard ket0)).ofLp i = (↑ketPlus).ofLp i
+```
+where `↑` is the `Subtype.val` coercion. The lemma `applyGate_vec_apply` has LHS `(applyGate U ψ).vec i`, which elaborates to `(applyGate U ψ).vec.ofLp i`. Lean's `rw` cannot match `.val.ofLp i` against `.vec.ofLp i` syntactically, even though `QState.vec psi = psi.val` definitionally.
+
+**Fix:** insert `show (applyGate hadamard ket0).vec i = ketPlus.vec i` (which `change`-style definitional equality accepts) before the `rw [applyGate_vec_apply]`:
+```lean
+apply Subtype.ext
+ext i
+show (applyGate hadamard ket0).vec i = ketPlus.vec i
+rw [applyGate_vec_apply]
+```
+
+### 27. `Matrix.dotProduct` is unknown as a `simp` argument; use `rfl` to close the `⬝ᵥ` residual goal
+After `simp [Matrix.toEuclideanLin, Matrix.toLin'_apply, Matrix.mulVec]`, a goal of the form
+```lean
+(fun j => ↑U i j) ⬝ᵥ ψ.vec.ofLp = ∑ x, ↑U i x * ψ.vec.ofLp x
+```
+may remain. Here `⬝ᵥ` is `Matrix.dotProduct`, but writing `simp [Matrix.dotProduct]` raises "Unknown constant". The left and right sides are definitionally equal (both reduce to `∑ j, U i j * ψ.vec.ofLp j`), so the goal closes immediately with `rfl`.
+
+### 28. `EuclideanSpace.single_apply` is deprecated; use `PiLp.single_apply` instead
+`EuclideanSpace.single_apply` was removed from the `EuclideanSpace` namespace. In Mathlib v4.29.0 the replacement is:
+```lean
+PiLp.single_apply (p : ENNReal) (𝕜 : Type*) (i a j)
+    : (PiLp.single p i a).ofLp j = if j = i then a else 0
+```
+Note the slightly different argument order and that `p` and `𝕜` are now explicit. In practice `simp [PiLp.single_apply]` works identically to the old usage; just rename every `EuclideanSpace.single_apply` occurrence.
+
 ### 20. `hPlusVector` coordinates simplify cleanly with `basisState` and `QState.vec`; explicit `EuclideanSpace.single_apply` is unnecessary
 For the uniform-superposition normalization proof, the pointwise identity
 ```lean
