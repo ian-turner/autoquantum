@@ -35,3 +35,7 @@ notes/.obsidian/
 
 # Local reference PDFs
 references/*.pdf
+
+# Docker build and runtime logs
+docker-*.log
+docker-compose*.log

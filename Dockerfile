@@ -17,17 +17,21 @@ RUN apt-get update && apt-get install -y \
 
 # Install uv (fast Python package manager) and Python mcp package globally
 RUN pip3 install uv \
-    && uv pip install mcp
-
-# Install lean-lsp-mcp (MCP server for Lean LSP) globally
-RUN npm install -g lean-lsp-mcp
+    && uv pip install --system mcp \
+    && uv pip install --system lean-lsp-mcp
 
 # Install OpenCode CLI globally
-RUN npm install -g @anomalyco/opencode
+RUN npm install -g opencode-ai
 
 # Create non‑root user matching host UID/GID (501:20)
-RUN groupadd -g 20 opencode && \
-    useradd -m -u 501 -g 20 -s /bin/bash opencode
+RUN useradd -m -u 501 -g 20 -s /bin/bash opencode
+
+# Create workspace directory and set ownership
+RUN mkdir -p /workspace && chown opencode:20 /workspace
+
+# Copy entrypoint script while still root
+COPY entrypoint.sh /home/opencode/entrypoint.sh
+RUN chown opencode:20 /home/opencode/entrypoint.sh && chmod +x /home/opencode/entrypoint.sh
 
 # Switch to non‑root user for elan installation
 USER opencode
@@ -39,15 +43,10 @@ RUN curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init
     && elan toolchain install leanprover/lean4:v4.29.0 \
     && elan default leanprover/lean4:v4.29.0
 
-# Set up workspace directory
-RUN mkdir -p /workspace
+RUN mkdir -p ~/.cache/opencode
 
 # Set up environment (ensure elan is in PATH)
 RUN echo '. ~/.profile' >> ~/.bashrc
-
-# Create a simple entrypoint script that changes to the mounted project if present
-COPY --chown=opencode:opencode entrypoint.sh /home/opencode/entrypoint.sh
-RUN chmod +x /home/opencode/entrypoint.sh
 
 WORKDIR /workspace
 

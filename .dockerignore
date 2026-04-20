@@ -24,9 +24,9 @@ lean/.lake
 notes/.obsidian
 references/*.pdf
 
-# Docker
-.dockerignore
-Dockerfile
+# Docker logs and temp files
+*.log
+docker-compose*.log
 
 # macOS
 .DS_Store
