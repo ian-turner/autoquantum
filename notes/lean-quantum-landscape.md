@@ -108,6 +108,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `circuitMatrix_append` — composition lemma | Done | `Core/Circuit.lean` |
 | `Circuit.Implements` — primary correctness predicate | Done | `Core/Circuit.lean` |
 | `tensorWithId_mul`, `tensorWithId_one`, `idTensorWith_mul`, `idTensorWith_one`, `circuitMatrix_tensorWithIdCircuit`, `circuitMatrix_idTensorCircuit` | Done | `Lemmas/Gate.lean` / `Lemmas/Circuit.lean` |
+| permutation-matrix proof infrastructure (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`, `finFunctionFinEquiv_symm_tensorIndex_{zero,succ}`, and `finFunctionFinEquiv_symm_qubitPerm_apply`) | **Done** (Apr 21, 2026) | `Lemmas/Gate.lean` |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
 | `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
 | `dft_orthogonality` — DFT orthogonality sum | **Done** (Apr 18, 2026) | `QFT.lean` |
@@ -493,3 +494,29 @@ have hcoord : ∀ j : Fin (2 ^ n), hPlusVector n j = (1 / Real.sqrt (2 ^ n : ℝ
   simp [hPlusVector, basisState, QState.vec]
 ```
 closed directly. An earlier attempt added `EuclideanSpace.single_apply`, but in Mathlib v4.29 that lemma is deprecated in favor of `PiLp.single_apply`, and it was not needed anyway because `simp` already unfolds the basis-state coordinates through the subtype wrapper.
+
+### 30. `tensorIndexEquiv n 1` + `finFunctionFinEquiv.symm` exposes the trailing qubit as digit `0`
+For qubit-permutation proofs on a register split as `n` leading qubits plus one trailing qubit, the useful coordinate facts are:
+```lean
+finFunctionFinEquiv.symm (tensorIndexEquiv n 1 (a, b)) 0 = b
+finFunctionFinEquiv.symm (tensorIndexEquiv n 1 (a, b)) j.succ =
+  finFunctionFinEquiv.symm a j
+```
+The `0` case closes with `simp [tensorIndexEquiv]` plus `omega`. The `succ` case needs one explicit quotient rewrite:
+```lean
+have hquot : ((b : ℕ) + 2 * a) / (2 * 2 ^ (j : ℕ)) = a / 2 ^ (j : ℕ) := by
+  rw [← Nat.div_div_eq_div_mul]
+  rw [Nat.add_mul_div_left _ _ (by omega), Nat.div_eq_of_lt b.is_lt, zero_add]
+```
+After that, `simp [hquot]` closes the digit goal. This is the stable way to relate `qubitPerm` on `castSucc`-lifted qubits to the tensor decomposition used by `tensorWithId 1`.
+
+### 31. The tempting `ρ = tensorWithId 1` lift of the old-qubit swap is not a one-line simp reduction
+A tempting reduction for `hadamardAt_castSucc_eq` is to set
+```lean
+ρ := Equiv.swap (Fin.castSucc (Fin.last m)) (Fin.castSucc i)
+```
+and try to prove
+```lean
+permuteQubits ρ = tensorWithId 1 (permuteQubits (Equiv.swap (Fin.last m) i))
+```
+Current evidence only supports the weaker conclusion that this transport lemma does **not** fall out from `simp` plus the basic digit lemmas. The interaction between `castSucc` on qubit indices and the base-2 digits exposed by `finFunctionFinEquiv.symm` is subtle, so this route should be treated as an explicit proof obligation rather than an obvious rewrite.

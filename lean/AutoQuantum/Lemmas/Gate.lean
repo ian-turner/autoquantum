@@ -1,6 +1,7 @@
 import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Qubit
 import AutoQuantum.Core.Hilbert
+import Mathlib.Tactic
 
 /-!
 # Gate Lemmas
@@ -210,6 +211,54 @@ lemma idTensorWith_one {k : ℕ} (m : ℕ) : idTensorWith m (1 : QGate k) = 1 :=
 
 /-! ## hadamardAt placement identities -/
 
+/-- Coercion of `permuteQubits` to a plain matrix is definitionally the permutation matrix. -/
+private lemma permuteQubits_coe {n : ℕ} (σ : Equiv.Perm (Fin n)) :
+    (permuteQubits σ : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = (qubitPerm σ).permMatrix ℂ := rfl
+
+/-- Left-multiplying by a permutation matrix permutes the row index. -/
+private lemma permMatrix_mul_apply {α : Type*} [Fintype α] [DecidableEq α]
+    (σ : Equiv.Perm α) (M : Matrix α α ℂ) (a b : α) :
+    ((σ.permMatrix ℂ) * M) a b = M (σ a) b := by
+  simp [Matrix.mul_apply]
+
+/-- Right-multiplying by a permutation matrix permutes the column index. -/
+private lemma mul_permMatrix_apply {α : Type*} [Fintype α] [DecidableEq α]
+    (σ : Equiv.Perm α) (M : Matrix α α ℂ) (a b : α) :
+    (M * σ.permMatrix ℂ) a b = M a (σ.symm b) := by
+  have h := congrFun (Matrix.vecMul_permMatrix (R := ℂ) (σ := σ) (v := fun j => M a j)) b
+  simpa [Matrix.vecMul_eq_sum, Matrix.mul_apply, Pi.single_apply, Equiv.eq_symm_apply, eq_comm] using h
+
+/-- Under `tensorIndexEquiv (n) 1`, the least-significant base-2 digit is exactly the trailing
+    `Fin 2` coordinate. -/
+private lemma finFunctionFinEquiv_symm_tensorIndex_zero (n : ℕ)
+    (a : Fin (2 ^ n)) (b : Fin 2) :
+    (finFunctionFinEquiv (m := 2) (n := n + 1)).symm (tensorIndexEquiv n 1 (a, b)) 0 = b := by
+  ext
+  simp [tensorIndexEquiv]
+  omega
+
+/-- Under `tensorIndexEquiv (n) 1`, the higher base-2 digits are exactly the digits of the
+    leading `Fin (2^n)` coordinate. -/
+private lemma finFunctionFinEquiv_symm_tensorIndex_succ (n : ℕ)
+    (a : Fin (2 ^ n)) (b : Fin 2) (j : Fin n) :
+    (finFunctionFinEquiv (m := 2) (n := n + 1)).symm (tensorIndexEquiv n 1 (a, b)) j.succ =
+      (finFunctionFinEquiv (m := 2) (n := n)).symm a j := by
+  ext
+  simp [tensorIndexEquiv, pow_succ']
+  have hb : (b : ℕ) < 2 := b.is_lt
+  have hbdiv : (b : ℕ) / 2 = 0 := Nat.div_eq_of_lt hb
+  have hquot : ((b : ℕ) + 2 * a) / (2 * 2 ^ (j : ℕ)) = a / 2 ^ (j : ℕ) := by
+    rw [← Nat.div_div_eq_div_mul]
+    rw [Nat.add_mul_div_left _ _ (by omega), hbdiv, zero_add]
+  simp [hquot]
+
+/-- Reading a digit of `qubitPerm σ a` amounts to reading the corresponding permuted digit of `a`. -/
+private lemma finFunctionFinEquiv_symm_qubitPerm_apply {n : ℕ}
+    (σ : Equiv.Perm (Fin n)) (a : Fin (2 ^ n)) (j : Fin n) :
+    (finFunctionFinEquiv (m := 2) (n := n)).symm (qubitPerm σ a) j =
+      (finFunctionFinEquiv (m := 2) (n := n)).symm a (σ.symm j) := by
+  simp [qubitPerm, Equiv.trans_apply, Equiv.piCongrLeft_apply]
+
 /-- `permuteQubits` of the identity permutation is the identity gate. -/
 private lemma permuteQubits_refl {n : ℕ} :
     permuteQubits (Equiv.refl (Fin n)) = (1 : QGate n) := by
@@ -232,6 +281,24 @@ lemma hadamardAt_last_eq (n : ℕ) :
     This is the key identity for shifting a gate away from the front of the circuit. -/
 lemma hadamardAt_castSucc_eq (n : ℕ) (i : Fin n) :
     (hadamardAt (Fin.castSucc i) : QGate (n + 1)) = tensorWithId 1 (hadamardAt i) := by
-  sorry
+  cases n with
+  | zero => exact Fin.elim0 i
+  | succ m =>
+      -- Normalize the RHS by distributing `tensorWithId 1` over the `onQubit`
+      -- conjugation, so the remaining goal is purely about how the swap-based
+      -- qubit permutation lifts through the extra trailing qubit.
+      change permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) *
+          idTensorWith (m + 1) hadamard *
+          permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) =
+        tensorWithId 1
+          (permuteQubits (Equiv.swap (Fin.last m) i) *
+            idTensorWith m hadamard *
+            permuteQubits (Equiv.swap (Fin.last m) i))
+      rw [tensorWithId_mul, tensorWithId_mul]
+      sorry
+      -- Remaining work: prove the castSucc-lifted swap permutation acts on
+      -- `tensorIndexEquiv (m+1) 1` by transporting only the leading factor,
+      -- then use the permutation-matrix helpers above to turn that index fact
+      -- into the required gate equality.
 
 end AutoQuantum
