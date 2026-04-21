@@ -33,8 +33,7 @@ lemma tensorVec_norm {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m)
 lemma tensorWithId_apply {k m : ℕ} (U : QGate k) (ψ : QState k) (φ : QState m) :
     applyGate (tensorWithId m U) (tensorState ψ φ) = tensorState (applyGate U ψ) φ := by
   apply Subtype.ext
-  let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-    finProdFinEquiv.trans <| finCongr (show 2 ^ k * 2 ^ m = 2 ^ (k + m) by rw [pow_add])
+  let e := tensorIndexEquiv k m
   let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
   ext i
   obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective i
@@ -72,8 +71,7 @@ lemma tensorWithId_apply {k m : ℕ} (U : QGate k) (ψ : QState k) (φ : QState 
 lemma idTensorWith_apply {k m : ℕ} (U : QGate k) (ψ : QState m) (φ : QState k) :
     applyGate (idTensorWith m U) (tensorState ψ φ) = tensorState ψ (applyGate U φ) := by
   apply Subtype.ext
-  let e : Fin (2 ^ m) × Fin (2 ^ k) ≃ Fin (2 ^ (m + k)) :=
-    finProdFinEquiv.trans <| finCongr (show 2 ^ m * 2 ^ k = 2 ^ (m + k) by rw [pow_add])
+  let e := tensorIndexEquiv m k
   let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
   ext i
   obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective i

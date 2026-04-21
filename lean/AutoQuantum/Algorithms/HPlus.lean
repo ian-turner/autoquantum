@@ -71,7 +71,7 @@ noncomputable def hPlusState (n : ℕ) : QState n :=
 
 /-- The circuit that produces |+⟩^⊗n: apply Hadamard to every qubit. -/
 noncomputable def hPlusCircuit (n : ℕ) : Circuit n :=
-  (List.finRange n).map fun i => ⟨hadamardAt i⟩
+  (List.finRange n).map fun i => hadamardAt i
 
 /-! ## Correctness theorem -/
 
@@ -86,9 +86,8 @@ lemma ketPlus_eq_hPlusState_one : ketPlus = hPlusState 1 := by
 lemma basisState_zero_tensor (n : ℕ) :
     basisState (1 + n) 0 = tensorState (basisState 1 0) (basisState n 0) := by
   apply Subtype.ext
-  let e : Fin (2 ^ 1) × Fin (2 ^ n) ≃ Fin (2 ^ (1 + n)) :=
-    finProdFinEquiv.trans (finCongr (pow_add 2 1 n).symm)
-  have he00 : e (0, 0) = (0 : Fin (2 ^ (1 + n))) := Fin.ext (by simp [e])
+  let e := tensorIndexEquiv 1 n
+  have he00 : e (0, 0) = (0 : Fin (2 ^ (1 + n))) := Fin.ext (by simp [e, tensorIndexEquiv])
   ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
   -- Normalize to .vec form so rw can match
   change (basisState (1 + n) 0).vec (e (a, b)) =
@@ -118,9 +117,8 @@ lemma basisState_zero_tensor (n : ℕ) :
 lemma basisState_zero_tensor' (n : ℕ) :
     basisState (n + 1) 0 = tensorState (basisState n 0) (basisState 1 0) := by
   apply Subtype.ext
-  let e : Fin (2 ^ n) × Fin (2 ^ 1) ≃ Fin (2 ^ (n + 1)) :=
-    finProdFinEquiv.trans (finCongr (pow_add 2 n 1).symm)
-  have he00 : e (0, 0) = (0 : Fin (2 ^ (n + 1))) := Fin.ext (by simp [e])
+  let e := tensorIndexEquiv n 1
+  have he00 : e (0, 0) = (0 : Fin (2 ^ (n + 1))) := Fin.ext (by simp [e, tensorIndexEquiv])
   ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
   change (basisState (n + 1) 0).vec (e (a, b)) =
       (tensorState (basisState n 0) (basisState 1 0)).vec (e (a, b))
@@ -148,8 +146,7 @@ lemma basisState_zero_tensor' (n : ℕ) :
     of the 1-qubit and n-qubit uniform superpositions. -/
 lemma hPlusVector_succ (n : ℕ) :
     hPlusVector (1 + n) = (tensorState (hPlusState 1) (hPlusState n)).vec := by
-  let e : Fin (2 ^ 1) × Fin (2 ^ n) ≃ Fin (2 ^ (1 + n)) :=
-    finProdFinEquiv.trans (finCongr (pow_add 2 1 n).symm)
+  let e := tensorIndexEquiv 1 n
   ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
   have hten : (tensorState (hPlusState 1) (hPlusState n)).vec (e (a, b)) =
       (hPlusState 1).vec a * (hPlusState n).vec b := by
@@ -170,8 +167,7 @@ lemma hPlusVector_succ (n : ℕ) :
     of the n-qubit and 1-qubit uniform superpositions. -/
 lemma hPlusVector_succ' (n : ℕ) :
     hPlusVector (n + 1) = (tensorState (hPlusState n) (hPlusState 1)).vec := by
-  let e : Fin (2 ^ n) × Fin (2 ^ 1) ≃ Fin (2 ^ (n + 1)) :=
-    finProdFinEquiv.trans (finCongr (pow_add 2 n 1).symm)
+  let e := tensorIndexEquiv n 1
   ext j; obtain ⟨⟨a, b⟩, rfl⟩ := e.surjective j
   have hten : (tensorState (hPlusState n) (hPlusState 1)).vec (e (a, b)) =
       (hPlusState n).vec a * (hPlusState 1).vec b := by
@@ -200,8 +196,8 @@ theorem hPlus_correct (n : ℕ) :
   | succ n ih =>
     -- Split circuit: last gate is hadamardAt (Fin.last n) = I_n ⊗ H
     have hcircuit : hPlusCircuit (n + 1) =
-        ((List.finRange n).map fun i => (⟨hadamardAt (Fin.castSucc i)⟩ : GateStep (n + 1))) ++
-        [⟨hadamardAt (Fin.last n)⟩] := by
+        ((List.finRange n).map fun i => (hadamardAt (Fin.castSucc i) : QGate (n + 1))) ++
+        [hadamardAt (Fin.last n)] := by
       simp only [hPlusCircuit, List.finRange_succ_last, List.map_append, List.map_map,
         List.map_cons, List.map_nil, Function.comp_def]
     rw [hcircuit]
@@ -212,7 +208,7 @@ theorem hPlus_correct (n : ℕ) :
     rw [basisState_zero_tensor']
     -- Apply init circuit; blocked on hadamardAt_castSucc_eq
     have hinit : applyGate
-        (circuitMatrix ((List.finRange n).map fun i => (⟨hadamardAt (Fin.castSucc i)⟩ : GateStep (n + 1))))
+        (circuitMatrix ((List.finRange n).map fun i => (hadamardAt (Fin.castSucc i) : QGate (n + 1))))
         (tensorState (basisState n 0) (basisState 1 0)) =
         tensorState (hPlusState n) (basisState 1 0) := by
       sorry  -- blocked on hadamardAt_castSucc_eq

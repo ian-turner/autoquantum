@@ -95,9 +95,9 @@ noncomputable def ghzCircuit (n : ℕ) (hn : n ≥ 1) : Circuit n :=
       exfalso
       omega
   | n + 1, _ =>
-      [⟨hadamardAt 0⟩] ++
+      [hadamardAt 0] ++
       (List.finRange n).map fun i =>
-        ⟨controlledAt 0 i.succ (Ne.symm (Fin.succ_ne_zero i)) pauliX⟩
+        controlledAt 0 i.succ (Ne.symm (Fin.succ_ne_zero i)) pauliX
 
 /-! ## Correctness theorem -/
 

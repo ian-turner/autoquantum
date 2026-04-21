@@ -19,15 +19,8 @@ open Matrix
 
 /-! ## Circuit types -/
 
-/-- A single step in a quantum circuit: an n-qubit unitary applied at one moment.
-    The full embedded n-qubit unitary is stored directly; see `Gate.tensorWithId`
-    for constructing embedded gate steps. -/
-structure GateStep (n : ℕ) where
-  /-- The n-qubit unitary matrix for this step. -/
-  unitary : QGate n
-
 /-- A quantum circuit on n qubits: an ordered list of gate steps. -/
-abbrev Circuit (n : ℕ) := List (GateStep n)
+abbrev Circuit (n : ℕ) := List (QGate n)
 
 /-! ## Circuit semantics -/
 
@@ -35,7 +28,7 @@ abbrev Circuit (n : ℕ) := List (GateStep n)
     `circuitMatrix [U₁, U₂, …, Uₖ]` = Uₖ * … * U₂ * U₁
     (the first gate is applied first, so it appears rightmost in the product). -/
 def circuitMatrix {n : ℕ} (c : Circuit n) : QGate n :=
-  c.foldl (fun acc step => step.unitary * acc) 1
+  c.foldl (fun acc U => U * acc) 1
 
 /-- Apply a circuit to a quantum state. -/
 noncomputable def runCircuit {n : ℕ} (c : Circuit n) (ψ : QState n) : QState n :=
@@ -44,22 +37,25 @@ noncomputable def runCircuit {n : ℕ} (c : Circuit n) (ψ : QState n) : QState 
 /-! ## Circuit construction helpers -/
 
 /-- Wrap a single gate as a one-step circuit. -/
-def singleGate {n : ℕ} (U : QGate n) : Circuit n := [⟨U⟩]
+def singleGate {n : ℕ} (U : QGate n) : Circuit n := [U]
 
 /-- Sequential composition: run c₁ first, then c₂. -/
 def seqComp {n : ℕ} (c₁ c₂ : Circuit n) : Circuit n := c₁ ++ c₂
+
+/-- Lift a circuit to the last k qubits of an (m+k)-qubit register by mapping each gate
+    through `idTensorWith m`. -/
+noncomputable def idTensorCircuit {k : ℕ} (m : ℕ) (c : Circuit k) : Circuit (m + k) :=
+  c.map (idTensorWith m)
+
+/-- Lift a circuit to the first k qubits of a (k+m)-qubit register by mapping each gate
+    through `tensorWithId m`. -/
+noncomputable def tensorWithIdCircuit {k : ℕ} (m : ℕ) (c : Circuit k) : Circuit (k + m) :=
+  c.map (tensorWithId m)
 
 /-! ## Correctness predicates -/
 
 /-- A circuit `c` implements unitary `U` if their matrices are equal. -/
 def Circuit.Implements {n : ℕ} (c : Circuit n) (U : QGate n) : Prop :=
   circuitMatrix c = U
-
-/-- A circuit `c` is correct for target operator `T` (given as a plain matrix with
-    a unitarity proof) if the circuit's matrix equals T. -/
-def Circuit.CorrectFor {n : ℕ} (c : Circuit n)
-    (T : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)
-    (_hT : T ∈ Matrix.unitaryGroup (Fin (2 ^ n)) ℂ) : Prop :=
-  (circuitMatrix c : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = T
 
 end AutoQuantum

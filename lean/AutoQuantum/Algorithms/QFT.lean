@@ -232,8 +232,7 @@ noncomputable def qftCircuit1 : Circuit 1 := singleGate hadamard
 
 /-- Correctness of QFT on 1 qubit: H = QFT_2.
     Entry-wise: H[i,j] = (1/sqrt 2) * (-1)^{ij} = (1/sqrt 2) * omega^{ij} for omega = exp(pi*i). -/
-theorem qft1_correct : qftCircuit1.CorrectFor (qftMatrix 1) (qftMatrix_isUnitary 1) := by
-  change (circuitMatrix qftCircuit1 : Matrix (Fin 2) (Fin 2) ℂ) = qftMatrix 1
+theorem qft1_correct : (circuitMatrix qftCircuit1 : Matrix (Fin 2) (Fin 2) ℂ) = qftMatrix 1 := by
   ext i j
   fin_cases i <;> fin_cases j
   · simp [qftCircuit1, circuitMatrix, singleGate, qftMatrix, omega, hadamard, hadamardMatrix]
@@ -268,96 +267,24 @@ private noncomputable def qftControlledLayer (n : ℕ) (target : Fin n) : Circui
       intro hEq
       have : control.val = target.val := congrArg Fin.val hEq
       omega
-    ⟨controlledPhaseAt control target hct (offset.val + 2)⟩
+    controlledPhaseAt control target hct (offset.val + 2)
 
 private noncomputable def qftQubitLayer (n : ℕ) (target : Fin n) : Circuit n :=
-  [⟨hadamardAt target⟩] ++ qftControlledLayer n target
+  [hadamardAt target] ++ qftControlledLayer n target
 
 /-- The QFT gate layers without the final bit-reversal permutation. -/
 private noncomputable def qftLayers (n : ℕ) : Circuit n :=
   (List.finRange n).foldr (fun target acc => qftQubitLayer n target ++ acc) []
 
 noncomputable def qftCircuit (n : ℕ) : Circuit n :=
-  qftLayers n ++ [⟨bitReverse⟩]
+  qftLayers n ++ [bitReverse]
 
 /-! ## Infrastructure for the general correctness proof -/
 
-/-- The canonical reindexing used to view `Fin 2 × Fin (2^n)` as `Fin (2^(n+1))`. -/
-private def liftEquiv (n : ℕ) : Fin 2 × Fin (2 ^ n) ≃ Fin (2 ^ (n + 1)) :=
-  finProdFinEquiv.trans <|
-    finCongr (show 2 * 2 ^ n = 2 ^ (n + 1) by rw [pow_succ, Nat.mul_comm])
-
-/-- Lift an `n`-qubit gate to the suffix qubits of an `(n+1)`-qubit register. -/
-private noncomputable def liftGate {n : ℕ} (U : QGate n) : QGate (n + 1) := by
-  refine ⟨
-    Matrix.reindex (liftEquiv n) (liftEquiv n)
-      (((1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ))),
-    ?_⟩
-  have hI : (1 : Matrix (Fin 2) (Fin 2) ℂ) ∈ Matrix.unitaryGroup (Fin 2) ℂ :=
-    SetLike.coe_mem (1 : QGate 1)
-  exact reindex_mem_unitaryGroup (liftEquiv n) <|
-    Matrix.kronecker_mem_unitary hI (SetLike.coe_mem U)
-
-/-- Lift every step of a circuit to the suffix qubits of an `(n+1)`-qubit register. -/
-private noncomputable def liftCircuit {n : ℕ} (c : Circuit n) : Circuit (n + 1) :=
-  c.map fun s => ⟨liftGate s.unitary⟩
-
-/-- The underlying matrix of `liftGate` is the reindexed Kronecker product `I₂ ⊗ U`. -/
-@[simp]
-private lemma liftGate_coe {n : ℕ} (U : QGate n) :
-    ((liftGate U : QGate (n + 1)) : Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ) =
-      Matrix.reindex (liftEquiv n) (liftEquiv n)
-        (((1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ))) := rfl
-
-/-- Lifting preserves multiplication: `I ⊗ (U * V) = (I ⊗ U) * (I ⊗ V)`. -/
-private lemma liftGate_mul {n : ℕ} (U V : QGate n) :
-    liftGate (U * V) = liftGate U * liftGate V := by
-  apply Subtype.ext
-  show ((liftGate (U * V) : QGate (n + 1)) :
-      Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ) =
-    (((liftGate U : QGate (n + 1)) :
-      Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ) *
-      ((liftGate V : QGate (n + 1)) :
-        Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ))
-  have hkr :
-      ((1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ ((U * V : QGate n) :
-        Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)) =
-      (((1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)) *
-        ((1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (V : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ))) := by
-    simpa using
-      (Matrix.mul_kronecker_mul
-        (1 : Matrix (Fin 2) (Fin 2) ℂ)
-        (1 : Matrix (Fin 2) (Fin 2) ℂ)
-        (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)
-        (V : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ))
-  rw [liftGate_coe, liftGate_coe, liftGate_coe,
-    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
-    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
-    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ), hkr,
-    Matrix.reindexAlgEquiv_mul (R := ℂ) (A := ℂ)]
-
-/-- Lifting preserves the identity gate. -/
-@[simp]
-private lemma liftGate_one {n : ℕ} : liftGate (1 : QGate n) = 1 := by
-  apply Subtype.ext
-  show ((liftGate (1 : QGate n) : QGate (n + 1)) :
-      Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ) =
-    (1 : Matrix (Fin (2 ^ (n + 1))) (Fin (2 ^ (n + 1))) ℂ)
-  rw [liftGate_coe, ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ)]
-  simp
-
-/-- The matrix of a lifted circuit is the lifted matrix of the original circuit. -/
+/-- The matrix of a suffix-lifted circuit is the suffix lift of the original circuit matrix. -/
 private lemma circuitMatrix_liftCircuit {n : ℕ} (c : Circuit n) :
-    circuitMatrix (liftCircuit c) = liftGate (circuitMatrix c) := by
-  induction c with
-  | nil =>
-      simp [liftCircuit]
-  | cons s c ih =>
-      rw [show liftCircuit (s :: c) = [⟨liftGate s.unitary⟩] ++ liftCircuit c by rfl,
-        circuitMatrix_append, circuitMatrix_singleton, ih]
-      rw [show circuitMatrix (s :: c) = circuitMatrix c * s.unitary by
-        simpa using (circuitMatrix_append [s] c)]
-      rw [← liftGate_mul]
+    circuitMatrix (idTensorCircuit 1 c) = idTensorWith 1 (circuitMatrix c) := by
+  simpa using (circuitMatrix_idTensorCircuit 1 c)
 
 /-- Embed a leading qubit bit `b` and an `n`-qubit suffix index `i` into `Fin (2^(n+1))`
     as `b * 2^n + i`. This matches the input-side decomposition used in the recursive QFT proof. -/
@@ -423,7 +350,7 @@ lemma qftMatrix_zero : (qftMatrix 0 : Matrix (Fin 1) (Fin 1) ℂ) = 1 := by
 
 /-- qftCircuit 0 is just [bitReverse]. -/
 @[simp]
-lemma qftCircuit_zero : qftCircuit 0 = [⟨(bitReverse : QGate 0)⟩] := by
+lemma qftCircuit_zero : qftCircuit 0 = [(bitReverse : QGate 0)] := by
   simp [qftCircuit, qftLayers]
 
 /-- The coercion of permuteQubits to a plain matrix gives the permutation matrix.
@@ -474,7 +401,7 @@ lemma bitReverse_one : (bitReverse : QGate 1) = 1 := by
 
 /-- qft_correct for the base case n = 0. -/
 theorem qft_correct_zero :
-    (qftCircuit 0).CorrectFor (qftMatrix 0) (qftMatrix_isUnitary 0) := by
+    (circuitMatrix (qftCircuit 0) : Matrix (Fin (2 ^ 0)) (Fin (2 ^ 0)) ℂ) = qftMatrix 0 := by
   show (circuitMatrix (qftCircuit 0) : Matrix (Fin (2 ^ 0)) (Fin (2 ^ 0)) ℂ) = qftMatrix 0
   simp only [qftCircuit_zero, circuitMatrix_singleton]
   simp [bitReverse_zero, qftMatrix_zero]
@@ -508,11 +435,10 @@ private lemma qftCircuit_succ_matrix (n : ℕ)
     Proved by induction on n: the base case (n = 0) is qft_correct_zero, and the
     inductive step is qftCircuit_succ_matrix (currently deferred). -/
 theorem qft_correct (n : ℕ) :
-    qftCircuit n |>.CorrectFor (qftMatrix n) (qftMatrix_isUnitary n) := by
+    (circuitMatrix (qftCircuit n) : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ) = qftMatrix n := by
   induction n with
   | zero => exact qft_correct_zero
   | succ n ih =>
-    unfold Circuit.CorrectFor at *
     exact qftCircuit_succ_matrix n ih
 
 /-! ## Small cases -/
@@ -533,10 +459,10 @@ lemma omega_two : omega 2 = Complex.I := by
     `H₀ ; CR₂(1→0) ; H₁ ; bitReverse`. -/
 lemma qftCircuit_two :
     qftCircuit 2 =
-      [⟨hadamardAt 0⟩,
-       ⟨controlledPhaseAt 1 0 (by decide) 2⟩,
-       ⟨hadamardAt 1⟩,
-       ⟨bitReverse⟩] := by
+      [hadamardAt 0,
+       controlledPhaseAt 1 0 (by decide) 2,
+       hadamardAt 1,
+       bitReverse] := by
   rw [qftCircuit, qftLayers, List.finRange_succ, List.finRange_succ, List.finRange_zero]
   simp [qftQubitLayer, qftControlledLayer, List.finRange_succ, List.finRange_zero]
 
@@ -570,7 +496,7 @@ noncomputable def qftCircuit2 : Circuit 2 :=
   qftCircuit 2
 
 theorem qft2_correct :
-    qftCircuit2.CorrectFor (qftMatrix 2) (qftMatrix_isUnitary 2) := by
+    (circuitMatrix qftCircuit2 : Matrix (Fin (2 ^ 2)) (Fin (2 ^ 2)) ℂ) = qftMatrix 2 := by
   sorry
 
 end AutoQuantum.QFT

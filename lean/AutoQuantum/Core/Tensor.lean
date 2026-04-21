@@ -17,19 +17,21 @@ open scoped InnerProductSpace
 
 /-! ## Tensor product of state vectors -/
 
+/-- Canonical equivalence between product tensor indices and the combined register index. -/
+def tensorIndexEquiv (k m : ℕ) : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
+  finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+
 /-- The Kronecker (tensor) product of two quantum state vectors.
     The output index set Fin(2^(k+m)) is identified with Fin(2^k) × Fin(2^m) via the standard
     `finProdFinEquiv` bijection; the (a,b) component of the result is ψ(a)·φ(b). -/
 noncomputable def tensorVec {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) : QHilbert (k + m) :=
-  let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-    finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+  let e := tensorIndexEquiv k m
   ∑ a : Fin (2 ^ k), ∑ b : Fin (2 ^ m),
     (ψ a * φ b) • (EuclideanSpace.single (e (a, b)) (1 : ℂ))
 
 /-- The coordinate formula for tensorVec: at index e(a,b), the value is ψ(a)·φ(b). -/
 lemma tensorVec_apply {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) (a : Fin (2^k)) (b : Fin (2^m)) :
-    let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-      finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+    let e := tensorIndexEquiv k m
     tensorVec ψ φ (e (a, b)) = ψ a * φ b := by
   intro e; unfold tensorVec
   rw [WithLp.ofLp_sum]; simp_rw [WithLp.ofLp_sum]
@@ -51,8 +53,7 @@ lemma tensorVec_apply {k m : ℕ} (ψ : QHilbert k) (φ : QHilbert m) (a : Fin (
     Normalization follows by reindexing to the product basis and factoring the squared norm. -/
 noncomputable def tensorState {k m : ℕ} (ψ : QState k) (φ : QState m) : QState (k + m) :=
   QState.mk (tensorVec ψ.vec φ.vec) (by
-    let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-      finProdFinEquiv.trans (finCongr (pow_add 2 k m).symm)
+    let e := tensorIndexEquiv k m
     have hψsq : ∑ a : Fin (2 ^ k), ‖ψ.vec a‖ ^ 2 = 1 := by
       rw [← PiLp.norm_sq_eq_of_L2, ψ.norm_eq_one, one_pow]
     have hφsq : ∑ b : Fin (2 ^ m), ‖φ.vec b‖ ^ 2 = 1 := by

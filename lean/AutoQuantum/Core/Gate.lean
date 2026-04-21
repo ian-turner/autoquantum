@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Hilbert
+import AutoQuantum.Core.Tensor
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Rev
 import Mathlib.Data.Fin.SuccPred
@@ -247,9 +248,7 @@ lemma reindex_mem_unitaryGroup {n m : Type*} [DecidableEq n] [Fintype n]
 
 /-- Embed a k-qubit gate on the first k qubits of a (k+m)-qubit system (U ⊗ I_{2^m}). -/
 noncomputable def tensorWithId {k : ℕ} (m : ℕ) (U : QGate k) : QGate (k + m) := by
-  let e : Fin (2 ^ k) × Fin (2 ^ m) ≃ Fin (2 ^ (k + m)) :=
-    finProdFinEquiv.trans <|
-      finCongr (show 2 ^ k * 2 ^ m = 2 ^ (k + m) by rw [pow_add])
+  let e := tensorIndexEquiv k m
   let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
     ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
   refine ⟨Matrix.reindex e e ((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im), ?_⟩
@@ -259,9 +258,7 @@ noncomputable def tensorWithId {k : ℕ} (m : ℕ) (U : QGate k) : QGate (k + m)
 
 /-- Embed a k-qubit gate on the last k qubits of an (m+k)-qubit system (I_{2^m} ⊗ U). -/
 noncomputable def idTensorWith {k : ℕ} (m : ℕ) (U : QGate k) : QGate (m + k) := by
-  let e : Fin (2 ^ m) × Fin (2 ^ k) ≃ Fin (2 ^ (m + k)) :=
-    finProdFinEquiv.trans <|
-      finCongr (show 2 ^ m * 2 ^ k = 2 ^ (m + k) by rw [pow_add])
+  let e := tensorIndexEquiv m k
   let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
     ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
   refine ⟨Matrix.reindex e e (Im ⊗ₖ (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)), ?_⟩

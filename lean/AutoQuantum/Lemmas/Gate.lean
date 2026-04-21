@@ -14,6 +14,8 @@ by AI assistants.
 
 namespace AutoQuantum
 
+open scoped Kronecker
+
 /-! ## applyGate laws -/
 
 /-- The identity gate leaves every state unchanged. -/
@@ -101,6 +103,110 @@ lemma cnot_mul_self : cnot * cnot = (1 : QGate 2) := by
   ext i j
   fin_cases i <;> fin_cases j <;>
     simp [cnot, cnotMatrix]
+
+/-! ## Tensor-embedding algebra -/
+
+/-- Embedding on the first k qubits preserves multiplication. -/
+lemma tensorWithId_mul {k : ℕ} (m : ℕ) (U V : QGate k) :
+    tensorWithId m (U * V) = tensorWithId m U * tensorWithId m V := by
+  apply Subtype.ext
+  let e := tensorIndexEquiv k m
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
+  show ((tensorWithId m (U * V) : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+    (((tensorWithId m U : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) *
+      ((tensorWithId m V : QGate (k + m)) :
+        Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ))
+  have hkr :
+      (((U * V : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) =
+        (((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) *
+          ((V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im)) := by
+    simpa [Im] using
+      (Matrix.mul_kronecker_mul
+        (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)
+        (V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)
+        Im Im)
+  have hleft : ((tensorWithId m (U * V) : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+        Matrix.reindex e e (((U * V : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) := rfl
+  have hU : ((tensorWithId m U : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+        Matrix.reindex e e ((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) := rfl
+  have hV : ((tensorWithId m V : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+        Matrix.reindex e e ((V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) := rfl
+  rw [hleft, hU, hV,
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ), hkr,
+    Matrix.reindexAlgEquiv_mul (R := ℂ) (A := ℂ)]
+
+/-- Embedding on the first k qubits preserves the identity gate. -/
+@[simp]
+lemma tensorWithId_one {k : ℕ} (m : ℕ) : tensorWithId m (1 : QGate k) = 1 := by
+  apply Subtype.ext
+  let e := tensorIndexEquiv k m
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
+  show ((tensorWithId m (1 : QGate k) : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+    (1 : Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ)
+  have hleft : ((tensorWithId m (1 : QGate k) : QGate (k + m)) :
+      Matrix (Fin (2 ^ (k + m))) (Fin (2 ^ (k + m))) ℂ) =
+        Matrix.reindex e e (((1 : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im) := rfl
+  rw [hleft, ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ)]
+  simp [Im]
+
+/-- Embedding on the last k qubits preserves multiplication. -/
+lemma idTensorWith_mul {k : ℕ} (m : ℕ) (U V : QGate k) :
+    idTensorWith m (U * V) = idTensorWith m U * idTensorWith m V := by
+  apply Subtype.ext
+  let e := tensorIndexEquiv m k
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
+  show ((idTensorWith m (U * V) : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+    (((idTensorWith m U : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) *
+      ((idTensorWith m V : QGate (m + k)) :
+        Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ))
+  have hkr :
+      (Im ⊗ₖ ((U * V : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) =
+        ((Im ⊗ₖ (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) *
+          (Im ⊗ₖ (V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ))) := by
+    simpa [Im] using
+      (Matrix.mul_kronecker_mul
+        Im Im
+        (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)
+        (V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ))
+  have hleft : ((idTensorWith m (U * V) : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+        Matrix.reindex e e (Im ⊗ₖ ((U * V : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) := rfl
+  have hU : ((idTensorWith m U : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+        Matrix.reindex e e (Im ⊗ₖ (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) := rfl
+  have hV : ((idTensorWith m V : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+        Matrix.reindex e e (Im ⊗ₖ (V : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) := rfl
+  rw [hleft, hU, hV,
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ),
+    ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ), hkr,
+    Matrix.reindexAlgEquiv_mul (R := ℂ) (A := ℂ)]
+
+/-- Embedding on the last k qubits preserves the identity gate. -/
+@[simp]
+lemma idTensorWith_one {k : ℕ} (m : ℕ) : idTensorWith m (1 : QGate k) = 1 := by
+  apply Subtype.ext
+  let e := tensorIndexEquiv m k
+  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ := ((1 : QGate m) : Matrix _ _ ℂ)
+  show ((idTensorWith m (1 : QGate k) : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+    (1 : Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ)
+  have hleft : ((idTensorWith m (1 : QGate k) : QGate (m + k)) :
+      Matrix (Fin (2 ^ (m + k))) (Fin (2 ^ (m + k))) ℂ) =
+        Matrix.reindex e e (Im ⊗ₖ ((1 : QGate k) : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) := rfl
+  rw [hleft, ← Matrix.reindexAlgEquiv_apply (R := ℂ) (A := ℂ)]
+  simp [Im]
 
 /-! ## hadamardAt placement identities -/
 

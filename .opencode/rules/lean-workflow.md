@@ -2,6 +2,9 @@
 
 This repo uses two MCP servers for Lean 4 work. **Always use them; never run bash lean/lake commands.**
 
+In this repo, `check_file` is expensive enough that broad edits should be verified with a
+single `lean_build` call rather than many per-file checks.
+
 ## Tool reference
 
 | Situation | Tool to call |
@@ -16,10 +19,10 @@ This repo uses two MCP servers for Lean 4 work. **Always use them; never run bas
 | Get type/doc for a symbol | `lean_lsp_lean_hover_info` |
 | Resolve file path + format multi_attempt call | `lean_proof_step` (custom tool) |
 | Find sorry positions with context | `lean_find_sorry` (custom tool) |
-| Typecheck a completed proof block | `lean_check_file` (slow — only after finishing) |
-| Full build | `lean_build` (very slow — only at end of session) |
+| Typecheck a completed proof block | `lean_check_file` (slow — only after finishing, and only for one file) |
+| Full build | `lean_build` (preferred after broad refactors or edits across multiple Lean files) |
 
-**`lean_check_file` and `lean_build` take 60–180 seconds. Never use them mid-proof to check if a tactic works — that is what `lean_lsp_lean_goal` and `lean_lsp_lean_multi_attempt` are for.**
+**`lean_check_file` and `lean_build` take 60–180 seconds. Never use them mid-proof to check if a tactic works — that is what `lean_lsp_lean_goal` and `lean_lsp_lean_multi_attempt` are for. Do not spawn multiple `lean_check_file` calls in parallel for this repository; after a multi-file change, prefer one `lean_build` call.**
 
 ## Decision tree: what to do next
 
@@ -43,7 +46,8 @@ Unsure of the correct absolute path for an LSP call?
   → lean_proof_step to resolve it
 
 Finished a proof block?
-  → lean_check_file to confirm the file typechecks
+  → If you changed one Lean file: lean_check_file
+  → If you changed multiple Lean files or refactored shared APIs: lean_build once
 ```
 
 ## Mandatory iterative workflow
@@ -56,7 +60,8 @@ Finished a proof block?
 4. Use `lean_lsp_lean_multi_attempt` to test candidates without touching the file.
 5. Before any `rw [X]` or `exact X`, call `lean_lsp_lean_local_search` to verify `X` exists.
 6. **After every Edit or Write to a `.lean` file**, call `lean_lsp_lean_diagnostic_messages` before doing anything else.
-7. After a complete proof block, call `lean_check_file`.
+7. After a complete proof block, call `lean_check_file` only if you changed a single file.
+8. After changes spanning multiple Lean files or shared APIs, make one `lean_build` call instead of multiple `lean_check_file` calls.
 
 ## File path format for LSP tools
 
