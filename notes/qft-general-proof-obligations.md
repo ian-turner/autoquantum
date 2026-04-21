@@ -5,11 +5,11 @@ Exact lemma inventory for finishing the general theorem
 
 Last updated: April 18, 2026.
 
-Update later on April 18, 2026: after refactoring `QFT.lean` to expose `qftLayers`, the likely
-recursive embedding now appears to be `tensorWithId 1` rather than the older `liftGate` /
-`idTensorWith 1` suffix lift. Keep the lemma inventory below as the record of the earlier suffix
-approach, but treat it as provisional; the revised indexing diagnosis is written up in
-`notes/qft-recursion-indexing.md`.
+Update after the core lifting refactor: the reusable lift machinery now lives in
+`Core/Circuit.lean` / `Lemmas/Circuit.lean` as `idTensorCircuit`, `tensorWithIdCircuit`, and the
+corresponding `circuitMatrix_*` lemmas. The likely recursive embedding for the unfinished QFT step
+still appears to be `tensorWithId 1` rather than the suffix direction `idTensorWith 1`; the revised
+indexing diagnosis is written up in `notes/qft-recursion-indexing.md`.
 
 ---
 
@@ -26,8 +26,8 @@ induction hypothesis on `qftCircuit n`.
 
 The DFT-side algebra is already in place:
 
-- `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`, `liftGate_one`
-- `circuitMatrix_liftCircuit`
+- `tensorWithId_mul`, `idTensorWith_mul`
+- `circuitMatrix_tensorWithIdCircuit`, `circuitMatrix_idTensorCircuit`
 - `omega_sq_pred`
 - `msbIndex`, `lsbIndex`
 - `msbIndex_mul_lsbIndex`
@@ -63,24 +63,23 @@ This makes `qft2_correct` a sanity check, not a dependency.
 
 ### 1. Lift circuits on the suffix qubits
 
-Status: implemented in `QFT.lean` as `liftEquiv`, `liftGate`, `liftCircuit`, `liftGate_mul`,
-`liftGate_one`, and `circuitMatrix_liftCircuit`.
+Status: implemented generically as `idTensorCircuit` in `Core/Circuit.lean` and
+`circuitMatrix_idTensorCircuit` in `Lemmas/Circuit.lean`.
 
 Define the embedded suffix circuit:
 
 ```lean
-private def liftCircuit (c : Circuit n) : Circuit (n + 1) :=
-  c.map (fun s => ⟨idTensorWith 1 s.unitary⟩)
+abbrev liftCircuit := idTensorCircuit 1
 ```
 
 Then prove:
 
 ```lean
-private lemma circuitMatrix_liftCircuit (c : Circuit n) :
-    circuitMatrix (liftCircuit c) = idTensorWith 1 (circuitMatrix c)
+lemma circuitMatrix_liftCircuit (c : Circuit n) :
+    circuitMatrix (idTensorCircuit 1 c) = idTensorWith 1 (circuitMatrix c)
 ```
 
-This reduces to a multiplicativity lemma:
+This reduces to the generic multiplicativity lemma:
 
 ```lean
 private lemma idTensorWith_mul (U V : QGate n) :
@@ -112,11 +111,11 @@ Once those are available, the layer lemmas should be straightforward:
 ```lean
 private lemma qftControlledLayer_succ (target : Fin n) :
     qftControlledLayer (n + 1) target.succ =
-      (qftControlledLayer n target).map (fun s => ⟨idTensorWith 1 s.unitary⟩)
+      idTensorCircuit 1 (qftControlledLayer n target)
 
 private lemma qftQubitLayer_succ (target : Fin n) :
     qftQubitLayer (n + 1) target.succ =
-      liftCircuit (qftQubitLayer n target)
+      idTensorCircuit 1 (qftQubitLayer n target)
 ```
 
 ### 3. Decompose bit-reversal recursively
@@ -150,8 +149,8 @@ After the gate-placement and bit-reversal lemmas, prove the actual list-level fa
 private lemma qftCircuit_succ_decompose :
     qftCircuit (n + 1) =
       qftQubitLayer (n + 1) 0 ++
-      liftCircuit (qftCircuit n) ++
-      [⟨swapAt 0 (Fin.last n)⟩]
+      idTensorCircuit 1 (qftCircuit n) ++
+      [swapAt 0 (Fin.last n)]
 ```
 
 This is the point where the induction hypothesis becomes usable.

@@ -131,12 +131,12 @@ lemma hadamardAt_succ {n : ℕ} (i : Fin n) :
 -- hPlusCircuit factors as one head gate + shifted tail
 lemma hPlusCircuit_succ (n : ℕ) :
     hPlusCircuit (n+1) =
-      [⟨hadamardAt (0 : Fin (n+1))⟩] ++
-      (hPlusCircuit n).map (fun s => ⟨idTensorWith 1 s.unitary⟩)
+      [hadamardAt (0 : Fin (n+1))] ++
+      tensorWithIdCircuit 1 (hPlusCircuit n)
 
 -- Lifted circuit acts only on left factor of tensor state
 lemma runCircuit_idTensorWith {k m : ℕ} (c : Circuit k) (ψ : QState k) (φ : QState m) :
-    runCircuit (c.map (fun s => ⟨idTensorWith m s.unitary⟩)) (tensorState ψ φ) =
+    runCircuit (tensorWithIdCircuit m c) (tensorState ψ φ) =
     tensorState (runCircuit c ψ) φ
 ```
 

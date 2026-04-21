@@ -149,11 +149,11 @@ is now written up in `notes/qft-general-proof-obligations.md`.
 
 Update from the next proof pass: `QFT.lean` now factors the circuit as
 ```lean
-qftCircuit n = qftLayers n ++ [⟨bitReverse⟩]
+qftCircuit n = qftLayers n ++ [bitReverse]
 ```
 so the recursive gate layers are separated from the final permutation. The new structural blocker is
 that the recursive `target.succ` layers appear to line up with `tensorWithId 1` (new LSB) rather
-than the older `liftGate` / `idTensorWith 1` suffix embedding. That indexing issue is now written
+than the older suffix embedding direction. That indexing issue is now written
 up in `notes/qft-recursion-indexing.md`.
 
 ### Textbook alignment

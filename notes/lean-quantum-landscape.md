@@ -268,7 +268,7 @@ When adding algebraic lemmas about `tensorWithId` or `idTensorWith` outside `Cor
 open scoped Kronecker
 ```
 
-### 18. End-placement embeddings are not enough for textbook circuit definitions
+### 20. End-placement embeddings are not enough for textbook circuit definitions
 For the decomposed QFT, `tensorWithId`, `idTensorWith`, and a fixed-layout `controlled` constructor are still too low-level: they only place gates at the ends of the register. The missing abstraction is a qubit-permutation layer
 ```lean
 Equiv.Perm (Fin n) -> Equiv.Perm (Fin (2 ^ n))
@@ -355,14 +355,13 @@ embedded_suffix_bitReverse * final_swap_0_last
 This is not just cosmetic proof organization; it is the structural step that makes the recursive
 statement line up with the existing induction hypothesis.
 
-### 24. `⊗ₖ` notation is file-local syntax: importing `Core/Gate.lean` does not automatically open the Kronecker scope in `QFT.lean`
-When the new suffix-lift helper `liftGate` was first written in `QFT.lean`, the definition used
+### 24. `⊗ₖ` notation is file-local syntax: importing `Core/Gate.lean` does not automatically open the Kronecker scope in a lemma file
+When the generic tensor-embedding lemmas were added outside `Core/Gate.lean`, one proof used
 ```lean
 (1 : Matrix (Fin 2) (Fin 2) ℂ) ⊗ₖ (U : Matrix (Fin (2 ^ n)) (Fin (2 ^ n)) ℂ)
 ```
-but the file had not opened `scoped Kronecker`. Lean then parsed the definition badly enough that
-the follow-on errors looked like a malformed `Subtype.mk` or an attempted application of
-`Matrix.reindex` to the identity matrix. The fix is explicit:
+but the file had not opened `scoped Kronecker`. Lean then parsed the proof badly enough that
+the follow-on errors looked unrelated to notation. The fix is explicit:
 ```lean
 open scoped Kronecker
 ```
@@ -408,21 +407,21 @@ The "prime" variant has `x = a` (variable on the left), and the non-prime varian
 ### 34. The `e` in a `show` or `hmat` proof must match the internal `e` in `tensorWithId` syntactically
 `tensorWithId` uses `finProdFinEquiv.trans <| finCongr (show 2^k * 2^m = 2^(k+m) by rw [pow_add])`. When proving matrix-entry lemmas by `show (Matrix.reindex e e ...) (e (a,b)) (e (x,y)) = _`, the local `e` must be defined **identically** (same expression) as the internal one. Using `(pow_add 2 k m).symm` instead of `show ... by rw [pow_add]` creates a different proof term; `Equiv.symm_apply_apply` then fails because the two `e`s are not syntactically unified. Copy the exact `let e :=` from the `tensorWithId` definition.
 
-### 25. The recursive `target.succ` QFT layers appear to require `tensorWithId 1`, not the older suffix-lift helper
+### 25. The recursive `target.succ` QFT layers appear to require `tensorWithId 1`, not the older suffix direction
 During the next general-proof pass, `QFT.lean` was refactored to expose
 ```lean
 qftLayers n
 ```
 as the gate list without the final `bitReverse`. A direct attempted bridge lemma of the form
 ```lean
-hadamardAt q.succ = liftGate (hadamardAt q)
+hadamardAt q.succ = idTensorWith 1 (hadamardAt q)
 ```
 did not fail for a merely syntactic reason. It exposed that the two sides are using different
 computational-basis reindexings.
 
-The existing helper
+The shared suffix helper direction
 ```lean
-liftGate U
+idTensorWith 1 U
 ```
 uses the split `b * 2^n + i`, i.e. it adds a new **most-significant** qubit via `I₂ ⊗ U`.
 But the raw recursive QFT layers in `qftCircuit (n+1)` are indexed by `target.succ`, which is the
@@ -433,7 +432,7 @@ So the likely next circuit-side embedding for the inductive proof is
 ```lean
 tensorWithId 1
 ```
-rather than `liftGate` / `idTensorWith 1`. This distinction is easy to miss because both are
+rather than `idTensorWith 1`. This distinction is easy to miss because both are
 “attach one idle qubit” operations, but they are different Kronecker/reindex conventions.
 ### 26. `ext` on `PiLp`/`EuclideanSpace` after `Subtype.ext` produces `(↑...).ofLp i`, not `(applyGate ...).vec.ofLp i`
 After `apply Subtype.ext; ext i` on a `QState` equality, the goal takes the form

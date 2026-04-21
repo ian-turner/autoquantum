@@ -5,10 +5,10 @@ Notes from the April 18, 2026 proof pass on the general-case QFT theorem in
 
 ## Main Finding
 
-The existing recursive scaffolding in `QFT.lean` distinguishes two different
+The recursive scaffolding for QFT distinguishes two different
 ways to enlarge an `n`-qubit system to `n+1` qubits:
 
-- `liftGate` / `liftCircuit` use `I₂ ⊗ U`, implemented with the index split
+- `idTensorWith 1` / `idTensorCircuit 1` use `I₂ ⊗ U`, implemented with the index split
   `b * 2^n + i`. This adds a new **most-significant** qubit.
 - the raw recursive QFT layers in `qftCircuit (n+1)` are indexed by
   `target.succ`. That shift is the shape you get when the old qubits move up by
@@ -21,11 +21,11 @@ Those are different embeddings.
 
 The first serious unfinished attempt at `qft_correct` assumed the target-`1..n`
 layers in `qftCircuit (n+1)` should match a lifted `qftCircuit n` via the
-existing `liftGate` / `liftCircuit` infrastructure. During this session, an
+existing suffix-lift infrastructure. During this session, an
 attempted lemma of the form
 
 ```lean
-hadamardAt q.succ = liftGate (hadamardAt q)
+hadamardAt q.succ = idTensorWith 1 (hadamardAt q)
 ```
 
 did **not** simplify to the expected block-diagonal form. The obstruction is
@@ -55,7 +55,7 @@ which stores the decomposed QFT gate layers **without** the final
 `bitReverse`. The public circuit definition is now
 
 ```lean
-qftCircuit n = qftLayers n ++ [⟨bitReverse⟩]
+qftCircuit n = qftLayers n ++ [bitReverse]
 ```
 
 This is a useful normalization regardless of the final inductive proof shape,
@@ -63,8 +63,8 @@ because it separates the recursive gate layers from the final permutation.
 
 ## Expected Next Step
 
-The next proof pass should likely introduce a second embedding helper based on
-`tensorWithId 1` and prove shifted-placement lemmas against that embedding:
+The next proof pass should likely use the shared prefix-lift API based on
+`tensorWithId 1` / `tensorWithIdCircuit 1` and prove shifted-placement lemmas against that embedding:
 
 - `hadamardAt q.succ`
 - `controlledPhaseAt control.succ target.succ`
