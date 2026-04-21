@@ -24,6 +24,16 @@ single `lean_build` call rather than many per-file checks.
 
 **`lean_check_file` and `lean_build` take 60–180 seconds. Never use them mid-proof to check if a tactic works — that is what `lean_lsp_lean_goal` and `lean_lsp_lean_multi_attempt` are for. Do not spawn multiple `lean_check_file` calls in parallel for this repository; after a multi-file change, prefer one `lean_build` call.**
 
+## lean_lsp startup note
+
+`lean_lsp` can time out on the first request after the MCP server starts while it warms up and opens the Lean project. Do not treat a single initial timeout as a hard failure.
+
+If the first `lean_lsp_*` call times out:
+
+1. Wait briefly and retry the same call once or twice.
+2. If retries succeed, continue normally.
+3. Only diagnose the server as broken if repeated retries across multiple `lean_lsp_*` tools still fail.
+
 ## Decision tree: what to do next
 
 ```
