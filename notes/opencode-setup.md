@@ -34,7 +34,8 @@ Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate
 
 ### `lean_lsp` server
 
-Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, which:
+Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, with
+`LEAN_LOOGLE_LOCAL=false LEAN_REPL=false`, which:
 - Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
 - Disables the heaviest remote-search tools by default.
   - Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
@@ -54,6 +55,7 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 |---------|-------|--------|
 | `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
 | `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
+| `mcp.lean_lsp.command` | `LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Avoid local loogle initialization and missing-REPL startup noise |
 | `plugin` | `.opencode/plugins/lean-tools.js` | Custom tools and post-edit hook (see below) |
 
 **Important:** OpenCode does **not** read `AGENTS.md` or `CLAUDE.md` automatically. Agent instructions for OpenCode sessions must be placed in `.opencode/rules/` (markdown files, auto-loaded into every session context).
