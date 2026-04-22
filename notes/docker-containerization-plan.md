@@ -23,7 +23,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 
 ### Container Contents
 1. **OpenCode CLI** – `npm install -g @anomalyco/opencode` (includes `opencode serve` command)
-2. **Lean 4.29.0** via elan (`elan toolchain install leanprover/lean4:v4.29.0`)
+2. **Lean 4.29.0** bootstrapped via `bootstrap-lean.sh` into the mounted `~/.elan` cache on container start
 3. **Mathlib v4.29.0** – fetched via `lake update`; `.olean` cache stored in a Docker volume.
 4. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
 5. **Git, bash, coreutils** – for standard operations.
@@ -50,7 +50,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 ## Decisions
 
 ### 1. Container Scope
-**AutoQuantum‑specific image** – pre‑install Lean 4.29.0, Mathlib v4.29.0, and all MCP dependencies. This ensures reproducibility and fast startup; image size (~1–2 GB) is acceptable.
+**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, but bootstrap Lean 4.29.0 and the matching Lake toolchain at container start into the persistent `elan` volume. This keeps the image simpler and avoids duplicating toolchain installation logic across `Dockerfile` and startup scripts.
 
 ### 2. Git Credentials
 - **Do not mount SSH keys** – keep container simple and secure.
@@ -66,7 +66,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 
 ## Implementation
 
-All steps are complete. The `Dockerfile` and `docker-compose.yml` at the repo root implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `.mcp/` scripts; `opencode.json` is unchanged.
+All steps are complete. The `Dockerfile`, `docker-compose.yml`, and `bootstrap-lean.sh` at the repo root implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `.mcp/` scripts; `opencode.json` is unchanged.
 
 ## Workflow
 
@@ -80,5 +80,7 @@ docker compose down                         # Stop when done
 The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
 
 ## Operational Notes
+- **Lean bootstrap ownership** — the image no longer installs `elan` during `docker build`; `bootstrap-lean.sh` is the single source of truth for installing `elan`, selecting the pinned toolchain, and refreshing Lake dependencies into the mounted caches.
+- **Bootstrap PATH handling** — `bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
 - **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.
 - **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.

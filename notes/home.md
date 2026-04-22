@@ -32,7 +32,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ## Container Usage
 
-A Docker container provides a fully reproducible environment with the Lean toolchain, Mathlib cache, and MCP servers pre-configured. See [Docker Setup](docker-containerization-plan.md) for the architecture.
+A Docker container provides a fully reproducible environment with MCP servers pre-configured and the Lean toolchain bootstrapped into persistent caches on startup. See [Docker Setup](docker-containerization-plan.md) for the architecture.
 
 ```bash
 docker compose build                        # Build the image (once)

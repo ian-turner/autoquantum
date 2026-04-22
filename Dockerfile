@@ -39,21 +39,14 @@ RUN mkdir -p /workspace && chown opencode:20 /workspace
 # Copy the entire autoquantum framework into the container
 COPY --chown=opencode:20 . /workspace/autoquantum
 
-
-
-# Switch to non‑root user for elan installation
+# Switch to non-root user for home-directory setup. Lean itself is installed
+# at container start by bootstrap-lean.sh into the mounted elan cache.
 USER opencode
 WORKDIR /home/opencode
 
-# Install elan (Lean toolchain manager) for the opencode user
-RUN curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y \
-    && . ~/.profile \
-    && elan toolchain install leanprover/lean4:v4.29.0 \
-    && elan default leanprover/lean4:v4.29.0
-
 RUN mkdir -p ~/.cache/opencode
 
-# Set up environment (ensure elan is in PATH)
+# Keep interactive shells aligned with elan's PATH updates once bootstrap runs.
 RUN echo '. ~/.profile' >> ~/.bashrc
 
 WORKDIR /workspace
