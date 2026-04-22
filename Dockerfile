@@ -40,7 +40,7 @@ RUN mkdir -p /workspace && chown opencode:20 /workspace
 COPY --chown=opencode:20 . /workspace/autoquantum
 
 # Switch to non-root user for home-directory setup. Lean itself is installed
-# at container start by bootstrap-lean.sh into the mounted elan cache.
+# by the dedicated cache warmer service into mounted volumes at runtime.
 USER opencode
 WORKDIR /home/opencode
 

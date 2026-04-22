@@ -23,11 +23,12 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 
 ### Container Contents
 1. **OpenCode CLI** – `npm install -g @anomalyco/opencode` (includes `opencode serve` command)
-2. **Lean 4.29.0** bootstrapped via `bootstrap-lean.sh` into the mounted `~/.elan` cache on container start
-3. **Mathlib v4.29.0** – fetched via `lake update`; `.olean` cache stored in a Docker volume.
-4. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
-5. **Git, bash, coreutils** – for standard operations.
-6. **Non‑root user** (`opencode`) with UID/GID matching the host user (501:20) to preserve file ownership.
+2. **Minimal base image** – no Lean toolchain or Mathlib cache is baked into the image.
+3. **Dedicated cache-warmer service** – runs `bootstrap-lean.sh` with writable volume mounts to install `elan`, the Lean toolchain, and the Lake package tree.
+4. **Main OpenCode service** – mounts those warmed cache volumes read-only and never runs the bootstrap script itself.
+5. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
+6. **Git, bash, coreutils** – for standard operations.
+7. **Non‑root user** (`opencode`) with UID/GID matching the host user (501:20) to preserve file ownership.
 
 ### Workspace Layout
 ```
@@ -37,8 +38,8 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 │   ├── .mcp/
 │   ├── notes/
 │   └── …
-├── .elan/                # Persistent volume for elan toolchains
-└── .cache/lean/         # Persistent volume for Mathlib .oleans
+├── .elan/                # Persistent volume, warmed by cache-warmer
+└── autoquantum/lean/.lake/packages  # Persistent volume, warmed by cache-warmer
 ```
 
 ### Sync Strategy
@@ -50,7 +51,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 ## Decisions
 
 ### 1. Container Scope
-**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, but bootstrap Lean 4.29.0 and the matching Lake toolchain at container start into the persistent `elan` volume. This keeps the image simpler and avoids duplicating toolchain installation logic across `Dockerfile` and startup scripts.
+**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, keep the image itself lean, and use a separate compose service to warm the shared Lean volumes before the main service starts. The main `opencode` container mounts those volumes read-only.
 
 ### 2. Git Credentials
 - **Do not mount SSH keys** – keep container simple and secure.
@@ -80,7 +81,8 @@ docker compose down                         # Stop when done
 The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
 
 ## Operational Notes
-- **Lean bootstrap ownership** — the image no longer installs `elan` during `docker build`; `bootstrap-lean.sh` is the single source of truth for installing `elan`, selecting the pinned toolchain, and refreshing Lake dependencies into the mounted caches.
+- **Dedicated prewarming** — `bootstrap-lean.sh` now runs only inside the `cache-warmer` compose service. `serve.sh` and `web.sh` only validate that the read-only caches are present.
+- **Read-only runtime caches** — the main `opencode` service mounts `autoquantum-elan-cache` and `autoquantum-mathlib-cache` read-only. If they are missing or stale, rerun the cache-warmer or prune and repopulate the volumes.
 - **Bootstrap PATH handling** — `bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
 - **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.
 - **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.

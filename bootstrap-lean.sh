@@ -26,10 +26,14 @@ fi
 "$ELAN_BIN/elan" default "$LEAN_TOOLCHAIN" >/dev/null
 
 if [ -d "$LEAN_PROJECT_PATH" ]; then
-    echo "Refreshing Lean dependencies in $LEAN_PROJECT_PATH"
-    (
-        cd "$LEAN_PROJECT_PATH"
-        lake update
-        lake exe cache get
-    )
+    if [ -d "$LEAN_PROJECT_PATH/.lake/packages/mathlib" ]; then
+        echo "Lean dependencies already present in $LEAN_PROJECT_PATH/.lake/packages"
+    else
+        echo "Refreshing Lean dependencies in $LEAN_PROJECT_PATH"
+        (
+            cd "$LEAN_PROJECT_PATH"
+            lake update
+            lake exe cache get
+        )
+    fi
 fi

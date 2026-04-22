@@ -2,18 +2,26 @@
 set -e
 
 if [ "$(id -u)" -eq 0 ]; then
-    mkdir -p /home/opencode/.elan /home/opencode/.cache/opencode /workspace/autoquantum/lean/.lake/packages
-    chown 501:20 /home/opencode/.elan /home/opencode/.cache /home/opencode/.cache/opencode /workspace/autoquantum/lean/.lake/packages
+    mkdir -p /home/opencode/.cache/opencode
+    chown 501:20 /home/opencode/.cache /home/opencode/.cache/opencode
     script_path="$(realpath "$0")"
     exec su -s /bin/bash opencode -c "$(printf '%q ' "$script_path" "$@")"
 fi
 
-# Source elan and environment
-if [ -f "$HOME/.profile" ]; then
-    . "$HOME/.profile"
+export PATH="$HOME/.elan/bin:$PATH"
+if [ -f "$HOME/.elan/env" ]; then
+    . "$HOME/.elan/env"
 fi
 
-"$(dirname "$0")/bootstrap-lean.sh"
+if [ ! -x "$HOME/.elan/bin/elan" ]; then
+    echo "Missing elan cache. Run the cache-warmer service first." >&2
+    exit 1
+fi
+
+if [ ! -d "${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}/.lake/packages/mathlib" ]; then
+    echo "Missing Lake package cache. Run the cache-warmer service first." >&2
+    exit 1
+fi
 
 # Change to project directory if mounted
 if [ -d "${PROJECT_ROOT:-/workspace/autoquantum}" ]; then
