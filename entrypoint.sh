@@ -12,12 +12,7 @@ if [ -d "${PROJECT_ROOT:-/workspace/autoquantum}" ]; then
     echo "Working directory: $(pwd)"
 fi
 
-# Generate opencode.json from template if template exists
-if [ -f "opencode.json.template" ]; then
-    echo "Generating opencode.json from template..."
-    envsubst '${MODEL}' < opencode.json.template > opencode.json
-    echo "Generated opencode.json with MODEL=${MODEL:-deepseek/deepseek-reasoner}"
-fi
+
 
 # Command parsing
 if [ "$1" = "serve" ]; then

@@ -161,10 +161,20 @@ lean-mcp-tools/
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "extends": [".config/opencode-base.json", ".config/opencode-quantum.json"],
-  "model": "deepseek/deepseek-reasoner",
+  "plugin": [".opencode/plugins/lean-tools.js"],
   "mcp": {
-    // Project-specific MCP servers
+    "lean": {
+      "type": "local",
+      "command": ["bash", ".mcp/lean-tools/run.sh"],
+      "enabled": true,
+      "timeout": 180000
+    },
+    "lean_lsp": {
+      "type": "local",
+      "command": ["bash", "-c", "LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"],
+      "enabled": true,
+      "timeout": 120000
+    }
   }
 }
 ```
@@ -262,11 +272,11 @@ includes:
 - **April 22, 2026**: Plan created after analysis of current setup and research into Lean 4 auto-coding patterns
 - **April 22, 2026**: Phase 1 implementation started:
   - Dockerfile updated to install gettext for envsubst
-  - `opencode.json.template` created with `${MODEL}` placeholder
-  - Entrypoint script updated to generate `opencode.json` and support multiple commands
+  - `opencode.json` created as canonical configuration (no model field)
+  - Entrypoint script simplified (no template generation)
   - `docker-compose.yml` updated with configurable environment variables
   - `.env.template` created for runtime configuration
-  - `.gitignore` updated to exclude generated `opencode.json`
+  - `.gitignore` updated to include `opencode.json` (now tracked)
   - MCP server scripts updated to respect `LEAN_PROJECT_PATH` environment variable
 - Next step: Test Docker configuration and refine as needed
 

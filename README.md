@@ -66,7 +66,7 @@ ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 ```
 
-To switch models, edit the `"model"` field in `opencode.json` (e.g. `deepseek/deepseek-chat`, `anthropic/claude-sonnet-4-6`).
+To switch models, use the `--model` flag when running OpenCode (e.g. `opencode run --model deepseek/deepseek-chat "task"`).
 
 ```bash
 docker compose build                        # Build the image (once, ~5 min)

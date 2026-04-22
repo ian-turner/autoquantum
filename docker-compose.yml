@@ -14,7 +14,7 @@ services:
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
       LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
-      # Model configuration (used in opencode.json.template)
+      # Optional model environment variable (not used by OpenCode)
       MODEL: ${MODEL:-deepseek/deepseek-reasoner}
       # OpenCode server settings (can be overridden)
       OPENCODE_HOST: ${OPENCODE_HOST:-0.0.0.0}

@@ -23,7 +23,7 @@ AutoQuantum is evolving from a single-project setup into a **reusable framework 
 
 For detailed planning, see [Framework Generalization Plan](../notes/framework-generalization-plan.md).
 
-**Configuration Note:** Models and project paths are now configurable at runtime via environment variables. See `.env.template` for available settings.
+**Configuration Note:** Project paths are configurable at runtime via environment variables (see `.env.template`). The model is specified via the `--model` flag when running OpenCode sessions (e.g., `opencode run --model deepseek/deepseek-reasoner "task"`).
 
 **Web Interface:** The Docker entrypoint supports `web` command to start OpenCode with web UI (defaults to `serve` for headless mode). Use `docker run ... web` or `docker-compose run opencode web`.
 
