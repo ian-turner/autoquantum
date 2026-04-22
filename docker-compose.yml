@@ -37,13 +37,7 @@ services:
     ports:
       - "4096:4096"
       - "1455:1455"
-    # Health check: run lake build (skip if lean/ doesn't exist yet)
-    healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -d ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean} ]; then cd ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean} && lake build ${LEAN_TARGET:-AutoQuantum}; else exit 0; fi"]
-      interval: 30s
-      timeout: 60s
-      retries: 3
-      start_period: 20s
+
     # Keep the container running; OpenCode server stays alive
     restart: unless-stopped
 
