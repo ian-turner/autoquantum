@@ -108,7 +108,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `circuitMatrix_append` — composition lemma | Done | `Core/Circuit.lean` |
 | `Circuit.Implements` — primary correctness predicate | Done | `Core/Circuit.lean` |
 | `tensorWithId_mul`, `tensorWithId_one`, `idTensorWith_mul`, `idTensorWith_one`, `circuitMatrix_tensorWithIdCircuit`, `circuitMatrix_idTensorCircuit` | Done | `Lemmas/Gate.lean` / `Lemmas/Circuit.lean` |
-| permutation-matrix proof infrastructure (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`, `finFunctionFinEquiv_symm_tensorIndex_{zero,succ}`, and `finFunctionFinEquiv_symm_qubitPerm_apply`) | **Done** (Apr 21, 2026) | `Lemmas/Gate.lean` |
+| permutation-matrix proof infrastructure (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`, `finFunctionFinEquiv_symm_tensorIndex_{zero,succ,cons}`, `finFunctionFinEquiv_symm_qubitPerm_apply`, `tensorIndexEquiv_symm_{snd_eq_digit_zero,fst_apply_eq_digit_succ}`, and `tensorWithId_one_entry`) | **Done** (Apr 22, 2026) | `Lemmas/Gate.lean` |
 | `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
 | `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
 | `dft_orthogonality` — DFT orthogonality sum | **Done** (Apr 18, 2026) | `QFT.lean` |
@@ -520,3 +520,21 @@ and try to prove
 permuteQubits ρ = tensorWithId 1 (permuteQubits (Equiv.swap (Fin.last m) i))
 ```
 Current evidence only supports the weaker conclusion that this transport lemma does **not** fall out from `simp` plus the basic digit lemmas. The interaction between `castSucc` on qubit indices and the base-2 digits exposed by `finFunctionFinEquiv.symm` is subtle, so this route should be treated as an explicit proof obligation rather than an obvious rewrite.
+
+### 32. `finFunctionFinEquiv.symm` on a reassembled `tensorIndexEquiv` often needs an explicit `Fin.cons` normal form
+For the remaining `hadamardAt_castSucc_eq` blocker, applying
+```lean
+apply_fun (finFunctionFinEquiv (m := 2) (n := m + 2)).symm
+```
+to the transport goal does **not** let `simp` reuse the `tensorIndexEquiv` digit lemmas automatically. Lean keeps the reassembled right-hand side as `% 2` / `/ 2^j` arithmetic on the full `tensorIndexEquiv` value unless the tensor bitstring is first rewritten into an explicit tuple function.
+
+The stable normalization is the helper
+```lean
+finFunctionFinEquiv_symm_tensorIndex_cons :
+  finFunctionFinEquiv.symm (tensorIndexEquiv n 1 (a, b)) =
+    Fin.cons b (finFunctionFinEquiv.symm a)
+```
+proved with `rw [Fin.cons_zero, finFunctionFinEquiv_symm_tensorIndex_zero]` and
+`rw [Fin.cons_succ, finFunctionFinEquiv_symm_tensorIndex_succ]`.
+
+Without this explicit `Fin.cons` form, `simp [qubitPerm]` tends to unfold back to arithmetic instead of the intended bitstring-level transport argument.

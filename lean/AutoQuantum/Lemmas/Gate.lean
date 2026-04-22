@@ -252,6 +252,19 @@ private lemma finFunctionFinEquiv_symm_tensorIndex_succ (n : ℕ)
     rw [Nat.add_mul_div_left _ _ (by omega), hbdiv, zero_add]
   simp [hquot]
 
+/-- The bitstring for `tensorIndexEquiv n 1 (a, b)` is `b` at index `0` and the bitstring for
+    `a` at successor indices. -/
+private lemma finFunctionFinEquiv_symm_tensorIndex_cons (n : ℕ)
+    (a : Fin (2 ^ n)) (b : Fin 2) :
+    (finFunctionFinEquiv (m := 2) (n := n + 1)).symm (tensorIndexEquiv n 1 (a, b)) =
+      Fin.cons b ((finFunctionFinEquiv (m := 2) (n := n)).symm a) := by
+  ext j
+  cases' Fin.eq_zero_or_eq_succ j with hzero hs
+  · rcases hzero with rfl
+    rw [Fin.cons_zero, finFunctionFinEquiv_symm_tensorIndex_zero]
+  · rcases hs with ⟨j, rfl⟩
+    rw [Fin.cons_succ, finFunctionFinEquiv_symm_tensorIndex_succ]
+
 /-- Reading a digit of `qubitPerm σ a` amounts to reading the corresponding permuted digit of `a`. -/
 private lemma finFunctionFinEquiv_symm_qubitPerm_apply {n : ℕ}
     (σ : Equiv.Perm (Fin n)) (a : Fin (2 ^ n)) (j : Fin n) :
@@ -259,12 +272,41 @@ private lemma finFunctionFinEquiv_symm_qubitPerm_apply {n : ℕ}
       (finFunctionFinEquiv (m := 2) (n := n)).symm a (σ.symm j) := by
   simp [qubitPerm, Equiv.trans_apply, Equiv.piCongrLeft_apply]
 
+/-- The trailing `Fin 2` component of `(tensorIndexEquiv n 1).symm z` is the zeroth base-2 digit of
+    `z`. -/
+private lemma tensorIndexEquiv_symm_snd_eq_digit_zero (n : ℕ) (z : Fin (2 ^ (n + 1))) :
+    ((tensorIndexEquiv n 1).symm z).2 =
+      (finFunctionFinEquiv (m := 2) (n := n + 1)).symm z 0 := by
+  obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv n 1).surjective z
+  simpa [eq_comm] using finFunctionFinEquiv_symm_tensorIndex_zero n a b
+
+/-- The digits of the leading `Fin (2^n)` component of `(tensorIndexEquiv n 1).symm z` are exactly
+    the successor digits of `z`. -/
+private lemma tensorIndexEquiv_symm_fst_apply_eq_digit_succ (n : ℕ)
+    (z : Fin (2 ^ (n + 1))) (j : Fin n) :
+    (finFunctionFinEquiv (m := 2) (n := n)).symm ((tensorIndexEquiv n 1).symm z).1 j =
+      (finFunctionFinEquiv (m := 2) (n := n + 1)).symm z j.succ := by
+  obtain ⟨⟨a, b⟩, rfl⟩ := (tensorIndexEquiv n 1).surjective z
+  simpa [eq_comm] using finFunctionFinEquiv_symm_tensorIndex_succ n a b j
+
 /-- `permuteQubits` of the identity permutation is the identity gate. -/
 private lemma permuteQubits_refl {n : ℕ} :
     permuteQubits (Equiv.refl (Fin n)) = (1 : QGate n) := by
   apply Subtype.ext
   show (qubitPerm (Equiv.refl (Fin n))).permMatrix ℂ = 1
   simp [qubitPerm, Equiv.piCongrLeft_refl]
+
+/-- Entry formula for `tensorWithId 1`: it acts on the leading factor and leaves the trailing
+    qubit untouched. -/
+private lemma tensorWithId_one_entry {k : ℕ} (U : QGate k)
+    (a x : Fin (2 ^ k)) (b y : Fin 2) :
+    (((tensorWithId 1 U : QGate (k + 1)) :
+        Matrix (Fin (2 ^ (k + 1))) (Fin (2 ^ (k + 1))) ℂ)
+      (tensorIndexEquiv k 1 (a, b))
+      (tensorIndexEquiv k 1 (x, y))) =
+      ((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) a x) *
+        (1 : Matrix (Fin 2) (Fin 2) ℂ) b y := by
+  simp [tensorWithId]
 
 /-- Placing a Hadamard on the last qubit of an (n+1)-qubit register is the same as
     `I_n ⊗ H` (Hadamard acts on the last qubit, identity on the first n). -/
@@ -284,21 +326,14 @@ lemma hadamardAt_castSucc_eq (n : ℕ) (i : Fin n) :
   cases n with
   | zero => exact Fin.elim0 i
   | succ m =>
-      -- Normalize the RHS by distributing `tensorWithId 1` over the `onQubit`
-      -- conjugation, so the remaining goal is purely about how the swap-based
-      -- qubit permutation lifts through the extra trailing qubit.
+      -- Normalize the RHS by viewing it as a split-entry statement on
+      -- `tensorIndexEquiv (m+1) 1`. The remaining work is the transport fact that the
+      -- swap on the larger register moves one bit out of the leading block and inserts the
+      -- trailing bit in its place.
       change permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) *
           idTensorWith (m + 1) hadamard *
           permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) =
-        tensorWithId 1
-          (permuteQubits (Equiv.swap (Fin.last m) i) *
-            idTensorWith m hadamard *
-            permuteQubits (Equiv.swap (Fin.last m) i))
-      rw [tensorWithId_mul, tensorWithId_mul]
+        tensorWithId 1 (onQubit i hadamard)
       sorry
-      -- Remaining work: prove the castSucc-lifted swap permutation acts on
-      -- `tensorIndexEquiv (m+1) 1` by transporting only the leading factor,
-      -- then use the permutation-matrix helpers above to turn that index fact
-      -- into the required gate equality.
 
 end AutoQuantum
