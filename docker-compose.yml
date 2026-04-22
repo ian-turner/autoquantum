@@ -6,14 +6,16 @@ services:
     image: autoquantum:latest
     container_name: autoquantum
     working_dir: /workspace/autoquantum
-    #entrypoint: ["./web.sh"] # optional: use the "web" version: 
-    entrypoint: ["./serve.sh"]
+    entrypoint: ["./web.sh"] # optional: use the "web" version: 
+#    entrypoint: ["./serve.sh"]
     environment:
       # Project configuration
       PROJECT_ROOT: /workspace/autoquantum
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
       LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
     volumes:
       # Mount the autoquantum project directory (host ./ to container /workspace/autoquantum)
       - ./:/workspace/autoquantum
