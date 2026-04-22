@@ -13,8 +13,8 @@ if [ -d "${PROJECT_ROOT:-/workspace/autoquantum}" ]; then
 fi
 
 # Run OpenCode web UI
+export OPENCODE_CONFIG="/workspace/autoquantum/opencode.json"
 exec opencode web \
-    --config "/workspace/autoquantum/opencode.json" \
     --hostname "${OPENCODE_HOST:-0.0.0.0}" \
     --port "${OPENCODE_PORT:-4096}" \
     --log-level DEBUG \
