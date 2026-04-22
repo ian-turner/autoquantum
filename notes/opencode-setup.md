@@ -49,14 +49,33 @@ See the **MCP Tools** section in `AGENTS.md` for how agents should use these too
 
 ## OpenCode-specific configuration (`opencode.json`)
 
-OpenCode reads its project config from `opencode.json` (project root), not from `.claude/settings.json`. Key settings:
+OpenCode reads its project config from `opencode.json` (project root), not from `.claude/settings.json`. The configuration is now **generated at runtime** from `opencode.json.template` using environment variable substitution.
 
-| Setting | Value | Reason |
-|---------|-------|--------|
+### Template System
+
+- `opencode.json.template` contains placeholders (e.g., `${MODEL}`) that are replaced with environment variables at container startup.
+- The entrypoint script runs `envsubst` to generate the final `opencode.json`.
+- Generated `opencode.json` is excluded from Git (see `.gitignore`).
+
+### Key Settings
+
+| Setting | Template Value | Reason |
+|---------|---------------|--------|
+| `model` | `${MODEL:-deepseek/deepseek-reasoner}` | Default model; can be overridden via `MODEL` environment variable |
 | `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
 | `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
 | `mcp.lean_lsp.command` | `LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Avoid local loogle initialization and missing-REPL startup noise |
 | `plugin` | `.opencode/plugins/lean-tools.js` | Custom tools and post-edit hook (see below) |
+
+### Runtime Configuration
+
+All configuration is driven by environment variables defined in `.env.template`. Key variables:
+
+- `MODEL`: LLM model (provider/model format)
+- `PROJECT_ROOT`: Host path to project directory
+- `LEAN_PROJECT_PATH`: Path to Lean project inside container
+- `LEAN_TARGET`: Lean library target name
+- `OPENCODE_HOST`, `OPENCODE_PORT`: Server binding
 
 **Important:** OpenCode does **not** read `AGENTS.md` or `CLAUDE.md` automatically. Agent instructions for OpenCode sessions must be placed in `.opencode/rules/` (markdown files, auto-loaded into every session context).
 
