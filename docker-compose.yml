@@ -7,6 +7,8 @@ services:
     container_name: autoquantum
     user: "501:20"
     working_dir: /workspace/autoquantum
+    #entrypoint: ["./web.sh"] # optional: use the "web" version: 
+    entrypoint: ["./serve.sh"]
     environment:
       # Project configuration
       PROJECT_ROOT: /workspace/autoquantum
