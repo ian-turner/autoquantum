@@ -31,6 +31,7 @@ services:
       - elan-cache:/home/opencode/.elan
       - mathlib-cache:/home/opencode/.cache/lean
     environment:
+      # User project configuration (framework lives at /workspace/autoquantum)
       PROJECT_ROOT: /workspace/project
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/project/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/project}
@@ -41,10 +42,13 @@ services:
 # entrypoint.sh - support multiple commands
 if [ "$1" = "serve" ]; then
   exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
+elif [ "$1" = "web" ]; then
+  exec opencode web --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
 elif [ "$1" = "shell" ]; then
   exec /bin/bash
 else
-  exec opencode "$@"
+  # Default to serve if no arguments
+  exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
 fi
 ```
 

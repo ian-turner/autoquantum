@@ -5,7 +5,9 @@
 # Node.js
 node_modules
 .npm
-.opencode
+.opencode/node_modules
+.opencode/package-lock.json
+.opencode/opencode.json
 
 # Python
 __pycache__

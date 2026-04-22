@@ -7,8 +7,8 @@ if [ -f "$HOME/.profile" ]; then
 fi
 
 # Change to project directory if mounted
-if [ -d "${PROJECT_ROOT:-/workspace/project}" ]; then
-    cd "${PROJECT_ROOT:-/workspace/project}"
+if [ -d "${PROJECT_ROOT:-/workspace/autoquantum}" ]; then
+    cd "${PROJECT_ROOT:-/workspace/autoquantum}"
     echo "Working directory: $(pwd)"
 fi
 
@@ -27,9 +27,23 @@ if [ "$1" = "serve" ]; then
         --port "${OPENCODE_PORT:-4096}" \
         --log-level DEBUG \
         "$@"
+elif [ "$1" = "web" ]; then
+    shift
+    exec opencode web \
+        --hostname "${OPENCODE_HOST:-0.0.0.0}" \
+        --port "${OPENCODE_PORT:-4096}" \
+        --log-level DEBUG \
+        "$@"
 elif [ "$1" = "shell" ]; then
     exec /bin/bash
 else
     # Run any other opencode command or default to serve
-    exec opencode "$@"
+    if [ $# -eq 0 ]; then
+        exec opencode serve \
+            --hostname "${OPENCODE_HOST:-0.0.0.0}" \
+            --port "${OPENCODE_PORT:-4096}" \
+            --log-level DEBUG
+    else
+        exec opencode "$@"
+    fi
 fi

@@ -40,6 +40,9 @@ RUN mkdir -p /workspace && chown opencode:20 /workspace
 COPY entrypoint.sh /home/opencode/entrypoint.sh
 RUN chown opencode:20 /home/opencode/entrypoint.sh && chmod +x /home/opencode/entrypoint.sh
 
+# Copy the entire autoquantum framework into the container
+COPY --chown=opencode:20 . /workspace/autoquantum
+
 # Switch to non‑root user for elan installation
 USER opencode
 WORKDIR /home/opencode

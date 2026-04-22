@@ -75,6 +75,8 @@ opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on 
 docker compose down                         # Stop when done
 ```
 
+**Web Interface:** To start OpenCode with a web UI, run `docker compose run opencode web`. The server will be accessible at http://localhost:4096 in your browser.
+
 ### Local Development
 
 **Prerequisites:** [Lean 4 + elan](https://leanprover.github.io/lean4/doc/setup.html), `lake` (bundled with elan).

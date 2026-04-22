@@ -25,6 +25,8 @@ For detailed planning, see [Framework Generalization Plan](../notes/framework-ge
 
 **Configuration Note:** Models and project paths are now configurable at runtime via environment variables. See `.env.template` for available settings.
 
+**Web Interface:** The Docker entrypoint supports `web` command to start OpenCode with web UI (defaults to `serve` for headless mode). Use `docker run ... web` or `docker-compose run opencode web`.
+
 ## Repository Layout
 
 ```
