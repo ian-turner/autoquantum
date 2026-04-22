@@ -15,7 +15,7 @@ AutoQuantum currently provides a working pipeline for automatic generation and f
 #### Current Limitations
 - Fixed mount path: `/workspace/autoquantum`
 - Always runs `opencode serve`
-- Hardcoded project name in health check
+
 - Fixed environment variables (`LEAN_PROJECT_PATH`, `LEAN_TOOLS_REPO_ROOT`)
 
 #### Proposed Changes
@@ -52,10 +52,12 @@ else
 fi
 ```
 
-**C. Dynamic Health Check**
+**C. Dynamic Health Check (Optional)**
 ```yaml
-healthcheck:
-  test: ["CMD", "bash", "-c", "if [ -d ${LEAN_PROJECT_PATH} ]; then cd ${LEAN_PROJECT_PATH} && lake build ${LEAN_TARGET:-AutoQuantum}; else exit 0; fi"]
+# Health check removed from default configuration (runs lake build periodically)
+# Uncomment if you want container health monitoring
+# healthcheck:
+#   test: ["CMD", "bash", "-c", "if [ -d ${LEAN_PROJECT_PATH} ]; then cd ${LEAN_PROJECT_PATH} && lake build ${LEAN_TARGET:-AutoQuantum}; else exit 0; fi"]
 ```
 
 ### 2. **Multi-Agent System with Permissions** (Includes Reading Agent)
