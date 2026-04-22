@@ -58,4 +58,6 @@ RUN echo '. ~/.profile' >> ~/.bashrc
 
 WORKDIR /workspace
 
+USER root
+
 ENTRYPOINT ["/workspace/autoquantum/serve.sh"]

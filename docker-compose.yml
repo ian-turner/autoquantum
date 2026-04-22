@@ -5,7 +5,6 @@ services:
     build: .
     image: autoquantum:latest
     container_name: autoquantum
-    user: "501:20"
     working_dir: /workspace/autoquantum
     #entrypoint: ["./web.sh"] # optional: use the "web" version: 
     entrypoint: ["./serve.sh"]
@@ -20,8 +19,9 @@ services:
       - ./:/workspace/autoquantum
       # Mount user's gitconfig (read‑only) for commit authorship
       - ~/.gitconfig:/home/opencode/.gitconfig:ro
-      # Persistent caches for elan toolchains and Lake-managed Lean dependencies
+      # Persistent caches for elan toolchains, Lean download artifacts, and Lake-managed dependencies
       - elan-cache:/home/opencode/.elan
+      - lean-cache:/home/opencode/.cache
       - mathlib-cache:/workspace/autoquantum/lean/.lake/packages
     ports:
       - "4096:4096"
@@ -30,5 +30,7 @@ services:
 volumes:
   elan-cache:
     name: autoquantum-elan-cache
+  lean-cache:
+    name: autoquantum-lean-cache
   mathlib-cache:
     name: autoquantum-mathlib-cache
