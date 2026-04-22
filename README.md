@@ -57,14 +57,7 @@ A Docker container provides a fully reproducible environment with the Lean toolc
 
 ### Configuration
 
-Create a `.env` file in the project root (gitignored) before starting the container:
-
-```bash
-# API keys — set whichever provider you're using
-DEEPSEEK_API_KEY=
-ANTHROPIC_API_KEY=
-OPENAI_API_KEY=
-```
+The container defaults are defined in `docker-compose.yml`. Override them with standard Compose environment handling or inline environment variables when you launch the container. In practice, the only values you usually need to supply are provider API keys.
 
 To switch models, use the `--model` flag when running OpenCode (e.g. `opencode run --model deepseek/deepseek-chat "task"`).
 

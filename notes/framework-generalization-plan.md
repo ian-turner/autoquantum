@@ -223,7 +223,7 @@ includes:
 ### Phase 1: Foundation & Docker (Week 1-2)
 1. Refactor Docker setup for configurable mounts and commands
 2. Implement separate entrypoint scripts (serve.sh, web.sh) for different OpenCode modes
-3. Create environment variable system with `.env.template`
+3. Document environment overrides directly in `docker-compose.yml` and command examples
 4. Update `AGENTS.md` with new framework structure
 
 ### Phase 2: Agent System with Reading Agent (Week 3-4)
@@ -275,7 +275,7 @@ includes:
   - `opencode.json` created as canonical configuration (no model field)
   - Entrypoint script simplified (no template generation)
   - `docker-compose.yml` updated with configurable environment variables
-  - `.env.template` created for runtime configuration
+  - Runtime configuration documented through compose defaults and environment-variable overrides instead of a checked-in `.env.template`
   - `.gitignore` updated to include `opencode.json` (now tracked)
   - MCP server scripts updated to respect `LEAN_PROJECT_PATH` environment variable
 - Next step: Test Docker configuration and refine as needed
