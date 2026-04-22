@@ -54,7 +54,7 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 ### Template System
 
 - `opencode.json.template` contains placeholders (e.g., `${MODEL}`) that are replaced with environment variables at container startup.
-- The entrypoint script runs `envsubst` to generate the final `opencode.json`.
+- The entrypoint script runs `envsubst '${MODEL}'` (with explicit variable list) to generate the final `opencode.json`, preserving the `$schema` field.
 - Generated `opencode.json` is excluded from Git (see `.gitignore`).
 
 ### Key Settings

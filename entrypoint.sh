@@ -15,7 +15,7 @@ fi
 # Generate opencode.json from template if template exists
 if [ -f "opencode.json.template" ]; then
     echo "Generating opencode.json from template..."
-    envsubst < opencode.json.template > opencode.json
+    envsubst '${MODEL}' < opencode.json.template > opencode.json
     echo "Generated opencode.json with MODEL=${MODEL:-deepseek/deepseek-reasoner}"
 fi
 
