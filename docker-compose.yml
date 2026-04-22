@@ -20,9 +20,9 @@ services:
       - ./:/workspace/autoquantum
       # Mount user's gitconfig (read‑only) for commit authorship
       - ~/.gitconfig:/home/opencode/.gitconfig:ro
-      # Persistent caches for elan toolchains and Mathlib .oleans
+      # Persistent caches for elan toolchains and Lake-managed Lean dependencies
       - elan-cache:/home/opencode/.elan
-      - mathlib-cache:/home/opencode/.cache/lean
+      - mathlib-cache:/workspace/autoquantum/lean/.lake/packages
     ports:
       - "4096:4096"
       - "1455:1455"
