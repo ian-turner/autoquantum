@@ -254,7 +254,15 @@ includes:
 ## Status Updates
 
 - **April 22, 2026**: Plan created after analysis of current setup and research into Lean 4 auto-coding patterns
-- Next step: Begin Phase 1 implementation with Docker refactoring
+- **April 22, 2026**: Phase 1 implementation started:
+  - Dockerfile updated to install gettext for envsubst
+  - `opencode.json.template` created with `${MODEL}` placeholder
+  - Entrypoint script updated to generate `opencode.json` and support multiple commands
+  - `docker-compose.yml` updated with configurable environment variables
+  - `.env.template` created for runtime configuration
+  - `.gitignore` updated to exclude generated `opencode.json`
+  - MCP server scripts updated to respect `LEAN_PROJECT_PATH` environment variable
+- Next step: Test Docker configuration and refine as needed
 
 ---
 

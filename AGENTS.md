@@ -23,6 +23,8 @@ AutoQuantum is evolving from a single-project setup into a **reusable framework 
 
 For detailed planning, see [Framework Generalization Plan](../notes/framework-generalization-plan.md).
 
+**Configuration Note:** Models and project paths are now configurable at runtime via environment variables. See `.env.template` for available settings.
+
 ## Repository Layout
 
 ```

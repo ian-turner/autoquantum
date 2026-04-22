@@ -6,15 +6,30 @@ if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
 fi
 
-# If the AutoQuantum project is mounted, change to its directory.
-if [ -d "/workspace/autoquantum" ]; then
-    cd "/workspace/autoquantum"
+# Change to project directory if mounted
+if [ -d "${PROJECT_ROOT:-/workspace/project}" ]; then
+    cd "${PROJECT_ROOT:-/workspace/project}"
+    echo "Working directory: $(pwd)"
 fi
 
-# Start the OpenCode HTTP server.
-# Default port 4096, host 0.0.0.0; can be overridden via environment variables.
-exec opencode serve \
-    --hostname "${OPENCODE_HOST:-0.0.0.0}" \
-    --port "${OPENCODE_PORT:-4096}" \
-    --log-level DEBUG \
-    "$@"
+# Generate opencode.json from template if template exists
+if [ -f "opencode.json.template" ]; then
+    echo "Generating opencode.json from template..."
+    envsubst < opencode.json.template > opencode.json
+    echo "Generated opencode.json with MODEL=${MODEL:-deepseek/deepseek-reasoner}"
+fi
+
+# Command parsing
+if [ "$1" = "serve" ]; then
+    shift
+    exec opencode serve \
+        --hostname "${OPENCODE_HOST:-0.0.0.0}" \
+        --port "${OPENCODE_PORT:-4096}" \
+        --log-level DEBUG \
+        "$@"
+elif [ "$1" = "shell" ]; then
+    exec /bin/bash
+else
+    # Run any other opencode command or default to serve
+    exec opencode "$@"
+fi

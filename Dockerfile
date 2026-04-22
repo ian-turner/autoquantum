@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     npm \
     cargo \
     ripgrep \
+    gettext \
     tzdata \
     && ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
     && rm -rf /var/lib/apt/lists/*

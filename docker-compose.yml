@@ -8,12 +8,16 @@ services:
     user: "501:20"
     working_dir: /workspace/autoquantum
     environment:
-      # Lean project path (used by MCP servers)
-      LEAN_PROJECT_PATH: /workspace/autoquantum/lean
-      LEAN_TOOLS_REPO_ROOT: /workspace/autoquantum
+      # Project configuration
+      PROJECT_ROOT: /workspace/project
+      LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/project/lean}
+      LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/project}
+      LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
+      # Model configuration (used in opencode.json.template)
+      MODEL: ${MODEL:-deepseek/deepseek-reasoner}
       # OpenCode server settings (can be overridden)
-      OPENCODE_HOST: 0.0.0.0
-      OPENCODE_PORT: 4096
+      OPENCODE_HOST: ${OPENCODE_HOST:-0.0.0.0}
+      OPENCODE_PORT: ${OPENCODE_PORT:-4096}
       # Optional HTTP basic auth for the OpenCode server
       # OPENCODE_SERVER_USERNAME: opencode
       # OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD:-}
@@ -22,8 +26,8 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
-      # Mount the entire AutoQuantum repository
-      - ./:/workspace/autoquantum
+      # Mount the project directory (configurable via PROJECT_ROOT)
+      - ${PROJECT_ROOT:-./}:/workspace/project
       # Mount user's gitconfig (read‑only) for commit authorship
       - ~/.gitconfig:/home/opencode/.gitconfig:ro
       # Persistent caches for elan toolchains and Mathlib .oleans
@@ -32,9 +36,9 @@ services:
     ports:
       - "4096:4096"
       - "1455:1455"
-    # Health check: run lake build AutoQuantum (skip if lean/ doesn't exist yet)
+    # Health check: run lake build (skip if lean/ doesn't exist yet)
     healthcheck:
-      test: ["CMD", "bash", "-c", "if [ -d /workspace/autoquantum/lean ]; then cd /workspace/autoquantum/lean && lake build AutoQuantum; else exit 0; fi"]
+      test: ["CMD", "bash", "-c", "if [ -d ${LEAN_PROJECT_PATH:-/workspace/project/lean} ]; then cd ${LEAN_PROJECT_PATH:-/workspace/project/lean} && lake build ${LEAN_TARGET:-AutoQuantum}; else exit 0; fi"]
       interval: 30s
       timeout: 60s
       retries: 3
