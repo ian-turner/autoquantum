@@ -61,7 +61,7 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 
 | Setting | Template Value | Reason |
 |---------|---------------|--------|
-| `model` | `${MODEL:-deepseek/deepseek-reasoner}` | Default model; can be overridden via `MODEL` environment variable |
+| `model` | `${MODEL}` | Model specified via `MODEL` environment variable (default: deepseek/deepseek-reasoner) |
 | `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
 | `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
 | `mcp.lean_lsp.command` | `LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Avoid local loogle initialization and missing-REPL startup noise |
