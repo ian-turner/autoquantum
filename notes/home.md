@@ -67,6 +67,7 @@ For HPlus, Gaps 1–4 are all complete. The blocker is Gap 5: `hadamardAt_zero_e
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
+- [Framework Generalization Plan](framework-generalization-plan.md) — Plan to transform AutoQuantum into a reusable framework for Lean 4 auto-coding with multi-agent system
 - [Docker Containerization Plan](docker-containerization-plan.md) — Plan for a fully reproducible, sandboxed OpenCode+Lean environment inside Docker
 - [QFT Gate Placement API](qft-api-roadmap.md) — Implemented gate placement API: `onQubit`, `controlledPhaseAt`, `bitReverse`, and the permutation-conjugation pattern
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`

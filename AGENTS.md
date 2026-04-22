@@ -11,6 +11,18 @@ AutoQuantum is a system for **automatic generation and formal verification of qu
 3. Lean's kernel checks the proof. If it fails, the LLM receives elaborated error feedback and retries.
 4. Verified circuits are exported to executable formats (OpenQASM, Qiskit, etc.).
 
+## Framework Evolution
+
+AutoQuantum is evolving from a single-project setup into a **reusable framework for Lean 4 auto-coding**, specifically optimized for quantum computing verification but extensible to other formal verification domains. The framework will include:
+
+1. **Configurable Docker/container setup** with flexible volume mounts and command support
+2. **Multi-agent system** with specialized agents (proof-writer, reading-agent, code-reviewer, test-generator) and fine-grained permissions
+3. **Generic Lean MCP tools** that work with any Lean project structure
+4. **Layered configuration system** for project-specific customization
+5. **Research integration** via a reading agent for arXiv paper analysis
+
+For detailed planning, see [Framework Generalization Plan](../notes/framework-generalization-plan.md).
+
 ## Repository Layout
 
 ```
