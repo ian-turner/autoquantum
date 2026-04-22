@@ -53,7 +53,7 @@ autoquantum/
 
 ## Docker Development Environment
 
-A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. Lean cache volumes are populated by a dedicated compose service and then mounted read-only into the main OpenCode container.
+A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service warms the shared Lean caches first; the main OpenCode container mounts the shared `elan` cache read-only and seeds a separate writable Lake package worktree volume from the warmed package cache.
 
 ### Configuration
 
@@ -68,7 +68,7 @@ opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on 
 docker compose down                         # Stop when done
 ```
 
-`docker compose up` runs a one-shot cache warmer first, which installs `elan` plus the Lean/Lake dependency cache into named Docker volumes. The main `opencode` service mounts those volumes read-only.
+`docker compose up` runs a one-shot cache warmer first, which installs `elan` plus the Lean/Lake dependency cache into named Docker volumes. The main `opencode` service mounts the shared `elan` cache read-only, copies the warmed Lake package tree into its own writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache.
 
 **Web Interface:** To start OpenCode with a web UI, run `docker compose run opencode web`. The server will be accessible at http://localhost:4096 in your browser.
 

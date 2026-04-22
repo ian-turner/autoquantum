@@ -26,12 +26,13 @@ fi
 "$ELAN_BIN/elan" default "$LEAN_TOOLCHAIN" >/dev/null
 
 if [ -d "$LEAN_PROJECT_PATH" ]; then
-    if [ -d "$LEAN_PROJECT_PATH/.lake/packages/mathlib" ]; then
+    if [ -f "$LEAN_PROJECT_PATH/.lake/packages/mathlib/lakefile.lean" ]; then
         echo "Lean dependencies already present in $LEAN_PROJECT_PATH/.lake/packages"
     else
         echo "Refreshing Lean dependencies in $LEAN_PROJECT_PATH"
         (
             cd "$LEAN_PROJECT_PATH"
+            find .lake/packages -mindepth 1 -maxdepth 1 -exec rm -rf {} +
             lake update
             lake exe cache get
         )
