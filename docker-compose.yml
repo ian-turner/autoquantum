@@ -5,7 +5,7 @@ services:
     build: .
     image: autoquantum:latest
     container_name: autoquantum
-    # Use 'docker-compose run opencode web' for web UI
+    # Use 'docker-compose run --entrypoint /workspace/autoquantum/web.sh opencode' for web UI
     user: "501:20"
     working_dir: /workspace/autoquantum
     environment:

@@ -25,7 +25,7 @@ For detailed planning, see [Framework Generalization Plan](../notes/framework-ge
 
 **Configuration Note:** Project paths are configurable at runtime via environment variables (see `.env.template`). The model is specified via the `--model` flag when running OpenCode sessions (e.g., `opencode run --model deepseek/deepseek-reasoner "task"`).
 
-**Web Interface:** The Docker entrypoint supports `web` command to start OpenCode with web UI (defaults to `serve` for headless mode). Use `docker run ... web` or `docker-compose run opencode web`.
+**Web Interface:** Use `docker run --entrypoint /workspace/autoquantum/web.sh ...` or `docker-compose run --entrypoint /workspace/autoquantum/web.sh opencode` to start OpenCode with web UI. The default entrypoint (`/workspace/autoquantum/serve.sh`) runs headless mode.
 
 ## Repository Layout
 

@@ -39,7 +39,7 @@ services:
 
 **B. Flexible Entrypoint**
 ```bash
-# entrypoint.sh - support multiple commands
+# serve.sh and web.sh - separate entrypoints
 if [ "$1" = "serve" ]; then
   exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
 elif [ "$1" = "web" ]; then
@@ -222,7 +222,7 @@ includes:
 
 ### Phase 1: Foundation & Docker (Week 1-2)
 1. Refactor Docker setup for configurable mounts and commands
-2. Implement flexible entrypoint supporting multiple `opencode` commands
+2. Implement separate entrypoint scripts (serve.sh, web.sh) for different OpenCode modes
 3. Create environment variable system with `.env.template`
 4. Update `AGENTS.md` with new framework structure
 

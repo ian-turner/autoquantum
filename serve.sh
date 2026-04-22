@@ -12,29 +12,20 @@ if [ -d "${PROJECT_ROOT:-/workspace/autoquantum}" ]; then
     echo "Working directory: $(pwd)"
 fi
 
-
-
 # Command parsing
 if [ "$1" = "serve" ]; then
     shift
     exec opencode serve \
+        --config "/workspace/autoquantum/opencode.json" \
         --hostname "${OPENCODE_HOST:-0.0.0.0}" \
         --port "${OPENCODE_PORT:-4096}" \
         --log-level DEBUG \
         "$@"
-elif [ "$1" = "web" ]; then
-    shift
-    exec opencode web \
-        --hostname "${OPENCODE_HOST:-0.0.0.0}" \
-        --port "${OPENCODE_PORT:-4096}" \
-        --log-level DEBUG \
-        "$@"
-elif [ "$1" = "shell" ]; then
-    exec /bin/bash
 else
     # Run any other opencode command or default to serve
     if [ $# -eq 0 ]; then
         exec opencode serve \
+            --config "/workspace/autoquantum/opencode.json" \
             --hostname "${OPENCODE_HOST:-0.0.0.0}" \
             --port "${OPENCODE_PORT:-4096}" \
             --log-level DEBUG
