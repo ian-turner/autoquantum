@@ -45,8 +45,8 @@ services:
       - elan-cache:/home/opencode/.elan:ro
       # Shared warmed package cache is mounted read-only at a seed path.
       - mathlib-cache:/home/opencode/.cache/lake-packages-seed:ro
-      # Runtime Lake package worktree stays writable and separate from the shared seed cache.
-      - lake-work:/workspace/autoquantum/lean/.lake/packages
+      # Runtime Lake package worktree is a per-container anonymous volume.
+      - /workspace/autoquantum/lean/.lake/packages
     ports:
       - "4096:4096"
       - "1455:1455"
@@ -56,5 +56,3 @@ volumes:
     name: autoquantum-elan-cache
   mathlib-cache:
     name: autoquantum-mathlib-cache
-  lake-work:
-    name: autoquantum-lake-work

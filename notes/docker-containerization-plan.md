@@ -25,7 +25,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 1. **OpenCode CLI** – `npm install -g @anomalyco/opencode` (includes `opencode serve` command)
 2. **Minimal base image** – no Lean toolchain or Mathlib cache is baked into the image.
 3. **Dedicated cache-warmer service** – runs `bootstrap-lean.sh` with writable volume mounts to install `elan`, the Lean toolchain, and the Lake package tree.
-4. **Main OpenCode service** – mounts the warmed `elan` volume read-only, mounts the warmed Lake package cache at a read-only seed path, copies that package tree into a separate writable `lake-work` volume, and runs `lake update` against that private worktree before startup.
+4. **Main OpenCode service** – mounts the warmed `elan` volume read-only, mounts the warmed Lake package cache at a read-only seed path, copies that package tree into its own anonymous writable `.lake/packages` volume, and runs `lake update` against that private worktree before startup.
 5. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
 6. **Git, bash, coreutils** – for standard operations.
 7. **Non‑root user** (`opencode`) with UID/GID matching the host user (501:20) to preserve file ownership.
@@ -40,7 +40,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 │   └── …
 ├── .elan/                # Persistent volume, warmed by cache-warmer
 ├── /home/opencode/.cache/lake-packages-seed  # Shared read-only warmed package cache
-└── autoquantum/lean/.lake/packages  # Separate writable lake-work volume
+└── autoquantum/lean/.lake/packages  # Per-container anonymous writable volume
 ```
 
 ### Sync Strategy
@@ -52,7 +52,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 ## Decisions
 
 ### 1. Container Scope
-**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, keep the image itself lean, and use a separate compose service to warm the shared Lean volumes before the main service starts. The main `opencode` container uses the shared caches as read-only seeds but keeps its own writable Lake package worktree because `lake build` mutates package directories.
+**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, keep the image itself lean, and use a separate compose service to warm the shared Lean volumes before the main service starts. The main `opencode` container uses the shared caches as read-only seeds but keeps its own private writable Lake package worktree because `lake build` mutates package directories.
 
 ### 2. Git Credentials
 - **Do not mount SSH keys** – keep container simple and secure.
@@ -83,7 +83,7 @@ The container mounts the repo as a volume, so file edits and git commits are imm
 
 ## Operational Notes
 - **Dedicated prewarming** — `bootstrap-lean.sh` now runs only inside the `cache-warmer` compose service. `serve.sh` and `web.sh` seed a writable package worktree from the shared warmed package cache and run `lake update` against that private worktree before starting OpenCode.
-- **Mutable Lake packages** — `lake build` writes into dependency directories such as `proofwidgets`, so the shared warmed package cache cannot be mounted directly at `.lake/packages` in read-only mode. The main service instead mounts the shared package cache read-only at a seed path and uses a separate writable volume for `.lake/packages`.
+- **Mutable Lake packages** — `lake build` writes into dependency directories such as `proofwidgets`, so the shared warmed package cache cannot be mounted directly at `.lake/packages` in read-only mode. The main service instead mounts the shared package cache read-only at a seed path and uses an anonymous per-container writable volume for `.lake/packages`.
 - **Bootstrap PATH handling** — `bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
 - **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.
 - **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.
