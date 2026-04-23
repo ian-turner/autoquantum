@@ -266,23 +266,40 @@ noncomputable def idTensorWith {k : ℕ} (m : ℕ) (U : QGate k) : QGate (m + k)
   exact reindex_mem_unitaryGroup e <|
     Matrix.kronecker_mem_unitary hIm (SetLike.coe_mem U)
 
-/-- Build a controlled-U gate from a single-qubit unitary: [[I₂, 0], [0, U]]. -/
-noncomputable def controlled (U : Matrix (Fin 2) (Fin 2) ℂ)
-    (hU : U ∈ Matrix.unitaryGroup (Fin 2) ℂ) : QGate 2 := by
-  let CU : Matrix (Fin 2 ⊕ Fin 2) (Fin 2 ⊕ Fin 2) ℂ :=
-    Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U
-  refine ⟨Matrix.reindex finSumFinEquiv finSumFinEquiv CU, ?_⟩
-  have hCU : CU ∈ Matrix.unitaryGroup (Fin 2 ⊕ Fin 2) ℂ := by
+/-- Build a controlled version of a k-qubit gate as `diag(I, U)`.
+
+    The output acts on `k + 1` qubits: the new leading control qubit leaves the target register
+    unchanged on `|0⟩` and applies `U` on `|1⟩`. -/
+noncomputable def controlled {k : ℕ} (U : QGate k) : QGate (k + 1) := by
+  let e : Fin (2 ^ k) ⊕ Fin (2 ^ k) ≃ Fin (2 ^ (k + 1)) :=
+    finSumFinEquiv.trans <| finCongr <| by
+      calc
+        2 ^ k + 2 ^ k = 2 * 2 ^ k := by rw [two_mul]
+        _ = 2 ^ k * 2 := by rw [Nat.mul_comm]
+        _ = 2 ^ (k + 1) := by simpa using (pow_succ 2 k).symm
+  let CU : Matrix (Fin (2 ^ k) ⊕ Fin (2 ^ k)) (Fin (2 ^ k) ⊕ Fin (2 ^ k)) ℂ :=
+    Matrix.fromBlocks (1 : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) 0 0
+      (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)
+  refine ⟨Matrix.reindex e e CU, ?_⟩
+  have hCU : CU ∈ Matrix.unitaryGroup (Fin (2 ^ k) ⊕ Fin (2 ^ k)) ℂ := by
     rw [Matrix.mem_unitaryGroup_iff]
-    have hU' : U * star U = 1 := Matrix.mem_unitaryGroup_iff.mp hU
-    have hU'' : U * Uᴴ = 1 := by
+    have hU' :
+        (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) *
+            star (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) = 1 :=
+      Matrix.mem_unitaryGroup_iff.mp (SetLike.coe_mem U)
+    have hU'' :
+        (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) *
+            (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)ᴴ = 1 := by
       simpa [Matrix.star_eq_conjTranspose] using hU'
-    change Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U *
-        star (Matrix.fromBlocks (1 : Matrix (Fin 2) (Fin 2) ℂ) 0 0 U) = 1
+    change Matrix.fromBlocks (1 : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) 0 0
+          (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) *
+        star
+          (Matrix.fromBlocks (1 : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) 0 0
+            (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)) = 1
     rw [Matrix.star_eq_conjTranspose, Matrix.fromBlocks_conjTranspose,
       Matrix.fromBlocks_multiply]
     simp [hU'', Matrix.fromBlocks_one]
-  exact reindex_mem_unitaryGroup finSumFinEquiv hCU
+  exact reindex_mem_unitaryGroup e hCU
 
 /-- Place a single-qubit gate on an arbitrary qubit by swapping that qubit to the end,
     applying `I ⊗ U`, and swapping back. -/
@@ -327,7 +344,7 @@ noncomputable def onQubits {n : ℕ} (q₁ q₂ : Fin n) (h : q₁ ≠ q₂) (U 
     `control` is the control qubit and `target` is the target qubit. -/
 noncomputable def controlledAt {n : ℕ} (control target : Fin n) (h : control ≠ target)
     (U : QGate 1) : QGate n :=
-  onQubits control target h (controlled (U : Matrix (Fin 2) (Fin 2) ℂ) (SetLike.coe_mem U))
+  onQubits control target h (controlled U)
 
 /-- Place a controlled phase-rotation `R_k` on an arbitrary control/target pair. -/
 noncomputable def controlledPhaseAt {n : ℕ} (control target : Fin n)

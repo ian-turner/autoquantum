@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 19, 2026 (Mathlib v4.29.0).
+Last updated: April 23, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -95,7 +95,7 @@ Last updated: April 19, 2026 (Mathlib v4.29.0).
 | `applyGate_basisState_vec_apply` — gate on basis state gives matrix column | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `hadamard_apply_ket0` — H\|0⟩ = \|+⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `hadamard_apply_ket1` — H\|1⟩ = \|−⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
-| `tensorWithId`, `idTensorWith`, `controlled` | Done | `Core/Gate.lean` |
+| `tensorWithId`, `idTensorWith`, generic `controlled` | Done | `Core/Gate.lean` |
 | `tensorWithId_apply`, `idTensorWith_apply` — action on tensor states | Done | `Lemmas/Tensor.lean` |
 | `tensorIndexEquiv k m` — canonical tensor basis equivalence | Done | `Core/Tensor.lean` |
 | `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Core/Gate.lean` (Apr 18, 2026) |
@@ -538,3 +538,25 @@ proved with `rw [Fin.cons_zero, finFunctionFinEquiv_symm_tensorIndex_zero]` and
 `rw [Fin.cons_succ, finFunctionFinEquiv_symm_tensorIndex_succ]`.
 
 Without this explicit `Fin.cons` form, `simp [qubitPerm]` tends to unfold back to arithmetic instead of the intended bitstring-level transport argument.
+
+### 33. `pow_succ` does not by itself bridge `Fin (2^k ⊕ 2^k)` to `Fin (2^(k+1))`
+For the generic controlled-gate constructor, the index equivalence naturally starts at
+```lean
+Fin (2 ^ k) ⊕ Fin (2 ^ k)
+```
+but `finCongr` needs a literal equality
+```lean
+2 ^ k + 2 ^ k = 2 ^ (k + 1)
+```
+while `pow_succ 2 k` gives the multiplicative form
+```lean
+2 ^ (k + 1) = 2 ^ k * 2.
+```
+`simpa [two_mul, Nat.mul_comm] using (pow_succ 2 k).symm` was not strong enough here. The stable route was an explicit calculation:
+```lean
+calc
+  2 ^ k + 2 ^ k = 2 * 2 ^ k := by rw [two_mul]
+  _ = 2 ^ k * 2 := by rw [Nat.mul_comm]
+  _ = 2 ^ (k + 1) := by simpa using (pow_succ 2 k).symm
+```
+This is the reliable bridge when packaging block-diagonal `diag(I, U)` matrices as `(k+1)`-qubit gates.
