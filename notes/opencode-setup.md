@@ -35,10 +35,10 @@ Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate
 ### `lean_lsp` server
 
 Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, with
-`LEAN_LOOGLE_LOCAL=false LEAN_REPL=false`, which:
+`LEAN_REPL=false`, which:
 - Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
-- Disables the heaviest remote-search tools by default.
-  - Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
+- Keeps the launcher's default `LEAN_LOOGLE_LOCAL=true`, so `lean_loogle` uses the local index instead of the hosted service.
+- Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
 - Prefers an installed `lean-lsp-mcp` binary and falls back to `uvx lean-lsp-mcp`.
 
 Note: `lean_lsp` is registered in `.claude/settings.json` and is available to both Claude Code and OpenCode agents.
@@ -57,7 +57,7 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 |---------|-------|--------|
 | `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
 | `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
-| `mcp.lean_lsp.command` | `LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Avoid local loogle initialization and missing-REPL startup noise |
+| `mcp.lean_lsp.command` | `LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Keep REPL noise off while allowing the launcher default local Loogle index |
 | `plugin` | `.opencode/plugins/lean-tools.js` | Custom tools and post-edit hook (see below) |
 
 ### Model Selection

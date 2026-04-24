@@ -220,7 +220,7 @@ lean-mcp-tools/
     },
     "lean_lsp": {
       "type": "local",
-      "command": ["bash", "-c", "LEAN_LOOGLE_LOCAL=false LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"],
+      "command": ["bash", "-c", "LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"],
       "enabled": true,
       "timeout": 120000
     }
