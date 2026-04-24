@@ -69,7 +69,53 @@ The recent cache design is worth keeping: shared Elan and seeded Lake package ca
 #   test: ["CMD", "bash", "-c", "if [ -d ${LEAN_PROJECT_PATH} ]; then cd ${LEAN_PROJECT_PATH} && lake build ${LEAN_TARGET:-AutoQuantum}; else exit 0; fi"]
 ```
 
-### 2. **Multi-Agent System with Permissions** (Includes Reading Agent)
+### 2. **Multi-Agent System** — Phase 2 Implementation
+
+#### Priority Agents (implementing now)
+
+Three agents are being built first, in order of immediate utility:
+1. **`developer`** — highest-permission, general project and framework work
+2. **`reading`** — arXiv + local PDF ingestion, theorem extraction, Lean skeleton generation
+3. **`latex-writer`** — Lean-to-LaTeX transcription and PDF compilation
+
+The remaining agents (`proof-writer`, `verifier`, `code-reviewer`) follow in a later pass once the three priority agents are stable.
+
+#### Confirmed OpenCode `command` Block Schema
+
+Fields available per agent definition (confirmed from `https://opencode.ai/config.json`):
+
+| Field | Purpose |
+|-------|---------|
+| `description` | Documentation string shown when selecting the agent |
+| `prompt` | **Inlined system instructions** — agent-specific rules go here |
+| `model` | Model override for this agent |
+| `variant` | Model variant override |
+| `temperature`, `top_p` | Sampling parameters |
+| `mode` | `"primary"`, `"subagent"`, or `"all"` |
+| `steps` | Max agentic iterations |
+| `hidden` | Hide from agent picker |
+| `disable` | Disable agent entirely |
+| `color` | Theme color |
+| `options` | Custom key-value config |
+| `permission` | Granular tool/file permissions (see below) |
+
+Permission categories: `read`, `edit`, `bash`, `lsp`, `glob`, `grep`, `webfetch`, `websearch`, `codesearch`, `task`, `todowrite`, `skill`, `external_directory`. Each takes `"allow"`, `"ask"`, or `"deny"`.
+
+#### Tiered Rules Architecture
+
+Rules are split into two layers:
+
+**Layer 1 — Common rules (`.opencode/rules/*.md`, auto-loaded into every session):**
+- `project-overview.md` — project layout, key files, build commands, how agents relate
+- `lean-workflow.md` — MCP tool reference, decision tree, iterative workflow, stop conditions
+- `lean-proof-patterns.md` — confirmed tensor-product, gate-placement, and circuit patterns
+
+**Layer 2 — Agent-specific instructions (`prompt` field in `opencode.json`):**
+- Each priority agent has a dedicated rules file in `.opencode/rules/agents/<name>.md`
+- The full content of that file is inlined into the agent's `prompt` field — this maximizes context quality without loading all agent rules into every session
+- Files in `.opencode/rules/agents/` serve as the canonical editable source; `prompt` values in `opencode.json` are kept in sync
+
+The split means all agents share the common foundation (project layout, Lean tools) while each gets deep, targeted instructions without cluttering other agents' contexts.
 
 #### Agent Definitions in `opencode.json`
 
@@ -78,99 +124,85 @@ The recent cache design is worth keeping: shared Elan and seeded Lake package ca
   "command": {
     "developer": {
       "description": "Highest-permission agent for direct project development, framework work, and general Lean engineering beyond proof writing",
+      "mode": "primary",
+      "prompt": "<contents of .opencode/rules/agents/developer.md>",
       "permission": {
         "bash": "allow",
         "read": "allow",
         "edit": "allow",
         "task": "allow",
-        "webfetch": "ask"
+        "webfetch": "ask",
+        "websearch": "ask"
       }
     },
-    "proof-writer": {
-      "description": "Specialized in writing and verifying Lean proofs",
-      "permission": {
-        "bash": "allow",
-        "read": "allow",
-        "edit": { ".lean": "allow", "*": "ask" },
-        "task": "deny",
-        "webfetch": "ask"
-      }
-    },
-    "code-reviewer": {
-      "description": "Review code and proofs (read-only)",
+    "reading": {
+      "description": "Read and analyze arXiv papers and research literature; extract theorems and generate Lean skeletons",
+      "mode": "primary",
+      "prompt": "<contents of .opencode/rules/agents/reading.md>",
       "permission": {
         "read": "allow",
-        "edit": "deny",
+        "edit": "ask",
+        "webfetch": "allow",
+        "websearch": "allow",
         "bash": "deny",
-        "webfetch": "ask"
-      }
-    },
-    "reading-agent": {
-      "description": "Read and analyze arXiv papers and research literature",
-      "permission": {
-        "read": "allow",
-        "edit": { "*.lean": "allow", "notes/papers/*.md": "allow", "notes/research/*.md": "allow", "*": "ask" },
-        "webfetch": "allow",  # Restricted in practice to arXiv plus approved PDF sources
-        "bash": "deny",
-        "task": "allow"  # Can delegate to explore agents
-      }
-    },
-    "verifier": {
-      "description": "Check Lean files, validate proof obligations, and confirm claimed results",
-      "permission": {
-        "read": "allow",
-        "edit": "deny",
-        "bash": "allow",
-        "webfetch": "ask"
+        "task": "allow"
       }
     },
     "latex-writer": {
-      "description": "Translate Lean definitions and proofs into LaTeX documents and PDF-ready sources",
+      "description": "Translate Lean definitions and proofs into LaTeX documents and compile PDFs",
+      "mode": "primary",
+      "prompt": "<contents of .opencode/rules/agents/latex-writer.md>",
       "permission": {
         "read": "allow",
-        "edit": { "*.tex": "allow", "*.bib": "allow", "*": "ask" },
-        "bash": "allow",
-        "webfetch": "ask"
+        "edit": "ask",
+        "bash": "deny",
+        "webfetch": "deny",
+        "task": "deny"
       }
     }
   }
 }
 ```
 
-#### Reading Agent Capabilities
-- **Restricted source access**: Fetch papers from arXiv and read local PDFs from an approved directory only
-- **PDF parsing**: Extract text, figures, mathematical notation
-- **Math OCR**: Recover equations and notation that are not captured well by plain PDF text extraction
-- **Summary generation**: Create concise summaries of papers
-- **Theorem extraction**: Identify formalizable statements
-- **Circuit diagram analysis**: Parse quantum circuit diagrams
-- **Research context**: Connect papers to existing Lean formalizations
-- **Lean skeleton generation**: Produce a basic Lean file skeleton with imports, declarations, and theorem stubs for the proof-writer to refine
+Note: `edit: "ask"` for reading and latex-writer means the agent requests confirmation before writing, preserving safety while still allowing output.
 
-#### Latex Writer Capabilities
-- **Proof transcription**: Convert Lean theorem statements and proofs into mathematical prose
-- **Notation alignment**: Rewrite Lean syntax into standard LaTeX notation while preserving meaning
-- **Document assembly**: Produce paper-style sections, theorem environments, and appendices
-- **PDF builds**: Generate `.tex` and bibliography inputs, then compile them with `pdflatex` / `latexmk`
-- **Formalization traceability**: Link LaTeX explanations back to source Lean declarations
+#### Agent Capabilities
 
-#### Developer Agent Capabilities
-- **General project engineering**: Work directly on framework code, infrastructure, scripts, and documentation
-- **Lean development beyond proofs**: Implement definitions, APIs, refactors, and supporting tooling for Lean projects
-- **Cross-cutting changes**: Coordinate edits that span Docker, MCP tooling, config, notes, and source code
-- **Task delegation**: Hand specialized proof, review, reading, verification, or LaTeX work to narrower agents when useful
+**`developer`:**
+- General project engineering: framework code, infrastructure, scripts, documentation
+- Lean development beyond proofs: definitions, APIs, refactors, supporting tooling
+- Cross-cutting changes spanning Docker, MCP, config, notes, and Lean source
+- Task delegation to specialized agents for proof, review, reading, verification, or LaTeX work
 
-#### Agent Workflow Integration
+**`reading`:**
+- Fetch papers from arXiv; read local PDFs from `references/`
+- Extract text, equations, and mathematical notation
+- Identify formalizable theorems and circuit descriptions
+- Generate structured notes in `notes/papers/<id>.md`
+- Draft a basic Lean file skeleton (imports, declarations, theorem stubs) for the proof-writer
+
+**`latex-writer`:**
+- Transcribe Lean theorem statements and proofs into mathematical prose
+- Rewrite Lean syntax into standard LaTeX notation while preserving meaning
+- Produce paper-style sections, theorem environments, and appendices in `latex/`
+- Trigger PDF compilation via a dedicated `latex` MCP server — no bash permissions
+- Edit permissions scoped to `latex/` output directory only
+- Link LaTeX explanations back to source Lean declarations for traceability
+
+#### Agent Workflow
+
 ```
 Developer → Coordinates project work → Proof Writer → Verifier
-     ↓                  ↓
-Reading Agent     Direct code / infra changes
      ↓
-Extracts theorem/circuit → Lean skeleton / notes
-                                     ↓
-                              Latex Writer → PDF-ready writeup
-                                             ↓
-                                      Code Reviewer validates
+Reading Agent
+  → Fetches paper, extracts theorems
+  → Creates notes/papers/<id>.md
+  → Drafts Lean skeleton → Proof Writer refines
+                                ↓
+                         Latex Writer
+                           → Reads Lean source + notes
+                           → Produces .tex / PDF
+                           → Code Reviewer validates
 ```
 
 ### 3. **Generic Lean MCP Tools**
@@ -314,13 +346,16 @@ includes:
 
 ## Resolved Decisions
 
-1. **Reading Agent Scope**: Restrict the reading agent to arXiv plus local PDFs from an approved directory.
-2. **Agent Permissions**: Reading-agent web access should be limited to arXiv and approved PDF retrieval paths rather than broad web access.
+1. **Reading Agent Scope**: Restrict the reading agent to arXiv plus local PDFs from `references/`.
+2. **Agent Permissions**: Reading-agent web access is `allow` (needed for arXiv fetch), not restricted to a domain allowlist — rely on agent instructions to scope behavior.
 3. **PDF Processing**: Include math OCR as part of the planned reading-agent toolchain.
 4. **Integration Depth**: The reading agent should be able to draft a basic Lean skeleton in addition to summaries.
-5. **Latex Writer Scope**: The latex writer should own both `.tex` generation and PDF compilation.
+5. **Latex Writer Scope**: The latex writer owns `.tex` generation. PDF compilation goes through a dedicated `latex` MCP server — the agent has no bash permissions. Edit permissions are scoped to the `latex/` output directory.
 6. **Developer Agent Role**: Add a highest-permission developer agent for direct code work, framework engineering, and broader Lean development beyond proof-writing-only tasks.
 7. **Backward Compatibility**: Compatibility can be broken during the transition; the framework should optimize for the new architecture rather than preserving the old layout.
+8. **Priority Agent Order**: Implement `developer`, `reading`, and `latex-writer` first. `proof-writer`, `verifier`, and `code-reviewer` follow in a later pass.
+9. **Tiered Rules Architecture**: Common rules in `.opencode/rules/*.md` (auto-loaded to all sessions); agent-specific rules in `.opencode/rules/agents/<name>.md`, inlined into each agent's `prompt` field in `opencode.json`. The files are the editable source; `prompt` values are kept in sync.
+10. **Inline Agent Instructions**: Agent `prompt` fields should contain the full text of the corresponding rules file to maximize per-agent context quality without polluting other agents' sessions.
 
 ## Status Updates
 
@@ -334,7 +369,13 @@ includes:
   - Runtime configuration documented through compose defaults and environment-variable overrides instead of a checked-in `.env.template`
   - `.gitignore` updated to include `opencode.json` (now tracked)
   - `lean_lsp` launcher now respects `LEAN_PROJECT_PATH`; `lean-tools` launcher uses `LEAN_TOOLS_REPO_ROOT` and still needs a final project-agnostic pass
-- Next step: Test Docker configuration and refine as needed
+- Phase 1 remaining gaps: `/workspace/autoquantum` hardcoded in `docker-compose.yml`, `entrypoint.sh`, and previously in `.claude/settings.json` (host paths now fixed in settings)
+- **April 23, 2026**: Phase 2 planning complete:
+  - OpenCode `command` block schema confirmed (fields: `description`, `prompt`, `model`, `variant`, `temperature`, `top_p`, `mode`, `steps`, `hidden`, `disable`, `color`, `options`, `permission`)
+  - Permission categories confirmed: `read`, `edit`, `bash`, `lsp`, `glob`, `grep`, `webfetch`, `websearch`, `codesearch`, `task`, `todowrite`, `skill`, `external_directory`
+  - Tiered rules architecture decided: common rules auto-loaded from `.opencode/rules/`; agent-specific rules inlined into `prompt` field from `.opencode/rules/agents/<name>.md`
+  - Priority agents decided: `developer`, `reading`, `latex-writer`
+- Next step: Write agent rules files and wire them into `opencode.json`
 
 ---
 

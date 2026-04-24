@@ -79,10 +79,25 @@ opencode run --attach http://localhost:4096 --model anthropic/claude-3-5-sonnet 
 
 ## OpenCode rules (`.opencode/rules/`)
 
+Rules are split into two layers:
+
+**Layer 1 — Common rules (auto-loaded into every session):**
+
 | File | Contents |
 |------|----------|
+| `project-overview.md` | Project layout, key files, build commands, agent roster and how they relate *(to be created)* |
 | `lean-workflow.md` | Tool reference table, decision tree, mandatory iterative workflow, file-path format guidance, stop conditions |
 | `lean-proof-patterns.md` | Tensor-product proof patterns (Patterns 1–4), `onQubit`/`permuteGate` algebra notes, circuit decomposition patterns, pitfall table |
+
+**Layer 2 — Agent-specific instructions (inlined into each agent's `prompt` field in `opencode.json`):**
+
+| File | Agent | Contents |
+|------|-------|----------|
+| `agents/developer.md` | `developer` | Project engineering guidance, delegation patterns, cross-cutting change conventions *(to be created)* |
+| `agents/reading.md` | `reading` | arXiv/PDF workflow, theorem extraction protocol, notes format, Lean skeleton conventions *(to be created)* |
+| `agents/latex-writer.md` | `latex-writer` | Lean-to-LaTeX translation conventions, document structure, PDF compilation workflow *(to be created)* |
+
+Files in `.opencode/rules/agents/` are the canonical editable source. The `prompt` field in `opencode.json` for each agent is kept in sync with the corresponding file's contents.
 
 ## OpenCode plugin (`.opencode/plugins/lean-tools.js`)
 
