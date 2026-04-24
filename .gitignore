@@ -37,6 +37,9 @@ notes/.obsidian/
 # Local reference PDFs
 references/*.pdf
 
+# LaTeX compiled output
+latex-out/
+
 # Docker build and runtime logs
 docker-*.log
 docker-compose*.log

@@ -23,7 +23,7 @@ def _repo_root() -> Path:
 
 
 def _latex_root() -> Path:
-    return _repo_root() / "latex"
+    return _repo_root() / "latex-out"
 
 
 def _resolve_project(project: str) -> Path:
