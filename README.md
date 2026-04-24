@@ -53,7 +53,7 @@ autoquantum/
 
 ## Docker Development Environment
 
-A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service warms the shared Lean caches first; the main OpenCode container mounts the shared `elan` cache read-only and seeds its own writable Lake package worktree from the warmed package cache.
+A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service still warms shared Lean caches first, but `entrypoint.sh` also falls back to `bootstrap-lean.sh` when runtime caches are missing and the container has permission to populate them.
 
 ### Configuration
 
@@ -68,7 +68,7 @@ opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on 
 docker compose down                         # Stop when done
 ```
 
-`docker compose up` runs a one-shot cache warmer first, which installs `elan` plus the Lean/Lake dependency cache into named Docker volumes. The main `opencode` service mounts the shared `elan` cache read-only, copies the warmed Lake package tree into its own anonymous writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache.
+`docker compose up` runs a one-shot cache warmer first, which installs `elan` plus the Lean/Lake dependency cache into named Docker volumes. The main `opencode` service mounts the shared `elan` cache read-only, copies the warmed Lake package tree into its own anonymous writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache. If you run the image standalone without those shared caches, the entrypoint now attempts the same Lean bootstrap flow directly inside the container.
 
 **Web Interface:** To start OpenCode with a web UI, run `docker compose run opencode web`. The server will be accessible at http://localhost:4096 in your browser.
 

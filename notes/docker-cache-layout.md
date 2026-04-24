@@ -15,14 +15,14 @@ The main goal is to let multiple containers share the same Lean toolchain and wa
 
 ## Implementation detail
 
-`cache-warmer` is the only compose service that runs `bootstrap-lean.sh`. It mounts:
+`cache-warmer` is the compose service that pre-populates the shared caches with `bootstrap-lean.sh`. It mounts:
 
 ```bash
 /home/opencode/.elan
 /workspace/autoquantum/lean/.lake/packages
 ```
 
-in write mode, installs the pinned Lean toolchain, and populates the shared Lake dependency tree when the package cache volume is empty or invalid. The warmer now treats `mathlib/lakefile.lean` as the validity check and rebuilds the seed cache if that file is missing. The main `opencode` service mounts the warmed package cache read-only at `/home/opencode/.cache/lake-packages-seed`, copies it into its own anonymous writable `.lake/packages` volume on first start, runs `lake update` against that private worktree, and refuses to start if the seed cache is missing.
+in write mode, installs the pinned Lean toolchain, and populates the shared Lake dependency tree when the package cache volume is empty or invalid. The warmer now treats `mathlib/lakefile.lean` as the validity check and rebuilds the seed cache if that file is missing. The main `opencode` service mounts the warmed package cache read-only at `/home/opencode/.cache/lake-packages-seed`, copies it into its own anonymous writable `.lake/packages` volume on first start, and runs `lake update` against that private worktree. If the shared cache is missing, `entrypoint.sh` now falls back to `bootstrap-lean.sh` and populates the runtime Lean cache directly when the relevant mounts are writable.
 
 ## Follow-up
 
