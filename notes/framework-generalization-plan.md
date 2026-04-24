@@ -13,7 +13,7 @@ AutoQuantum currently provides a working pipeline for automatic generation and f
 ### 1. **Docker/Container Framework** - Configurable & Flexible
 
 #### Current State and Remaining Limitations
-- Separate `serve.sh` and `web.sh` entrypoints now exist and are used directly by Docker
+- A single `entrypoint.sh` now owns container startup and runs OpenCode in `serve` mode
 - `docker-compose.yml` now passes `PROJECT_ROOT`, `LEAN_PROJECT_PATH`, `LEAN_TOOLS_REPO_ROOT`, and `LEAN_TARGET`
 - A dedicated `cache-warmer` service seeds shared Elan / Lake caches before the main OpenCode container starts
 - Runtime Lake packages are copied from a read-only seed cache into a writable per-container worktree on startup
@@ -42,14 +42,10 @@ services:
 
 **B. Flexible Entrypoint**
 ```bash
-# Current direction: keep dedicated scripts and make them path-agnostic
-# serve.sh
+# Current direction: keep a single path-agnostic entrypoint
+# entrypoint.sh
 export OPENCODE_CONFIG="/workspace/autoquantum/opencode.json"
 exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
-
-# web.sh
-export OPENCODE_CONFIG="/workspace/autoquantum/opencode.json"
-exec opencode web --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
 ```
 
 **C. Preserve Cache-Warmer Architecture While Generalizing Paths**
@@ -275,7 +271,7 @@ includes:
 
 ### Phase 1: Foundation & Docker (Week 1-2)
 1. Refactor Docker setup for configurable mounts and commands
-2. Implement separate entrypoint scripts (serve.sh, web.sh) for different OpenCode modes
+2. Consolidate container startup behind a single `entrypoint.sh`
 3. Document environment overrides directly in `docker-compose.yml` and command examples
 4. Update `AGENTS.md` with new framework structure
 
@@ -332,7 +328,7 @@ includes:
 - **April 22, 2026**: Phase 1 implementation started:
   - Dockerfile updated to install gettext for envsubst
   - `opencode.json` created as canonical configuration (no model field)
-  - `serve.sh` and `web.sh` split into dedicated entrypoints
+  - `entrypoint.sh` now owns the shared startup flow and launches `opencode serve`
   - `docker-compose.yml` updated with Docker environment variables for `PROJECT_ROOT`, `LEAN_PROJECT_PATH`, `LEAN_TOOLS_REPO_ROOT`, and `LEAN_TARGET`
   - Added `cache-warmer` service plus seeded-cache startup flow for writable runtime Lake packages
   - Runtime configuration documented through compose defaults and environment-variable overrides instead of a checked-in `.env.template`

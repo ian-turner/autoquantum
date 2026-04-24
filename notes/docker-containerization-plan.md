@@ -82,7 +82,7 @@ docker compose down                         # Stop when done
 The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
 
 ## Operational Notes
-- **Dedicated prewarming** — `bootstrap-lean.sh` now runs only inside the `cache-warmer` compose service. `serve.sh` and `web.sh` seed a writable package worktree from the shared warmed package cache and run `lake update` against that private worktree before starting OpenCode.
+- **Dedicated prewarming** — `bootstrap-lean.sh` now runs only inside the `cache-warmer` compose service. `entrypoint.sh` seeds a writable package worktree from the shared warmed package cache and runs `lake update` against that private worktree before starting OpenCode.
 - **Mutable Lake packages** — `lake build` writes into dependency directories such as `proofwidgets`, so the shared warmed package cache cannot be mounted directly at `.lake/packages` in read-only mode. The main service instead mounts the shared package cache read-only at a seed path and uses an anonymous per-container writable volume for `.lake/packages`.
 - **Bootstrap PATH handling** — `bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
 - **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.

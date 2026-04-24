@@ -53,4 +53,4 @@ WORKDIR /workspace
 
 USER root
 
-ENTRYPOINT ["/workspace/autoquantum/serve.sh"]
+ENTRYPOINT ["/workspace/autoquantum/entrypoint.sh"]

@@ -23,8 +23,6 @@ services:
     image: autoquantum:latest
     container_name: autoquantum
     working_dir: /workspace/autoquantum
-    entrypoint: ["./web.sh"] # optional: use the "web" version: 
-#    entrypoint: ["./serve.sh"]
     depends_on:
       cache-warmer:
         condition: service_completed_successfully
