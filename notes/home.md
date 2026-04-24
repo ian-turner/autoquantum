@@ -45,7 +45,7 @@ docker compose down                         # Stop when done
 
 ## Open Work
 
-Current sorry count: **7** (as of April 20, 2026).
+Current sorry count: **7** (as of April 24, 2026).
 
 | Algorithm | Remaining gap | Primary reference |
 |-----------|--------------|-------------------|
@@ -55,7 +55,15 @@ Current sorry count: **7** (as of April 20, 2026).
 
 For QFT, the recommended next step is proving explicit 4×4 matrix lemmas for `hadamardAt 0`, `hadamardAt 1`, `controlledPhaseAt 1 0 2`, and `bitReverse`, then assembling `qft2_correct`. The general proof requires shifted-gate-placement lemmas (`hadamardAt q.succ = tensorWithId 1 ...`) plus recursive bit-reversal decomposition — see [QFT Recursion Indexing](qft-recursion-indexing.md).
 
-For HPlus, Gaps 1–4 are all complete. The blocker is Gap 5: `hadamardAt_zero_eq` — proving that `hadamardAt (0 : Fin (1+n))` equals `tensorWithId n hadamard` as gate matrices. This requires working through the `permuteGate (swap last 0) (idTensorWith n hadamard)` permutation algebra. An easier alternative: induct from the back of the circuit using `hadamardAt (Fin.last n) = idTensorWith n hadamard` (the swap is trivial there) and add `idTensorWith_apply`. See [HPlus Proof Plan](hplus-proof-plan.md).
+For HPlus, Gaps 1–4 are complete and the back-qubit induction route was taken: `hadamardAt_last_eq` and `idTensorWith_apply` are both proved. The current blocker is `hadamardAt_castSucc_eq` in `Lemmas/Gate.lean` — a conjugation-by-swap identity showing that swapping the last qubit with position `castSucc i` transforms `idTensorWith (m+1) hadamard` into `tensorWithId 1 (hadamardAt i)`. The goal is reduced to a transport fact through `(tensorIndexEquiv (m+1) 1)`. See [HPlus Proof Plan](hplus-proof-plan.md).
+
+### GHZ
+
+The n-qubit GHZ state is `(|0…0⟩ + |1…1⟩) / √2`. The preparation circuit is:
+1. `hadamardAt 0` — put qubit 0 into superposition
+2. `controlledAt 0 i.succ pauliX` for each `i : Fin (n-1)` — spread the entanglement
+
+The normalization lemma `norm_ghzVector` is proved. The three remaining sorries are `ghz_correct_one` (n=1), `ghz_correct_two` (n=2), and `ghz_correct` (general, requires n ≥ 1). No proof attempts have been made yet; the n=1 case has a partial `simp` scaffold already in place.
 
 ## Topics
 
@@ -67,8 +75,8 @@ For HPlus, Gaps 1–4 are all complete. The blocker is Gap 5: `hadamardAt_zero_e
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
-- [Framework Generalization Plan](framework-generalization-plan.md) — Plan to transform AutoQuantum into a reusable framework for Lean 4 auto-coding with multi-agent system
-- [Docker Containerization Plan](docker-containerization-plan.md) — Plan for a fully reproducible, sandboxed OpenCode+Lean environment inside Docker
+- [Framework Generalization Plan](framework-generalization-plan.md) — Ongoing evolution of AutoQuantum into a reusable multi-agent framework; Phases 1–2 complete (`build`, `plan`, `reading`, `latex-writer` agents)
+- [Docker Containerization Plan](docker-containerization-plan.md) — Architecture and workflow for the fully reproducible OpenCode+Lean Docker environment (implemented)
 - [QFT Gate Placement API](qft-api-roadmap.md) — Implemented gate placement API: `onQubit`, `controlledPhaseAt`, `bitReverse`, and the permutation-conjugation pattern
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 

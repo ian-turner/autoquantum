@@ -88,27 +88,33 @@ then `Finset.sum_ite_eq` (no prime — pattern `a = x`). The key constraint: def
 `show 2^k * 2^m = 2^(k+m) by rw [pow_add]` (exact copy of `tensorWithId`'s internal `e`) so
 that `Equiv.symm_apply_apply` fires inside `simp`.
 
-### Gap 5 — `hadamardAt` gate identities ← current blocker
+### Gap 5 — `hadamardAt` gate identities
 
-**Status (April 20, 2026):** DeepSeek attempted this via OpenCode and could not close it after ~6 approaches. The front-qubit route (proving `hadamardAt 0 = tensorWithId n hadamard`) requires working through `qubitPerm` / `finFunctionFinEquiv` matrix algebra and is confirmed hard.
+**Status (April 20, 2026 attempt):** Front-qubit route confirmed hard (see Attempt 1 in proof-attempts.md). Back-qubit route was taken instead.
 
-**Easier alternative — induct from the back:**
+**Back-route progress:**
+- `hadamardAt_last_eq` ✅ proved — `Equiv.swap_self` makes the permutation trivial
+- `idTensorWith_apply` ✅ proved — mirrors `tensorWithId_apply` pattern
+- `hPlusVector_succ'`, `basisState_zero_tensor'` ✅ proved
+- Inductive step of `hPlus_correct` scaffolded, n=0 base case proved
 
-`hadamardAt (Fin.last n)` in an `(n+1)`-qubit system unfolds to
-`permuteGate (Equiv.swap (Fin.last n) (Fin.last n)) (idTensorWith n hadamard)`.
-Since `Equiv.swap x x = Equiv.refl`, the permutation is trivial and
-`permuteGate refl V = V`. Therefore:
+**Current blocker — `hadamardAt_castSucc_eq` ← open sorry in `Lemmas/Gate.lean`:**
 
 ```lean
-lemma hadamardAt_last_eq (n : ℕ) :
-    hadamardAt (Fin.last n) = idTensorWith n hadamard
--- Proof: unfold hadamardAt/onQubit, simp [Equiv.swap_self, permuteGate, permuteQubits]
+lemma hadamardAt_castSucc_eq (n : ℕ) (i : Fin n) :
+    (hadamardAt (Fin.castSucc i) : QGate (n + 1)) = tensorWithId 1 (hadamardAt i)
 ```
 
-This only requires `idTensorWith_apply` (the companion to the already-proved
-`tensorWithId_apply`) instead of the hard permutation proof.
+The goal after unfolding reduces to:
+```lean
+permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) *
+    idTensorWith (m + 1) hadamard *
+    permuteQubits (Equiv.swap (Fin.last (m + 1)) (Fin.castSucc i)) =
+  tensorWithId 1 (onQubit i hadamard)
+```
+This is a conjugation-by-swap identity: showing that swapping qubit `castSucc i` with the last qubit transforms `idTensorWith (m+1) H` into `tensorWithId 1 (hadamardAt i)`. The transport works through the `tensorIndexEquiv (m+1) 1` split. This is the same flavor of permutation algebra as the front-route blocker, just in a different form.
 
-**Original front-qubit lemmas (harder):**
+**Original front-qubit lemmas (still hard, not needed for current approach):**
 
 ```lean
 -- H on qubit 0 of (n+1) = H ⊗ Iₙ  (requires qubitPerm algebra)
@@ -166,15 +172,16 @@ lemma hadamard_apply_zero : applyGate hadamard (basisState 1 0) = hPlusState 1
 
 - Gaps 1–4 all complete.
 - DeepSeek (via OpenCode) attempted `hPlus_correct` with the front-qubit induction strategy.
-  - n=0 base case proved successfully (empty circuit + `applyGate_one`).
-  - Inductive step scaffolded: `circuitMatrix_append`, `applyGate_mul`, `basisState_zero_tensor` applied.
-  - Blocked on `hadamardAt 0` permutation algebra (Gap 5 front-qubit route). ~6 tactic attempts all
-    ended in `sorry`. DeepSeek also failed to use `lean_lsp_lean_goal` (root cause: 15 s MCP timeout
-    caused tool failures on first call, making the model abandon interactive tools).
-- OpenCode tooling fixes applied: timeouts raised, rules files added, plugin with `lean_proof_step`
-  and `lean_find_sorry` tools created. See `notes/opencode-setup.md`.
-- Recommended next approach: **induct from the back** via `hadamardAt_last_eq` + `idTensorWith_apply`,
-  which avoids the hard `qubitPerm` algebra entirely.
+  - n=0 base case proved successfully.
+  - Blocked on `hadamardAt 0` permutation algebra (Gap 5 front-qubit route). ~6 tactic attempts all ended in `sorry`.
+  - Root cause of tooling failures: 15 s MCP timeout caused tool failures on first call, making the model abandon interactive tools. Timeouts since raised; see `notes/opencode-setup.md`.
+- Recommended next approach: **induct from the back** via `hadamardAt_last_eq` + `idTensorWith_apply`.
+
+### April 20–24, 2026
+
+- Back-qubit route executed: `hadamardAt_last_eq`, `idTensorWith_apply`, `basisState_zero_tensor'`, and `hPlusVector_succ'` all proved.
+- `hPlus_correct` inductive proof scaffolded; n=0 base case proved.
+- Inductive step blocked on `hadamardAt_castSucc_eq` (Gap 5, new specific form). Permutation algebra isolated to the conjugation identity through `tensorIndexEquiv (m+1) 1` — same difficulty as front-qubit route, different form.
 
 ## Known hard points
 

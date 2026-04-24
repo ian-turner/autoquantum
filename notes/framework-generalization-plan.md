@@ -1,7 +1,7 @@
 # AutoQuantum Framework Generalization Plan
 
 **Date**: April 22, 2026  
-**Status**: Planning phase  
+**Status**: Phases 1–2 complete; Phases 3–5 planned  
 **Goal**: Transform AutoQuantum from a single-project setup into a reusable framework for Lean 4 auto-coding, specifically optimized for quantum computing verification but extensible to other formal verification domains.
 
 ## Overview
@@ -71,16 +71,17 @@ The recent cache design is worth keeping: shared Elan and seeded Lake package ca
 
 ### 2. **Multi-Agent System** — Phase 2 Implementation
 
-#### Priority Agents (implementing now)
+#### Implemented Agents ✅
 
-Three agents are being built first, in order of immediate utility:
-1. **`developer`** — highest-permission, general project and framework work
-2. **`reading`** — arXiv + local PDF ingestion, theorem extraction, Lean skeleton generation
-3. **`latex-writer`** — Lean-to-LaTeX transcription and PDF compilation
+Four agents implemented:
+1. **`build`** — highest-permission, general project and framework work (originally named `developer`)
+2. **`plan`** — read-only, designs proof/formalization strategies before execution (added alongside `build`)
+3. **`reading`** — arXiv + local PDF ingestion, theorem extraction, Lean skeleton generation
+4. **`latex-writer`** — Lean-to-LaTeX transcription and PDF compilation
 
-The remaining agents (`proof-writer`, `verifier`, `code-reviewer`) follow in a later pass once the three priority agents are stable.
+The remaining agents (`proof-writer`, `verifier`, `code-reviewer`) remain for a later pass.
 
-#### Confirmed OpenCode `command` Block Schema
+#### Confirmed OpenCode `agent` Block Schema
 
 Fields available per agent definition (confirmed from `https://opencode.ai/config.json`):
 
@@ -119,60 +120,33 @@ The split means all agents share the common foundation (project layout, Lean too
 
 #### Agent Definitions in `opencode.json`
 
+Implemented agents (using `"agent"` key in `opencode.json`):
+
 ```json
 {
-  "command": {
-    "developer": {
-      "description": "Highest-permission agent for direct project development, framework work, and general Lean engineering beyond proof writing",
-      "mode": "primary",
-      "prompt": "<contents of .opencode/rules/agents/developer.md>",
-      "permission": {
-        "bash": "allow",
-        "read": "allow",
-        "edit": "allow",
-        "task": "allow",
-        "webfetch": "ask",
-        "websearch": "ask"
-      }
-    },
-    "reading": {
-      "description": "Read and analyze arXiv papers and research literature; extract theorems and generate Lean skeletons",
-      "mode": "primary",
-      "prompt": "<contents of .opencode/rules/agents/reading.md>",
-      "permission": {
-        "read": "allow",
-        "edit": "ask",
-        "webfetch": "allow",
-        "websearch": "allow",
-        "bash": "deny",
-        "task": "allow"
-      }
-    },
-    "latex-writer": {
-      "description": "Translate Lean definitions and proofs into LaTeX documents and compile PDFs",
-      "mode": "primary",
-      "prompt": "<contents of .opencode/rules/agents/latex-writer.md>",
-      "permission": {
-        "read": "allow",
-        "edit": "ask",
-        "bash": "deny",
-        "webfetch": "deny",
-        "task": "deny"
-      }
-    }
+  "agent": {
+    "build": { ... },      // highest-permission; general project + framework work
+    "plan": { ... },       // read-only; designs proof/formalization strategies before execution
+    "reading": { ... },    // arXiv + local PDF ingestion, Lean skeleton generation
+    "latex-writer": { ... } // Lean → LaTeX + PDF compilation via latex MCP server
   }
 }
 ```
 
-Note: `edit: "ask"` for reading and latex-writer means the agent requests confirmation before writing, preserving safety while still allowing output.
+Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was added alongside it. `edit` for `reading` and `latex-writer` is `"ask"` to require confirmation before writing. Agent instructions live in `.opencode/rules/agents/<name>.md`; `opencode.json` `prompt` fields are kept in sync.
 
 #### Agent Capabilities
 
-**`developer`:**
+**`build`:**
 - General project engineering: framework code, infrastructure, scripts, documentation
 - Lean development beyond proofs: definitions, APIs, refactors, supporting tooling
 - Cross-cutting changes spanning Docker, MCP, config, notes, and Lean source
 - Task delegation to specialized agents for proof, review, reading, verification, or LaTeX work
+
+**`plan`:**
+- Read-only; designs proof strategies, formalization plans, and multi-agent workflows
+- Checks `notes/` for prior attempts before proposing a strategy
+- Outputs structured plans to `.opencode/plans/` or inline; does not edit Lean source
 
 **`reading`:**
 - Fetch papers from arXiv; read local PDFs from `references/`
@@ -301,34 +275,31 @@ includes:
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation & Docker (Week 1-2)
+### Phase 1: Foundation & Docker ✅ Complete
 1. Refactor Docker setup for configurable mounts and commands
 2. Consolidate container startup behind a single `entrypoint.sh`
 3. Document environment overrides directly in `docker-compose.yml` and command examples
 4. Update `AGENTS.md` with new framework structure
 
-### Phase 2: Agent System with Reading Agent (Week 3-4)
-1. Define all agents in `opencode.json` with permissions
-2. Add the high-permission developer agent for framework and general project work
-3. Implement reading agent with restricted arXiv/local-PDF access plus math OCR
-4. Add verifier workflows for proof checking and result validation
-5. Add latex-writer workflows for Lean-to-LaTeX document generation and PDF compilation
-6. Create agent switching mechanism (`@agent` syntax)
-7. Test permission boundaries and agent workflows
+### Phase 2: Agent System ✅ Complete
+1. Define `build`, `plan`, `reading`, and `latex-writer` agents in `opencode.json` with permissions
+2. Agent instructions in `.opencode/rules/agents/<name>.md`; `prompt` fields in `opencode.json` kept in sync
+3. `latex` MCP server added to container (TeX Live + dedicated run.sh)
+4. Agent switching via `@<name>` syntax
 
-### Phase 3: Generic MCP Tools (Week 5-6)
+### Phase 3: Generic MCP Tools (planned)
 1. Refactor `server.py` and MCP tools for project-agnostic operation
 2. Create standalone `lean-mcp-tools` package
 3. Update all path references to use configurable variables
 4. Test with different Lean project structures
 
-### Phase 4: Configuration & Simplified Skills (Week 7-8)
+### Phase 4: Configuration & Simplified Skills (planned)
 1. Implement layered configuration system
 2. Create broad skill definitions (no fine-grained patterns)
 3. Integrate reading agent with research workflow
 4. Update documentation for new framework
 
-### Phase 5: Polish & Integration (Week 9-10)
+### Phase 5: Polish & Integration (planned)
 1. Comprehensive testing across different use cases
 2. Performance optimization for large projects
 3. Documentation updates and examples
@@ -371,11 +342,14 @@ includes:
   - `lean_lsp` launcher now respects `LEAN_PROJECT_PATH`; `lean-tools` launcher uses `LEAN_TOOLS_REPO_ROOT` and still needs a final project-agnostic pass
 - Phase 1 remaining gaps: `/workspace/autoquantum` hardcoded in `docker-compose.yml`, `entrypoint.sh`, and previously in `.claude/settings.json` (host paths now fixed in settings)
 - **April 23, 2026**: Phase 2 planning complete:
-  - OpenCode `command` block schema confirmed (fields: `description`, `prompt`, `model`, `variant`, `temperature`, `top_p`, `mode`, `steps`, `hidden`, `disable`, `color`, `options`, `permission`)
-  - Permission categories confirmed: `read`, `edit`, `bash`, `lsp`, `glob`, `grep`, `webfetch`, `websearch`, `codesearch`, `task`, `todowrite`, `skill`, `external_directory`
+  - OpenCode `agent` block schema confirmed; permission categories confirmed
   - Tiered rules architecture decided: common rules auto-loaded from `.opencode/rules/`; agent-specific rules inlined into `prompt` field from `.opencode/rules/agents/<name>.md`
-  - Priority agents decided: `developer`, `reading`, `latex-writer`
-- Next step: Write agent rules files and wire them into `opencode.json`
+  - Priority agents decided: `build` (formerly `developer`), `plan`, `reading`, `latex-writer`
+- **April 23–24, 2026**: Phase 2 implemented:
+  - All four agents (`build`, `plan`, `reading`, `latex-writer`) wired into `opencode.json`
+  - `latex` MCP server added (`.mcp/latex-tools/`); TeX Live installed in container
+  - Agent instructions written in `.opencode/rules/agents/`
+  - `latex-out/` designated as latex-writer's output directory (gitignored)
 
 ---
 

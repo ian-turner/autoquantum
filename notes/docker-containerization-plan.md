@@ -1,6 +1,6 @@
 # Docker Containerization Plan for AutoQuantum
 
-**Status**: ✅ **Implemented and verified** (2025‑04‑20)
+**Status**: ✅ **Implemented and verified** (2026-04-20)
 
 All steps have been completed. The container runs OpenCode server with MCP tools `lean` and `lean_lsp` fully functional. Lean builds succeed inside container; host can connect via `opencode attach http://localhost:4096`.
 
