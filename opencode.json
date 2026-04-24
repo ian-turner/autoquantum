@@ -22,6 +22,15 @@
       ],
       "enabled": true,
       "timeout": 120000
+    },
+    "latex": {
+      "type": "local",
+      "command": [
+        "bash",
+        ".mcp/latex-tools/run.sh"
+      ],
+      "enabled": true,
+      "timeout": 120000
     }
   },
   "agent": {
