@@ -49,7 +49,7 @@ If compilation fails, read the error output, fix the `.tex` source, and retry. D
 
 ## Constraints
 
-- Only write files under `latex/` — confirm before writing (your `edit` permission requires confirmation)
+- Only write files under `latex/` — edits outside this directory are blocked by your permissions
 - No bash access — all compilation goes through the `latex` MCP server
 - Do not invent theorem statements — transcribe only what is present in the Lean source
 - If a Lean proof uses `sorry`, note it explicitly in the LaTeX: `\textit{(proof incomplete — sorry in Lean source)}`
