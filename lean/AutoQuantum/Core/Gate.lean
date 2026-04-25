@@ -35,14 +35,20 @@ open scoped InnerProductSpace Kronecker
 
 /-! ## Unitarity tactic -/
 
-/-- Prove a matrix is unitary by exhaustive entry-level case analysis.
-    Works for any finite matrix whose entries are in {0, 1, -1, i, -i}. -/
+/-- Prove a matrix is unitary by exhaustive entry-level computation.
+    Works for any concrete finite matrix with algebraic entries (including 1/√2). -/
 macro "fin_unitary" M:ident : tactic =>
   `(tactic| (
     rw [Matrix.mem_unitaryGroup_iff]
     ext i j
     fin_cases i <;> fin_cases j <;>
-      (unfold $M; simp [Matrix.mul_apply, Fin.sum_univ_two, Fin.sum_univ_four])))
+      (unfold $M; simp [Matrix.mul_apply, Fin.sum_univ_two, Fin.sum_univ_four])
+    all_goals (
+      have h : (Real.sqrt 2 : ℂ) ≠ 0 :=
+        by exact_mod_cast Real.sqrt_ne_zero'.mpr (by norm_num)
+      have hsq : (Real.sqrt 2 : ℂ) ^ 2 = 2 :=
+        by exact_mod_cast Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
+      field_simp [h]; ring_nf; simpa using hsq.symm)))
 
 /-! ## Gate type -/
 
@@ -125,14 +131,7 @@ lemma sqrt2_sq_cast : (Real.sqrt 2 : ℂ) ^ 2 = 2 :=
   by exact_mod_cast Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
 
 lemma hadamardMatrix_isUnitary : hadamardMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  have hne : Real.sqrt 2 ≠ 0 := Real.sqrt_ne_zero'.mpr (by norm_num)
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [hadamardMatrix, Matrix.mul_apply, Fin.sum_univ_two]
-  all_goals
-    have hneC : (Real.sqrt 2 : ℂ) ≠ 0 := by exact_mod_cast hne
-    field_simp [hneC]; ring_nf; simpa using sqrt2_sq_cast.symm
+  fin_unitary hadamardMatrix
 
 /-- The Hadamard gate. -/
 noncomputable def hadamard : QGate 1 := ⟨hadamardMatrix, hadamardMatrix_isUnitary⟩
