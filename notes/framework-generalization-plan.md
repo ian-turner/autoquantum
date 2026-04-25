@@ -194,7 +194,7 @@ def _lean_root() -> Path:
 ```
 lean-mcp-tools/
 ├── server.py           # Generic Lean tools (build, check_file, sorry_count)
-├── scripts/mcp/run-lean-tools.sh  # Launcher with PATH setup
+├── .mcp/lean-tools/run.sh  # Launcher with PATH setup
 └── README.md          # Installation/usage for any Lean project
 ```
 
@@ -216,13 +216,13 @@ lean-mcp-tools/
   "mcp": {
     "lean": {
       "type": "local",
-      "command": ["bash", "./scripts/mcp/run-lean-tools.sh"],
+      "command": ["bash", ".mcp/lean-tools/run.sh"],
       "enabled": true,
       "timeout": 180000
     },
     "lean_lsp": {
       "type": "local",
-      "command": ["bash", "-c", "LEAN_REPL=false bash ./scripts/mcp/run-lean-lsp-mcp.sh"],
+      "command": ["bash", "-c", "LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"],
       "enabled": true,
       "timeout": 120000
     }

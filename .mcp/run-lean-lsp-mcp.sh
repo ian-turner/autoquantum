@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
 export LEAN_PROJECT_PATH="${LEAN_PROJECT_PATH:-$repo_root/lean}"
 export LEAN_MCP_DISABLED_TOOLS="${LEAN_MCP_DISABLED_TOOLS:-lean_run_code,lean_build,lean_leanfinder,lean_hammer_premise}"

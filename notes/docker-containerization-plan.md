@@ -69,7 +69,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 
 ## Implementation
 
-All steps are complete. The `Dockerfile`, `docker-compose.yml`, and `scripts/bootstrap-lean.sh` implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `scripts/mcp/` launchers that call the Python server implementations under `.mcp/`; `opencode.json` wires those launchers directly.
+All steps are complete. The `Dockerfile`, `docker-compose.yml`, and `scripts/bootstrap-lean.sh` implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `.mcp/` launchers alongside the Python server implementations; `opencode.json` wires those launchers directly.
 
 ## Workflow
 

@@ -50,15 +50,15 @@ autoquantum/
 │           └── HPlus.lean        -- Uniform superposition |+⟩^⊗n
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
-│   └── latex-tools/    -- LaTeX MCP server implementation
+│   ├── latex-tools/    -- LaTeX MCP server implementation
+│   ├── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp
+│   ├── lean-tools/run.sh    -- launcher for the Lean MCP server
+│   └── latex-tools/run.sh   -- launcher for the LaTeX MCP server
 ├── scripts/            # Shell entrypoints, bootstrap helpers, and MCP launchers
 │   ├── entrypoint.sh
 │   ├── warm-cache.sh
 │   ├── bootstrap-lean.sh
-│   └── mcp/
-│       ├── run-lean-lsp-mcp.sh
-│       ├── run-lean-tools.sh
-│       └── run-latex-tools.sh
+│   └── setup_comparator.sh
 ├── .opencode/rules/    # OpenCode agent rules (proof workflow and patterns)
 ├── notes/              # Research wiki — start at notes/home.md
 ├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
