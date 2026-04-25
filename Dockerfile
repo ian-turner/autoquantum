@@ -52,8 +52,9 @@ WORKDIR /home/opencode
 
 RUN mkdir -p ~/.cache/opencode
 
-# Keep interactive shells aligned with elan's PATH updates once bootstrap runs.
-RUN echo '. ~/.profile' >> ~/.bashrc
+# Keep interactive shells aligned with elan's PATH updates once bootstrap runs,
+# without introducing a .bashrc <-> .profile recursion loop.
+RUN printf '\nif [ -f "$HOME/.elan/env" ]; then\n  . "$HOME/.elan/env"\nfi\n' >> ~/.bashrc
 
 WORKDIR /workspace
 
