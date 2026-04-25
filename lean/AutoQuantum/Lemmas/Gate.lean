@@ -90,13 +90,8 @@ lemma hadamard_mul_self : hadamard * hadamard = (1 : QGate 1) := by
   fin_cases i <;> fin_cases j <;>
     simp [hadamard, hadamardMatrix]
   all_goals
-    have hneC : (Real.sqrt 2 : ℂ) ≠ 0 := by
-      exact_mod_cast hne
-    field_simp [hneC]
-    ring_nf
-    have hsq : ((Real.sqrt 2 : ℂ) ^ 2) = 2 := by
-      exact_mod_cast Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
-    simpa using hsq.symm
+    have hneC : (Real.sqrt 2 : ℂ) ≠ 0 := by exact_mod_cast hne
+    field_simp [hneC]; ring_nf; simpa using sqrt2_sq_cast.symm
 
 /-- CNOT² = I (CNOT is self-inverse). -/
 lemma cnot_mul_self : cnot * cnot = (1 : QGate 2) := by

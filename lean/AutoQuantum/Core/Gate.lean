@@ -33,6 +33,17 @@ namespace AutoQuantum
 open Complex Matrix
 open scoped InnerProductSpace Kronecker
 
+/-! ## Unitarity tactic -/
+
+/-- Prove a matrix is unitary by exhaustive entry-level case analysis.
+    Works for any finite matrix whose entries are in {0, 1, -1, i, -i}. -/
+macro "fin_unitary" M:ident : tactic =>
+  `(tactic| (
+    rw [Matrix.mem_unitaryGroup_iff]
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      (unfold $M; simp [Matrix.mul_apply, Fin.sum_univ_two, Fin.sum_univ_four])))
+
 /-! ## Gate type -/
 
 /-- A k-qubit quantum gate: a unitary matrix acting on 2^k-dimensional space. -/
@@ -81,10 +92,7 @@ section SingleQubit
 noncomputable def pauliXMatrix : Matrix (Fin 2) (Fin 2) ℂ := !![0, 1; 1, 0]
 
 lemma pauliXMatrix_isUnitary : pauliXMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [pauliXMatrix, Matrix.mul_apply]
+  fin_unitary pauliXMatrix
 
 /-- The Pauli X gate. -/
 noncomputable def pauliX : QGate 1 := ⟨pauliXMatrix, pauliXMatrix_isUnitary⟩
@@ -94,10 +102,7 @@ noncomputable def pauliYMatrix : Matrix (Fin 2) (Fin 2) ℂ :=
   !![0, -Complex.I; Complex.I, 0]
 
 lemma pauliYMatrix_isUnitary : pauliYMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [pauliYMatrix, Matrix.mul_apply]
+  fin_unitary pauliYMatrix
 
 /-- The Pauli Y gate. -/
 noncomputable def pauliY : QGate 1 := ⟨pauliYMatrix, pauliYMatrix_isUnitary⟩
@@ -106,10 +111,7 @@ noncomputable def pauliY : QGate 1 := ⟨pauliYMatrix, pauliYMatrix_isUnitary⟩
 noncomputable def pauliZMatrix : Matrix (Fin 2) (Fin 2) ℂ := !![1, 0; 0, -1]
 
 lemma pauliZMatrix_isUnitary : pauliZMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [pauliZMatrix, Matrix.mul_apply]
+  fin_unitary pauliZMatrix
 
 /-- The Pauli Z gate. -/
 noncomputable def pauliZ : QGate 1 := ⟨pauliZMatrix, pauliZMatrix_isUnitary⟩
@@ -119,6 +121,9 @@ noncomputable def hadamardMatrix : Matrix (Fin 2) (Fin 2) ℂ :=
   let h : ℂ := (1 : ℝ) / Real.sqrt 2
   !![h, h; h, -h]
 
+lemma sqrt2_sq_cast : (Real.sqrt 2 : ℂ) ^ 2 = 2 :=
+  by exact_mod_cast Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
+
 lemma hadamardMatrix_isUnitary : hadamardMatrix ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
   rw [Matrix.mem_unitaryGroup_iff]
   have hne : Real.sqrt 2 ≠ 0 := Real.sqrt_ne_zero'.mpr (by norm_num)
@@ -126,13 +131,8 @@ lemma hadamardMatrix_isUnitary : hadamardMatrix ∈ Matrix.unitaryGroup (Fin 2) 
   fin_cases i <;> fin_cases j <;>
     simp [hadamardMatrix, Matrix.mul_apply, Fin.sum_univ_two]
   all_goals
-    have hneC : (Real.sqrt 2 : ℂ) ≠ 0 := by
-      exact_mod_cast hne
-    field_simp [hneC]
-    ring_nf
-    have hsq : ((Real.sqrt 2 : ℂ) ^ 2) = 2 := by
-      exact_mod_cast Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num)
-    simpa using hsq.symm
+    have hneC : (Real.sqrt 2 : ℂ) ≠ 0 := by exact_mod_cast hne
+    field_simp [hneC]; ring_nf; simpa using sqrt2_sq_cast.symm
 
 /-- The Hadamard gate. -/
 noncomputable def hadamard : QGate 1 := ⟨hadamardMatrix, hadamardMatrix_isUnitary⟩
@@ -181,10 +181,7 @@ noncomputable def cnotMatrix : Matrix (Fin 4) (Fin 4) ℂ :=
      0, 0, 1, 0]
 
 lemma cnotMatrix_isUnitary : cnotMatrix ∈ Matrix.unitaryGroup (Fin 4) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [cnotMatrix, Matrix.mul_apply, Fin.sum_univ_four]
+  fin_unitary cnotMatrix
 
 /-- The CNOT gate. -/
 noncomputable def cnot : QGate 2 := ⟨cnotMatrix, cnotMatrix_isUnitary⟩
@@ -197,10 +194,7 @@ noncomputable def swapMatrix : Matrix (Fin 4) (Fin 4) ℂ :=
      0, 0, 0, 1]
 
 lemma swapMatrix_isUnitary : swapMatrix ∈ Matrix.unitaryGroup (Fin 4) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [swapMatrix, Matrix.mul_apply, Fin.sum_univ_four]
+  fin_unitary swapMatrix
 
 /-- The SWAP gate. -/
 noncomputable def swap : QGate 2 := ⟨swapMatrix, swapMatrix_isUnitary⟩
