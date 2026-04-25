@@ -60,4 +60,4 @@ WORKDIR /workspace
 
 USER root
 
-ENTRYPOINT ["/workspace/autoquantum/entrypoint.sh"]
+ENTRYPOINT ["/workspace/autoquantum/scripts/entrypoint.sh"]

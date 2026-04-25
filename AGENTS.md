@@ -25,7 +25,7 @@ For detailed planning, see [Framework Generalization Plan](../notes/framework-ge
 
 **Configuration Note:** Project paths are configurable at runtime via `docker-compose.yml` defaults or explicit environment variable overrides. The model is specified via the `--model` flag when running OpenCode sessions (e.g., `opencode run --model deepseek/deepseek-reasoner "task"`).
 
-**Container Entrypoint:** The default container entrypoint is `/workspace/autoquantum/entrypoint.sh`, which starts OpenCode in headless `serve` mode.
+**Container Entrypoint:** The default container entrypoint is `/workspace/autoquantum/scripts/entrypoint.sh`, which starts OpenCode in headless `serve` mode.
 
 ## Repository Layout
 
@@ -50,7 +50,15 @@ autoquantum/
 │           └── HPlus.lean        -- Uniform superposition |+⟩^⊗n
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
-│   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp LSP server
+│   └── latex-tools/    -- LaTeX MCP server implementation
+├── scripts/            # Shell entrypoints, bootstrap helpers, and MCP launchers
+│   ├── entrypoint.sh
+│   ├── warm-cache.sh
+│   ├── bootstrap-lean.sh
+│   └── mcp/
+│       ├── run-lean-lsp-mcp.sh
+│       ├── run-lean-tools.sh
+│       └── run-latex-tools.sh
 ├── .opencode/rules/    # OpenCode agent rules (proof workflow and patterns)
 ├── notes/              # Research wiki — start at notes/home.md
 ├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)

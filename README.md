@@ -43,6 +43,7 @@ autoquantum/
 │           ├── GHZ.lean         -- GHZ state and circuit
 │           └── HPlus.lean       -- Uniform superposition |+⟩^⊗n
 ├── .mcp/                   # MCP servers (lean build/check tools, lean_lsp)
+├── scripts/                # Shell entrypoints and MCP launcher scripts
 ├── notes/                  # Research wiki — start at notes/home.md
 ├── references/             # Local PDFs (gitignored — see notes/reference-assets.md)
 ├── Dockerfile
@@ -53,7 +54,7 @@ autoquantum/
 
 ## Docker Development Environment
 
-A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service still warms shared Lean caches first, but `entrypoint.sh` also falls back to `bootstrap-lean.sh` when runtime caches are missing and the container has permission to populate them.
+A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service still warms shared Lean caches first, but `scripts/entrypoint.sh` also falls back to `scripts/bootstrap-lean.sh` when runtime caches are missing and the container has permission to populate them.
 
 ### Configuration
 
@@ -100,7 +101,7 @@ For local host development outside Docker, bootstrap comparator tooling with:
 export PATH="$PWD/.tools/bin:$PATH"
 ```
 
-Inside the Compose-managed container, no extra comparator setup is needed: warmup installs the toolchain into the shared read-only cache and `entrypoint.sh` adds it to `PATH`. For host-local setup, `setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
+Inside the Compose-managed container, no extra comparator setup is needed: warmup installs the toolchain into the shared read-only cache and `scripts/entrypoint.sh` adds it to `PATH`. For host-local setup, `setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
 
 Then verify the sample goal with:
 

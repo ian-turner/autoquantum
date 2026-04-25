@@ -13,7 +13,7 @@ AutoQuantum currently provides a working pipeline for automatic generation and f
 ### 1. **Docker/Container Framework** - Configurable & Flexible
 
 #### Current State and Remaining Limitations
-- A single `entrypoint.sh` now owns container startup and runs OpenCode in `serve` mode
+- A single `scripts/entrypoint.sh` now owns container startup and runs OpenCode in `serve` mode
 - `docker-compose.yml` now passes `PROJECT_ROOT`, `LEAN_PROJECT_PATH`, `LEAN_TOOLS_REPO_ROOT`, and `LEAN_TARGET`
 - A dedicated `cache-warmer` service seeds shared Elan / Lake caches before the main OpenCode container starts
 - Runtime Lake packages are copied from a read-only seed cache into a writable per-container worktree on startup
@@ -43,7 +43,7 @@ services:
 **B. Flexible Entrypoint**
 ```bash
 # Current direction: keep a single path-agnostic entrypoint
-# entrypoint.sh
+# scripts/entrypoint.sh
 export OPENCODE_CONFIG="/workspace/autoquantum/opencode.json"
 exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PORT:-4096}"
 ```
@@ -52,7 +52,7 @@ exec opencode serve --hostname "${OPENCODE_HOST:-0.0.0.0}" --port "${OPENCODE_PO
 ```yaml
 services:
   cache-warmer:
-    entrypoint: ["./warm-cache.sh"]
+    entrypoint: ["./scripts/warm-cache.sh"]
   opencode:
     depends_on:
       cache-warmer:
@@ -194,7 +194,7 @@ def _lean_root() -> Path:
 ```
 lean-mcp-tools/
 ├── server.py           # Generic Lean tools (build, check_file, sorry_count)
-├── run.sh             # Launcher with PATH setup
+├── scripts/mcp/run-lean-tools.sh  # Launcher with PATH setup
 └── README.md          # Installation/usage for any Lean project
 ```
 
@@ -216,13 +216,13 @@ lean-mcp-tools/
   "mcp": {
     "lean": {
       "type": "local",
-      "command": ["bash", ".mcp/lean-tools/run.sh"],
+      "command": ["bash", "./scripts/mcp/run-lean-tools.sh"],
       "enabled": true,
       "timeout": 180000
     },
     "lean_lsp": {
       "type": "local",
-      "command": ["bash", "-c", "LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"],
+      "command": ["bash", "-c", "LEAN_REPL=false bash ./scripts/mcp/run-lean-lsp-mcp.sh"],
       "enabled": true,
       "timeout": 120000
     }
@@ -277,7 +277,7 @@ includes:
 
 ### Phase 1: Foundation & Docker ✅ Complete
 1. Refactor Docker setup for configurable mounts and commands
-2. Consolidate container startup behind a single `entrypoint.sh`
+2. Consolidate container startup behind a single `scripts/entrypoint.sh`
 3. Document environment overrides directly in `docker-compose.yml` and command examples
 4. Update `AGENTS.md` with new framework structure
 
@@ -334,13 +334,13 @@ includes:
 - **April 22, 2026**: Phase 1 implementation started:
   - Dockerfile updated to install gettext for envsubst
   - `opencode.json` created as canonical configuration (no model field)
-  - `entrypoint.sh` now owns the shared startup flow and launches `opencode serve`
+  - `scripts/entrypoint.sh` now owns the shared startup flow and launches `opencode serve`
   - `docker-compose.yml` updated with Docker environment variables for `PROJECT_ROOT`, `LEAN_PROJECT_PATH`, `LEAN_TOOLS_REPO_ROOT`, and `LEAN_TARGET`
   - Added `cache-warmer` service plus seeded-cache startup flow for writable runtime Lake packages
   - Runtime configuration documented through compose defaults and environment-variable overrides instead of a checked-in `.env.template`
   - `.gitignore` updated to include `opencode.json` (now tracked)
   - `lean_lsp` launcher now respects `LEAN_PROJECT_PATH`; `lean-tools` launcher uses `LEAN_TOOLS_REPO_ROOT` and still needs a final project-agnostic pass
-- Phase 1 remaining gaps: `/workspace/autoquantum` hardcoded in `docker-compose.yml`, `entrypoint.sh`, and previously in `.claude/settings.json` (host paths now fixed in settings)
+- Phase 1 remaining gaps: `/workspace/autoquantum` is still hardcoded in `docker-compose.yml`, `scripts/entrypoint.sh`, and previously in `.claude/settings.json` (host paths now fixed in settings)
 - **April 23, 2026**: Phase 2 planning complete:
   - OpenCode `agent` block schema confirmed; permission categories confirmed
   - Tiered rules architecture decided: common rules auto-loaded from `.opencode/rules/`; agent-specific rules inlined into `prompt` field from `.opencode/rules/agents/<name>.md`

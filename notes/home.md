@@ -76,6 +76,7 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 - [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — Planned `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
+- [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations
 - [Framework Generalization Plan](framework-generalization-plan.md) — Ongoing evolution of AutoQuantum into a reusable multi-agent framework; Phases 1–2 complete (`build`, `plan`, `reading`, `latex-writer` agents)
 - [Docker Containerization Plan](docker-containerization-plan.md) — Architecture and workflow for the fully reproducible OpenCode+Lean Docker environment (implemented)
 - [QFT Gate Placement API](qft-api-roadmap.md) — Implemented gate placement API: `onQubit`, `controlledPhaseAt`, `bitReverse`, and the permutation-conjugation pattern

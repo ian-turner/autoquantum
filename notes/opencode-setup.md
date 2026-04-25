@@ -1,6 +1,6 @@
 # MCP Setup
 
-Both Claude Code and OpenCode are configured to use the same set of MCP servers, defined under `.mcp/`.
+Both Claude Code and OpenCode are configured to use the same set of MCP servers, with Python implementations under `.mcp/` and shell launchers under `scripts/mcp/`.
 
 ## Goals
 
@@ -13,9 +13,14 @@ Both Claude Code and OpenCode are configured to use the same set of MCP servers,
 ```
 .mcp/
   lean-tools/
-    server.py          # FastMCP server — exposes build and check_file tools
-    run.sh             # Launcher: sets PATH (elan, homebrew) and runs server.py via uv
-  run-lean-lsp-mcp.sh  # Launcher for lean-lsp-mcp LSP server
+    server.py              # FastMCP server — exposes build and check_file tools
+  latex-tools/
+    server.py              # FastMCP server — exposes LaTeX compilation tools
+scripts/
+  mcp/
+    run-lean-tools.sh      # Launcher: sets PATH (elan, homebrew) and runs the Lean MCP server via uv
+    run-latex-tools.sh     # Launcher for the LaTeX MCP server via uv
+    run-lean-lsp-mcp.sh    # Launcher for lean-lsp-mcp
 ```
 
 ### `lean` server
@@ -34,7 +39,7 @@ Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate
 
 ### `lean_lsp` server
 
-Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, with
+Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `scripts/mcp/run-lean-lsp-mcp.sh`, with
 `LEAN_REPL=false`, which:
 - Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
 - Keeps the launcher's default `LEAN_LOOGLE_LOCAL=true`, so `lean_loogle` uses the local index instead of the hosted service.
@@ -57,7 +62,7 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 |---------|-------|--------|
 | `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
 | `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
-| `mcp.lean_lsp.command` | `LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Keep REPL noise off while allowing the launcher default local Loogle index |
+| `mcp.lean_lsp.command` | `LEAN_REPL=false bash ./scripts/mcp/run-lean-lsp-mcp.sh` | Keep REPL noise off while allowing the launcher default local Loogle index |
 | `plugin` | `.opencode/plugins/lean-tools.js` | Custom tools and post-edit hook (see below) |
 
 ### Model Selection

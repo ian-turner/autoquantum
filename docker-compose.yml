@@ -6,7 +6,7 @@ services:
     image: autoquantum:latest
     container_name: autoquantum-cache-warmer
     working_dir: /workspace/autoquantum
-    entrypoint: ["./warm-cache.sh"]
+    entrypoint: ["./scripts/warm-cache.sh"]
     environment:
       PROJECT_ROOT: /workspace/autoquantum
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
