@@ -124,6 +124,7 @@ Last updated: April 23, 2026 (Mathlib v4.29.0).
 | `tensorState`, `tensorVec_norm` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` / `Lemmas/Hilbert.lean` |
 | `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (tensor support done; correctness still open) | `Algorithms/HPlus.lean` |
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
+| involution matrix exponential example `exp (z • A) = cosh z • I + sinh z • A` under `A ^ 2 = 1` | **Done** (Apr 25, 2026) | `Goals/NC_Ex4_2.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
@@ -318,6 +319,27 @@ rw [hfull, omega_pow_two_pow]
 This keeps the proof state aligned with the recursive factorization you actually want.
 
 ### 21. `norm_num` does not close `Real.sqrt (2 ^ 2 : ℝ) = 2` for the 2-qubit QFT scalar without an explicit square rewrite
+
+### 22. For matrix exponentials, keep the proof in `expSeries` form until the last step
+For `Matrix (Fin n) (Fin n) ℂ`, the matrix exponential is written `exp A`, not `exp ℂ A`. In the
+involution identity
+```lean
+exp (z • A) = Complex.cosh z • I + Complex.sinh z • A
+```
+with `hA : A ^ 2 = 1`, the stable route was:
+```lean
+expSeries_even_of_sq_eq_one
+expSeries_odd_of_sq_eq_one
+HasSum.even_add_odd
+simpa [expSeries_apply_eq] using ...
+```
+Trying to split the already-expanded `exp_eq_tsum` series too early leads to avoidable mismatch
+goals between
+```lean
+fun n => (n !⁻¹ : ℂ) • (z • A) ^ n
+```
+and the cleaner `expSeries` even/odd lemmas. Also, factorial coercions parse more reliably as
+`↑(Nat.factorial n)` than as `↑(n!)` inside larger expressions.
 In the new explicit target lemma `qftMatrix_two`, the normalization factor
 ```lean
 (1 / (Real.sqrt (2 ^ 2 : ℝ) : ℂ))

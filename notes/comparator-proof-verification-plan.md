@@ -45,6 +45,7 @@ The initial scaffold uses a filename-based naming convention so the verifier can
 
 - `Comm.lean` → `comm_goal`
 - `HPlusCorrect.lean` → `h_plus_correct_goal`
+- stems that already contain underscores are normalized before suffixing, so `NC_Ex4_2.lean` maps to `nc_ex4_2_goal` rather than preserving doubled separators
 
 Example goal file:
 

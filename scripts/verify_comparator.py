@@ -95,7 +95,8 @@ def repo_root() -> Path:
 def stem_to_theorem(stem: str) -> str:
     first_pass = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", stem)
     second_pass = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", first_pass)
-    return f"{second_pass.lower()}_goal"
+    normalized = re.sub(r"_+", "_", second_pass).strip("_")
+    return f"{normalized.lower()}_goal"
 
 
 def discover_pairs(lean_dir: Path, selected_goals: set[str]) -> list[GoalPair]:

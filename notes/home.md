@@ -29,6 +29,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now uses shared circuit-lift support (`idTensorCircuit`, `tensorWithIdCircuit`, and their `circuitMatrix_*` lemmas) plus `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Correctness statements were simplified to direct matrix equalities after removing `Circuit.CorrectFor`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB); remaining gaps are `qft_correct` and `qft2_correct` |
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
 | `Algorithms/HPlus.lean` | No | All supporting lemmas proved (Gaps 1–4: `tensorState`, `hPlusVector_norm`, `basisState_zero_tensor`, `hPlusVector_succ`, `tensorWithId_apply`). Added `idTensorWith_apply`, `hadamardAt_last_eq`, `basisState_zero_tensor'`, `hPlusVector_succ'`. The file now uses the shared `tensorIndexEquiv` helper instead of repeating the `finProdFinEquiv`/`pow_add` bridge. `hPlus_correct` has structured inductive proof with n=0 base case complete; inductive step scaffolded using `hadamardAt_last_eq` and `idTensorWith_apply`, blocked on `hadamardAt_castSucc_eq`. Current proof work in `Lemmas/Gate.lean` has reduced that blocker to the split-entry transport identity for the larger swap under `(tensorIndexEquiv (m+1) 1)`, not to a simple lifted-permutation rewrite. |
+| `Goals/NC_Ex4_2.lean` | **Yes** | Worked example proving `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1`, with the Nielsen-Chuang specialization `exp(i x A) = cos x • I + i sin x • A` |
 
 ## Container Usage
 
@@ -73,6 +74,7 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
+- [Matrix Exponential for Involutions](matrix-exponential-involution.md) — Worked proof pattern for `exp (z • A)` when `A^2 = I`, including the `expSeries`/`HasSum.even_add_odd` route
 - [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — Planned `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs
 - [Proof-writer Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@proof-writer` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
