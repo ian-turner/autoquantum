@@ -96,9 +96,10 @@ Rules are split into two layers:
 
 | File | Agent | Contents |
 |------|-------|----------|
-| `agents/developer.md` | `developer` | Project engineering guidance, delegation patterns, cross-cutting change conventions *(to be created)* |
-| `agents/reading.md` | `reading` | arXiv/PDF workflow, theorem extraction protocol, notes format, Lean skeleton conventions *(to be created)* |
-| `agents/latex-writer.md` | `latex-writer` | Lean-to-LaTeX translation conventions, document structure, PDF compilation workflow *(to be created)* |
+| `agents/build.md` | `build` | Project engineering guidance, delegation patterns, cross-cutting change conventions |
+| `agents/proof-writer.md` | `proof-writer` | Goal-scoped Lean proof workflow for `Goals/` + `Solutions/`, with mandatory comparator verification hook |
+| `agents/reading.md` | `reading` | arXiv/PDF workflow, theorem extraction protocol, notes format, Lean skeleton conventions |
+| `agents/latex-writer.md` | `latex-writer` | Lean-to-LaTeX translation conventions, document structure, PDF compilation workflow |
 
 Files in `.opencode/rules/agents/` are the canonical editable source. The `prompt` field in `opencode.json` for each agent is kept in sync with the corresponding file's contents.
 
@@ -106,12 +107,27 @@ Files in `.opencode/rules/agents/` are the canonical editable source. The `promp
 
 Registered via `"plugin": [".opencode/plugins/lean-tools.js"]` in `opencode.json`.
 
-Provides two custom tools and one hook:
+Provides four custom tools and three hooks:
 
 | Name | Type | Purpose |
 |------|------|---------|
 | `lean_proof_step` | tool | Resolves a Lean file path (any format) to absolute and formats the exact arguments for `lean_lsp_lean_multi_attempt` |
 | `lean_find_sorry` | tool | Scans a file for `sorry` occurrences and returns each with 3 lines of context and `>>>` markers |
+| `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>.lean` and shows the paired `lean/Solutions/<Stem>.lean` target |
+| `verify_comparator_goal` | tool | Manually runs `scripts/verify_comparator.py --goal <Stem>` and returns the transcript |
+| `chat.message` | hook | Tracks the requested `goal=<Stem>` value for `@proof-writer` sessions from the incoming prompt text |
+| `event` + `session.idle` | hook | Mandatory post-response comparator run for `@proof-writer` sessions; shows a toast on pass/fail or missing goal |
 | `tool.execute.after` | hook | Best-effort: appends a `lean_lsp_lean_diagnostic_messages` reminder after any `.lean` file edit |
 
 **Diagnostic:** If `lean_lsp_lean_goal` and `lean_lsp_lean_multi_attempt` are not being used, check that MCP servers are connected (`opencode mcp list`) and that timeouts are not hitting. The original 15 s `lean` timeout was the root cause of DeepSeek skipping all interactive proof tools.
+
+### Proof-writer invocation
+
+The `proof-writer` agent is goal-scoped. Pass the goal stem directly in the prompt:
+
+```text
+@proof-writer goal=Comm
+@proof-writer goal: HPlusCorrect
+```
+
+The plugin tracks that goal from the prompt and runs comparator automatically whenever the `proof-writer` session returns to idle, regardless of whether the agent chose to call any verification tool itself.

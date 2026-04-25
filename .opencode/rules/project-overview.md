@@ -58,10 +58,10 @@ cd lean && lake build AutoQuantum  # default target
 
 | Agent | Invoked via | Role |
 |-------|-------------|------|
-| `developer` | `@developer` | Full-permission project and framework engineering |
+| `build` | `@build` | Full-permission project and framework engineering |
+| `proof-writer` | `@proof-writer` | Goal-scoped Lean proof writing in `lean/Solutions/`, with mandatory comparator verification on response completion |
 | `reading` | `@reading` | arXiv/PDF ingestion, theorem extraction, Lean skeleton generation |
 | `latex-writer` | `@latex-writer` | Lean-to-LaTeX transcription and PDF compilation |
-| `proof-writer` | `@proof-writer` | Lean proof writing and iterative verification *(planned)* |
 | `verifier` | `@verifier` | Read-only proof and result validation *(planned)* |
 | `code-reviewer` | `@code-reviewer` | Read-only code review *(planned)* |
 

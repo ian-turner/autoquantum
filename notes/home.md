@@ -74,6 +74,7 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — Planned `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs
+- [Proof-writer Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@proof-writer` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
 - [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations

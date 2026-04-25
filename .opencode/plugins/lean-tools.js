@@ -2,8 +2,11 @@ import { tool } from "@opencode-ai/plugin";
 import { existsSync, readFileSync } from "fs";
 import { join, isAbsolute } from "path";
 
-export const LeanToolsPlugin = async ({ directory }) => {
+export const LeanToolsPlugin = async ({ directory, client, $ }) => {
   const leanRoot = join(directory, "lean");
+  const proofWriterGoals = new Map();
+  const proofWriterSessions = new Set();
+  const activeComparatorSessions = new Set();
 
   function resolveLeanPath(file) {
     if (isAbsolute(file)) return file;
@@ -15,6 +18,85 @@ export const LeanToolsPlugin = async ({ directory }) => {
     if (existsSync(fromRoot)) return fromRoot;
     // Default assumption: relative to lean/
     return fromLean;
+  }
+
+  function stemToTheorem(stem) {
+    const firstPass = stem.replace(/(.)([A-Z][a-z]+)/g, "$1_$2");
+    const secondPass = firstPass.replace(/([a-z0-9])([A-Z])/g, "$1_$2");
+    return `${secondPass.toLowerCase()}_goal`;
+  }
+
+  function goalPaths(stem) {
+    return {
+      goalFile: join(leanRoot, "Goals", `${stem}.lean`),
+      solutionFile: join(leanRoot, "Solutions", `${stem}.lean`),
+    };
+  }
+
+  function extractGoalStem(text) {
+    if (!text) return null;
+    const patterns = [
+      /(?:^|\b)goal\s*[:=]\s*([A-Za-z0-9_]+)\b/i,
+      /(?:^|\b)goal\s+([A-Za-z0-9_]+)\b/i,
+      /lean\/Goals\/([A-Za-z0-9_]+)\.lean\b/,
+      /Goals\.([A-Za-z0-9_]+)\b/,
+      /lean\/Solutions\/([A-Za-z0-9_]+)\.lean\b/,
+      /Solutions\.([A-Za-z0-9_]+)\b/,
+    ];
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  }
+
+  async function runComparatorGoal(stem) {
+    const command = $`python3 scripts/verify_comparator.py --goal ${stem}`
+      .cwd(directory)
+      .quiet()
+      .nothrow();
+    const completed = await command;
+    const stdout = completed.stdout.toString("utf8").trim();
+    const stderr = completed.stderr.toString("utf8").trim();
+    const transcript = [stdout, stderr].filter(Boolean).join("\n");
+    return {
+      ok: completed.exitCode === 0,
+      exitCode: completed.exitCode,
+      transcript:
+        transcript ||
+        `scripts/verify_comparator.py exited with status ${completed.exitCode}`,
+    };
+  }
+
+  async function verifyProofWriterSession(sessionID) {
+    if (activeComparatorSessions.has(sessionID)) return;
+    if (!proofWriterSessions.has(sessionID)) return;
+
+    const stem = proofWriterGoals.get(sessionID);
+    activeComparatorSessions.add(sessionID);
+    try {
+      if (!stem) {
+        await client.tui.showToast({
+          directory,
+          title: "Comparator skipped",
+          message: "No proof goal found in the proof-writer prompt. Pass `goal=<Stem>`.",
+          variant: "error",
+          duration: 8000,
+        });
+        return;
+      }
+
+      const result = await runComparatorGoal(stem);
+      await client.tui.showToast({
+        directory,
+        title: result.ok ? "Comparator passed" : "Comparator failed",
+        message: `${stem}: ${result.transcript.split("\n")[0]}`,
+        variant: result.ok ? "success" : "error",
+        duration: 8000,
+      });
+    } finally {
+      activeComparatorSessions.delete(sessionID);
+    }
   }
 
   return {
@@ -112,6 +194,111 @@ export const LeanToolsPlugin = async ({ directory }) => {
           );
         },
       }),
+
+      // ── lean_goal_context ────────────────────────────────────────────────
+      // Reads a comparator goal pair and returns the exact theorem/module
+      // contract that a proof-writing agent should satisfy.
+      lean_goal_context: tool({
+        description:
+          "Load the trusted comparator goal contract for a goal stem in " +
+          "`lean/Goals/<Stem>.lean` and show the matching `Solutions` target.",
+        args: {
+          goal: tool.schema
+            .string()
+            .describe("Goal stem, for example `Comm` or `HPlusCorrect`"),
+        },
+        async execute({ goal }) {
+          const { goalFile, solutionFile } = goalPaths(goal);
+          if (!existsSync(goalFile)) {
+            return `Goal file not found: ${goalFile}`;
+          }
+
+          const theoremName = stemToTheorem(goal);
+          const goalSource = readFileSync(goalFile, "utf8").trim();
+          const solutionExists = existsSync(solutionFile);
+          const solutionSource = solutionExists
+            ? readFileSync(solutionFile, "utf8").trim()
+            : "-- file does not exist yet";
+
+          return [
+            `Goal stem: ${goal}`,
+            `Theorem name: ${theoremName}`,
+            `Challenge module: Goals.${goal}`,
+            `Solution module: Solutions.${goal}`,
+            `Goal file: ${goalFile}`,
+            `Solution file: ${solutionFile}`,
+            "",
+            "Trusted goal source:",
+            "```lean",
+            goalSource,
+            "```",
+            "",
+            solutionExists ? "Current solution source:" : "Current solution source: missing",
+            "```lean",
+            solutionSource,
+            "```",
+            "",
+            "Do not edit `lean/Goals/*`. Keep the solution theorem statement aligned",
+            "with the trusted goal, and do not import the corresponding `Goals.*` module.",
+          ].join("\n");
+        },
+      }),
+
+      // ── verify_comparator_goal ───────────────────────────────────────────
+      // Runs the comparator verification script for one goal stem so the
+      // result appears directly in the chat transcript.
+      verify_comparator_goal: tool({
+        description:
+          "Run `scripts/verify_comparator.py --goal <Stem>` for a single " +
+          "comparator goal and return the full transcript.",
+        args: {
+          goal: tool.schema
+            .string()
+            .describe("Goal stem, for example `Comm` or `HPlusCorrect`"),
+        },
+        async execute({ goal }, context) {
+          context.metadata({
+            title: `Comparator ${goal}`,
+            metadata: { goal },
+          });
+          const result = await runComparatorGoal(goal);
+          return {
+            output: [
+              `Comparator goal: ${goal}`,
+              `Exit code: ${result.exitCode}`,
+              "",
+              result.transcript,
+            ].join("\n"),
+            metadata: {
+              goal,
+              exitCode: result.exitCode,
+              ok: result.ok,
+            },
+          };
+        },
+      }),
+    },
+
+    "chat.message": async (input, output) => {
+      if (input.agent && input.agent !== "proof-writer") {
+        proofWriterSessions.delete(input.sessionID);
+        return;
+      }
+      if (input.agent !== "proof-writer") return;
+      proofWriterSessions.add(input.sessionID);
+      const promptText = output.parts
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("\n");
+      const goalStem = extractGoalStem(promptText);
+      if (goalStem) {
+        proofWriterGoals.set(input.sessionID, goalStem);
+      }
+    },
+
+    event: async ({ event }) => {
+      if (event.type !== "session.idle") return;
+      await verifyProofWriterSession(event.properties.sessionID);
     },
 
     // ── post-edit diagnostic reminder ─────────────────────────────────────
@@ -126,22 +313,12 @@ export const LeanToolsPlugin = async ({ directory }) => {
 
       // Only trigger for .lean files — check the output payload for a path
       try {
-        const payload = JSON.stringify(output ?? "");
-        if (!payload.includes(".lean")) return;
+        const touchedLeanFile = JSON.stringify(input.args ?? "").includes(".lean");
+        if (!touchedLeanFile) return;
 
-        const reminder =
+        output.output +=
           "\n\n⚠️  Lean file modified — call `lean_lsp_lean_diagnostic_messages` " +
           "with the absolute file path NOW before writing any more tactics.";
-
-        // Try common result-field names used by different OpenCode versions
-        if (output && typeof output === "object") {
-          for (const key of ["result", "content", "output", "text", "message"]) {
-            if (typeof output[key] === "string") {
-              output[key] += reminder;
-              return;
-            }
-          }
-        }
       } catch {
         // Silent: never let a hook crash the tool call
       }
