@@ -117,6 +117,23 @@ def discover_pairs(lean_dir: Path, selected_goals: set[str]) -> list[GoalPair]:
     return pairs
 
 
+def tool_dir_candidates(root: Path) -> list[Path]:
+    candidates: list[Path] = []
+    if env_dir := os.environ.get("AUTOQUANTUM_TOOLS_DIR"):
+        candidates.append(Path(env_dir).expanduser())
+    candidates.append(Path("/home/opencode/.cache/autoquantum-tools"))
+    candidates.append(root / ".tools")
+    deduped: list[Path] = []
+    seen: set[Path] = set()
+    for candidate in candidates:
+        resolved = candidate.expanduser()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        deduped.append(resolved)
+    return deduped
+
+
 def resolve_comparator_binary(root: Path, requested: Path | None) -> Path:
     candidates: list[Path] = []
     if requested is not None:
@@ -125,12 +142,13 @@ def resolve_comparator_binary(root: Path, requested: Path | None) -> Path:
         candidates.append(Path(env_bin).expanduser())
     if which_bin := shutil.which("comparator"):
         candidates.append(Path(which_bin))
-    candidates.extend(
-        [
-            root / ".tools" / "bin" / "comparator",
-            root / ".tools" / "src" / "comparator" / ".lake" / "build" / "bin" / "comparator",
-        ]
-    )
+    for tools_dir in tool_dir_candidates(root):
+        candidates.extend(
+            [
+                tools_dir / "bin" / "comparator",
+                tools_dir / "src" / "comparator" / ".lake" / "build" / "bin" / "comparator",
+            ]
+        )
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -143,12 +161,24 @@ def resolve_comparator_binary(root: Path, requested: Path | None) -> Path:
 
 
 def build_path(root: Path) -> str:
-    extra_dirs = [
-        root / ".tools" / "bin",
-        root / ".tools" / "src" / "lean4export" / ".lake" / "build" / "bin",
-        root / ".tools" / "src" / "comparator" / ".lake" / "build" / "bin",
-        root / ".tools" / "src" / "comparator" / ".lake" / "packages" / "lean4export" / ".lake" / "build" / "bin",
-    ]
+    extra_dirs: list[Path] = []
+    for tools_dir in tool_dir_candidates(root):
+        extra_dirs.extend(
+            [
+                tools_dir / "bin",
+                tools_dir / "src" / "lean4export" / ".lake" / "build" / "bin",
+                tools_dir / "src" / "comparator" / ".lake" / "build" / "bin",
+                tools_dir
+                / "src"
+                / "comparator"
+                / ".lake"
+                / "packages"
+                / "lean4export"
+                / ".lake"
+                / "build"
+                / "bin",
+            ]
+        )
     present_dirs = [str(path) for path in extra_dirs if path.is_dir()]
     current_path = os.environ.get("PATH", "")
     if current_path:

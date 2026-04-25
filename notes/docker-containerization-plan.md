@@ -24,8 +24,8 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 ### Container Contents
 1. **OpenCode CLI** – `npm install -g @anomalyco/opencode` (includes `opencode serve` command)
 2. **Minimal base image** – no Lean toolchain or Mathlib cache is baked into the image.
-3. **Dedicated cache-warmer service** – runs `bootstrap-lean.sh` with writable volume mounts to install `elan`, the Lean toolchain, and the Lake package tree.
-4. **Main OpenCode service** – mounts the warmed `elan` volume read-only, mounts the warmed Lake package cache at a read-only seed path, copies that package tree into its own anonymous writable `.lake/packages` volume, and runs `lake update` against that private worktree before startup.
+3. **Dedicated cache-warmer service** – runs `bootstrap-lean.sh` and `scripts/setup_comparator.sh` with writable volume mounts to install `elan`, the Lean toolchain, the Lake package tree, and the comparator runtime binaries.
+4. **Main OpenCode service** – mounts the warmed `elan` volume read-only, mounts the warmed Lake package cache at a read-only seed path, mounts the warmed comparator tool cache read-only on `PATH`, copies that package tree into its own anonymous writable `.lake/packages` volume, and runs `lake update` against that private worktree before startup.
 5. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
 6. **Git, bash, coreutils** – for standard operations.
 7. **Non‑root user** (`opencode`) with UID/GID matching the host user (501:20) to preserve file ownership.
@@ -40,6 +40,7 @@ Create a fully reproducible, sandboxed environment where the **entire OpenCode s
 │   └── …
 ├── .elan/                # Persistent volume, warmed by cache-warmer
 ├── /home/opencode/.cache/lake-packages-seed  # Shared read-only warmed package cache
+├── /home/opencode/.cache/autoquantum-tools  # Shared read-only comparator tool cache
 └── autoquantum/lean/.lake/packages  # Per-container anonymous writable volume
 ```
 
@@ -82,8 +83,8 @@ docker compose down                         # Stop when done
 The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
 
 ## Operational Notes
-- **Dedicated prewarming with runtime fallback** — the `cache-warmer` compose service still pre-populates the shared `elan` and Lake caches, and `entrypoint.sh` still seeds a writable package worktree from that shared cache. When those runtime caches are missing, `entrypoint.sh` now also calls `bootstrap-lean.sh` directly so standalone containers can populate Lean on first start when their mounts are writable.
+- **Dedicated prewarming with runtime fallback** — the `cache-warmer` compose service now pre-populates the shared `elan`, Lake, and comparator caches. `entrypoint.sh` still seeds a writable package worktree from the shared Lake cache and prepends the shared comparator `bin/` directory to `PATH`. When those runtime Lean caches are missing, `entrypoint.sh` still calls `bootstrap-lean.sh` directly so standalone containers can populate Lean on first start when their mounts are writable.
 - **Mutable Lake packages** — `lake build` writes into dependency directories such as `proofwidgets`, so the shared warmed package cache cannot be mounted directly at `.lake/packages` in read-only mode. The main service instead mounts the shared package cache read-only at a seed path and uses an anonymous per-container writable volume for `.lake/packages`.
 - **Bootstrap PATH handling** — `bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
-- **Cache staleness** — if the Mathlib version changes, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`) and rebuild.
+- **Cache staleness** — if the Mathlib version or comparator refs change, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`, `autoquantum-comparator-cache`) and rebuild.
 - **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.

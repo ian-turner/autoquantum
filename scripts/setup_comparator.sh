@@ -24,6 +24,8 @@ clone_or_update() {
 
   if [ -d "${target_dir}/.git" ]; then
     git -C "$target_dir" fetch --tags origin
+    git -C "$target_dir" reset --hard HEAD
+    git -C "$target_dir" clean -fdx
   else
     git clone --branch "$ref" --depth 1 "$repo_url" "$target_dir"
   fi
@@ -36,21 +38,41 @@ pin_comparator_lean4export_ref() {
 
   python3 - "$comparator_dir/lakefile.toml" "$LEAN4EXPORT_REF" <<'PY'
 from pathlib import Path
-import re
 import sys
 
 lakefile = Path(sys.argv[1])
 ref = sys.argv[2]
-text = lakefile.read_text()
-updated = re.sub(
-    r'(name = "lean4export"\nrev = ")([^"]+)(")',
-    rf'\g<1>{ref}\3',
-    text,
-    count=1,
-)
-if updated == text:
+lines = lakefile.read_text().splitlines()
+updated_lines: list[str] = []
+in_require = False
+target_block = False
+replaced = False
+
+for line in lines:
+    stripped = line.strip()
+    if stripped == "[[require]]":
+        in_require = True
+        target_block = False
+        updated_lines.append(line)
+        continue
+    if in_require and stripped.startswith("[[") and stripped != "[[require]]":
+        in_require = False
+        target_block = False
+    if in_require and stripped == 'name = "lean4export"':
+        target_block = True
+        updated_lines.append(line)
+        continue
+    if target_block and stripped.startswith('rev = "'):
+        updated_lines.append(f'rev = "{ref}"')
+        replaced = True
+        target_block = False
+        continue
+    updated_lines.append(line)
+
+if not replaced:
     raise SystemExit("failed to pin comparator's lean4export dependency")
-lakefile.write_text(updated)
+
+lakefile.write_text("\n".join(updated_lines) + "\n")
 PY
 
   rm -f "${comparator_dir}/lake-manifest.json"

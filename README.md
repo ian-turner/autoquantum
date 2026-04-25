@@ -68,7 +68,7 @@ opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on 
 docker compose down                         # Stop when done
 ```
 
-`docker compose up` runs a one-shot cache warmer first, which installs `elan` plus the Lean/Lake dependency cache into named Docker volumes. The main `opencode` service mounts the shared `elan` cache read-only, copies the warmed Lake package tree into its own anonymous writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache. If you run the image standalone without those shared caches, the entrypoint now attempts the same Lean bootstrap flow directly inside the container.
+`docker compose up` runs a one-shot cache warmer first, which installs `elan`, the Lean/Lake dependency cache, and the comparator toolchain (`comparator`, `lean4export`, `landrun`) into named Docker volumes. The main `opencode` service mounts the shared `elan` cache and comparator tool cache read-only, copies the warmed Lake package tree into its own anonymous writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache. If you run the image standalone without those shared caches, the entrypoint now attempts the same Lean bootstrap flow directly inside the container.
 
 **Web Interface:** To start OpenCode with a web UI, run `docker compose run opencode web`. The server will be accessible at http://localhost:4096 in your browser.
 
@@ -93,14 +93,14 @@ The repo now includes a comparator-oriented proof verification scaffold under `l
 - `lean/Solutions/*.lean` are candidate proofs with the same module basename and theorem statement.
 - theorem names are derived from the file stem in snake case with a `_goal` suffix, e.g. `Comm.lean` → `comm_goal`.
 
-Bootstrap local comparator tooling with:
+For local host development outside Docker, bootstrap comparator tooling with:
 
 ```bash
 ./scripts/setup_comparator.sh
 export PATH="$PWD/.tools/bin:$PATH"
 ```
 
-`setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
+Inside the Compose-managed container, no extra comparator setup is needed: warmup installs the toolchain into the shared read-only cache and `entrypoint.sh` adds it to `PATH`. For host-local setup, `setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
 
 Then verify the sample goal with:
 

@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     python3-pip \
     nodejs \
     npm \
+    golang-go \
     cargo \
     ripgrep \
     gettext \

@@ -4,6 +4,8 @@ set -e
 lake_dir="${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}/.lake"
 packages_dir="$lake_dir/packages"
 seed_marker="$packages_dir/.seeded-from-cache"
+tools_dir="${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.cache/autoquantum-tools}"
+tools_bin="$tools_dir/bin"
 
 if [ "$(id -u)" -eq 0 ]; then
     mkdir -p /home/opencode/.cache/opencode
@@ -28,6 +30,9 @@ fi
 export PATH="$HOME/.elan/bin:$PATH"
 if [ -f "$HOME/.elan/env" ]; then
     . "$HOME/.elan/env"
+fi
+if [ -d "$tools_bin" ]; then
+    export PATH="$tools_bin:$PATH"
 fi
 
 if [ ! -x "$HOME/.elan/bin/elan" ] || [ ! -d "$packages_dir/mathlib" ]; then

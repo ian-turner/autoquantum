@@ -12,10 +12,12 @@ services:
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
       LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
+      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.cache/autoquantum-tools}
     volumes:
       - ./:/workspace/autoquantum
       - elan-cache:/home/opencode/.elan
       - mathlib-cache:/workspace/autoquantum/lean/.lake/packages
+      - comparator-cache:/home/opencode/.cache/autoquantum-tools
     restart: "no"
 
   opencode:
@@ -32,6 +34,7 @@ services:
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
       LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
+      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.cache/autoquantum-tools}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
     volumes:
@@ -43,6 +46,8 @@ services:
       - elan-cache:/home/opencode/.elan:ro
       # Shared warmed package cache is mounted read-only at a seed path.
       - mathlib-cache:/home/opencode/.cache/lake-packages-seed:ro
+      # Shared comparator toolchain is mounted read-only at runtime.
+      - comparator-cache:/home/opencode/.cache/autoquantum-tools:ro
       # Runtime Lake package worktree is a per-container anonymous volume.
       - /workspace/autoquantum/lean/.lake/packages
     ports:
@@ -54,3 +59,5 @@ volumes:
     name: autoquantum-elan-cache
   mathlib-cache:
     name: autoquantum-mathlib-cache
+  comparator-cache:
+    name: autoquantum-comparator-cache
