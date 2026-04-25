@@ -43,3 +43,6 @@ latex-out/
 # Docker build and runtime logs
 docker-*.log
 docker-compose*.log
+
+# Local comparator toolchain checkout
+.tools/

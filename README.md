@@ -85,6 +85,35 @@ lake build           # compile only our library (~seconds)
 
 > **Note:** `lake exe cache get` is essential. Without it, `lake build` will attempt to compile all of Mathlib from source.
 
+## Comparator Proof Verification
+
+The repo now includes a comparator-oriented proof verification scaffold under `lean/Goals/` and `lean/Solutions/`.
+
+- `lean/Goals/*.lean` are trusted challenge theorems.
+- `lean/Solutions/*.lean` are candidate proofs with the same module basename and theorem statement.
+- theorem names are derived from the file stem in snake case with a `_goal` suffix, e.g. `Comm.lean` → `comm_goal`.
+
+Bootstrap local comparator tooling with:
+
+```bash
+./scripts/setup_comparator.sh
+export PATH="$PWD/.tools/bin:$PATH"
+```
+
+`setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
+
+Then verify the sample goal with:
+
+```bash
+python3 scripts/verify_comparator.py --goal Comm
+```
+
+Useful script options:
+
+- `--list-goals` — show discovered goal files and expected theorem names
+- `--dry-run` — print generated comparator configs without invoking comparator
+- `--comparator /path/to/comparator` — use a specific comparator binary
+
 ## Current Status
 
 `lake build AutoQuantum` succeeds with 0 errors. Mathlib pinned to **v4.29.0**.

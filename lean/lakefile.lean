@@ -12,3 +12,9 @@ require repl from git
 
 lean_lib «AutoQuantum» where
   globs := #[.andSubmodules `AutoQuantum]
+
+lean_lib Goals where
+  globs := #[.submodules `Goals]
+
+lean_lib Solutions where
+  globs := #[.submodules `Solutions]

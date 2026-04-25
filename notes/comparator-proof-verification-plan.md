@@ -1,7 +1,7 @@
 # Comparator Proof Verification Plan
 
 **Date**: April 25, 2026  
-**Status**: Planned  
+**Status**: Initial scaffolding implemented  
 **Goal**: Add a comparator-based verification pipeline for AI-generated Lean proofs.
 
 ## Overview
@@ -40,6 +40,11 @@ Examples:
 ## Module Contract
 
 Each paired file should define the **same theorem name** with the **same statement**.
+
+The initial scaffold uses a filename-based naming convention so the verifier can derive theorem names automatically:
+
+- `Comm.lean` → `comm_goal`
+- `HPlusCorrect.lean` → `h_plus_correct_goal`
 
 Example goal file:
 
@@ -86,7 +91,7 @@ Comparator has a `v4.29.0` tag, so it is compatible with this repo's pinned Lean
 
 ## Planned Verification Script
 
-Add a script at:
+The initial script lives at:
 
 ```text
 scripts/verify_comparator.py
@@ -97,9 +102,11 @@ Responsibilities:
 1. enumerate `lean/Goals/*.lean`,
 2. find matching `lean/Solutions/*.lean`,
 3. derive module names such as `Goals.Comm` and `Solutions.Comm`,
-4. generate or read comparator config JSON,
+4. generate comparator config JSON on the fly,
 5. invoke comparator for each pair,
 6. print a pass/fail summary.
+
+The verifier also supports a flat `--goal <Stem>` selector, `--list-goals`, `--dry-run`, and automatic comparator binary discovery from `PATH`, `COMPARATOR_BIN`, or `.tools/bin/comparator`.
 
 ## External Dependencies
 
@@ -108,6 +115,14 @@ Comparator itself requires additional binaries in `PATH`:
 - `comparator`
 - `landrun`
 - `lean4export`
+
+To simplify local setup, the repo now includes:
+
+```text
+scripts/setup_comparator.sh
+```
+
+This helper bootstraps local checkouts of `comparator` and `lean4export` under `.tools/`, copies their built binaries into `.tools/bin/`, and attempts to build `landrun` there as well when Go is available.
 
 Optional later strengthening:
 
