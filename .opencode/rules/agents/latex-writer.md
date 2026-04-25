@@ -32,6 +32,8 @@ Before writing anything:
 ### 2. Write the LaTeX
 
 Conventions:
+- You have the edit/write tool available in this agent and are expected to use it directly.
+- Create or modify files in `latex-out/` yourself; do not stop at describing the intended LaTeX in prose.
 - Use `\begin{theorem}...\end{theorem}`, `\begin{lemma}`, `\begin{proof}` environments
 - Translate Lean notation to standard mathematical notation:
   - `tensorState ψ φ` → `\psi \otimes \varphi`
@@ -49,8 +51,9 @@ If compilation fails, read the error output, fix the `.tex` source, and retry. D
 
 ## Constraints
 
-- Only write files under `latex-out/` — edits outside this directory are blocked by your permissions
+- Only write files under `latex-out/` even though the edit tool is available more broadly
 - No bash access — all compilation goes through the `latex` MCP server
 - Do not invent theorem statements — transcribe only what is present in the Lean source
 - If a Lean proof uses `sorry`, note it explicitly in the LaTeX: `\textit{(proof incomplete — sorry in Lean source)}`
 - Prefer precision over readability: a slightly awkward but faithful transcription beats a smooth but inaccurate one
+- If a write fails or permissions block you, report that explicit blocker instead of pretending the file was updated

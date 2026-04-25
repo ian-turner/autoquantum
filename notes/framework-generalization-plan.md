@@ -133,7 +133,7 @@ Implemented agents (using `"agent"` key in `opencode.json`):
 }
 ```
 
-Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was added alongside it. `edit` for `reading` and `latex-writer` is `"ask"` to require confirmation before writing. Agent instructions live in `.opencode/rules/agents/<name>.md`; `opencode.json` `prompt` fields are kept in sync.
+Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was added alongside it. `reading` still uses `edit: "ask"` to require confirmation before writing. `latex-writer` was later widened to plain `edit: "allow"` because scoped edit permissions were leaving the edit tool unavailable in practice. Agent instructions live in `.opencode/rules/agents/<name>.md`; `opencode.json` `prompt` fields are kept in sync.
 
 #### Agent Capabilities
 
@@ -160,7 +160,7 @@ Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was 
 - Rewrite Lean syntax into standard LaTeX notation while preserving meaning
 - Produce paper-style sections, theorem environments, and appendices in `latex/`
 - Trigger PDF compilation via a dedicated `latex` MCP server — no bash permissions
-- Edit permissions scoped to `latex/` output directory only
+- Plain `edit: "allow"` so the edit tool is reliably exposed; the `latex-out/` write scope is enforced by prompt instructions
 - Link LaTeX explanations back to source Lean declarations for traceability
 
 #### Agent Workflow
