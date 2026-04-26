@@ -1,7 +1,6 @@
 import AutoQuantum.Core.Gate
 
-namespace AutoQuantum
-
+open AutoQuantum
 open Complex Matrix
 
 
@@ -13,5 +12,3 @@ theorem nc_thm4_1_goal (U : QGate 1) :
         Complex.exp (Complex.I * (α : ℂ)) •
           ((rz β * ry γ * rz δ : QGate 1) : Matrix (Fin 2) (Fin 2) ℂ) := by
   sorry
-
-end AutoQuantum
