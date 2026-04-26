@@ -23,7 +23,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 |------|-------------|-------|
 | `Core/Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
 | `Core/Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
-| `Core/Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026, and the generic `controlled : QGate k -> QGate (k + 1)` constructor was added on April 23, 2026 |
+| `Core/Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026, the generic `controlled : QGate k -> QGate (k + 1)` constructor was added on April 23, 2026, and Rx/Ry rotation-gate unitarity was completed on April 26, 2026 |
 | `Lemmas/Gate.lean` | **No** | `tensorWithId_apply`, `idTensorWith_apply`, `hadamardAt_last_eq` proved. Added permutation-matrix helper lemmas (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`), base-2 digit lemmas for `tensorIndexEquiv n 1` under `finFunctionFinEquiv.symm`, `finFunctionFinEquiv_symm_qubitPerm_apply`, and new tensor-decomposition helpers (`finFunctionFinEquiv_symm_tensorIndex_cons`, `tensorIndexEquiv_symm_{snd_eq_digit_zero,fst_apply_eq_digit_succ}`, `tensorWithId_one_entry`). `hadamardAt_castSucc_eq` is still the remaining sorry; the blocker is now isolated as the exact transport identity for the big swap through the `(tensorIndexEquiv (m+1) 1)` split. |
 | `Core/Circuit.lean` | **Yes** | Core circuit API simplified: `Circuit n = List (QGate n)` and the primary correctness predicate is now `Circuit.Implements` |
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now uses shared circuit-lift support (`idTensorCircuit`, `tensorWithIdCircuit`, and their `circuitMatrix_*` lemmas) plus `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Correctness statements were simplified to direct matrix equalities after removing `Circuit.CorrectFor`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB); remaining gaps are `qft_correct` and `qft2_correct` |
@@ -46,7 +46,7 @@ docker compose down                         # Stop when done
 
 ## Open Work
 
-Current sorry count: **7** (as of April 24, 2026).
+Current sorry count: **7** (as of April 26, 2026).
 
 | Algorithm | Remaining gap | Primary reference |
 |-----------|--------------|-------------------|

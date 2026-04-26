@@ -12,6 +12,7 @@ import Mathlib.LinearAlgebra.Matrix.Permutation
 import Mathlib.LinearAlgebra.Matrix.Reindex
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 
 /-!
 # Quantum Gates [Core]
@@ -165,6 +166,109 @@ noncomputable def sGate : QGate 1 := phaseRotation 2
 /-- The T gate = R_3: [[1, 0], [0, exp(iπ/4)]]. -/
 noncomputable def tGate : QGate 1 := phaseRotation 3
 
+/-- The Rz (Z-rotation) gate matrix: [[exp(−iθ/2), 0], [0, exp(iθ/2)]].
+    Rz(θ) = exp(−iθZ/2). (Nielsen & Chuang, Box 4.1.) -/
+noncomputable def rzMatrix (θ : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  !![Complex.exp (-Complex.I * ↑θ / 2), 0; 0, Complex.exp (Complex.I * ↑θ / 2)]
+
+lemma rzMatrix_isUnitary (θ : ℝ) : rzMatrix θ ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+  rw [Matrix.mem_unitaryGroup_iff]
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [rzMatrix, Matrix.mul_apply]
+  · rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
+    have hθ : (starRingEnd ℂ) (-Complex.I * (θ : ℂ) / 2) + (-Complex.I * (θ : ℂ) / 2) = 0 := by
+      simp only [map_mul, map_div₀, map_ofNat, map_neg, Complex.conj_I, Complex.conj_ofReal]
+      ring
+    simpa using congrArg Complex.exp hθ
+  · rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
+    have hθ : (starRingEnd ℂ) (Complex.I * (θ : ℂ) / 2) + (Complex.I * (θ : ℂ) / 2) = 0 := by
+      simp only [map_mul, map_div₀, map_ofNat, Complex.conj_I, Complex.conj_ofReal]
+      ring
+    simpa using congrArg Complex.exp hθ
+
+/-- The Rz (Z-rotation) gate. Rz(θ) = exp(−iθZ/2). -/
+noncomputable def rz (θ : ℝ) : QGate 1 := ⟨rzMatrix θ, rzMatrix_isUnitary θ⟩
+
+/-- The Rx (X-rotation) gate matrix: [[cos(θ/2), −i·sin(θ/2)], [−i·sin(θ/2), cos(θ/2)]].
+    Rx(θ) = exp(−iθX/2). (Nielsen & Chuang, Box 4.1.) -/
+noncomputable def rxMatrix (θ : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  !![↑(Real.cos (θ / 2)), -Complex.I * ↑(Real.sin (θ / 2));
+     -Complex.I * ↑(Real.sin (θ / 2)), ↑(Real.cos (θ / 2))]
+
+-- Euler's formula: exp(I*θ/2) and exp(-I*θ/2) in terms of cos/sin.
+private lemma exp_pos_half (θ : ℝ) :
+    Complex.exp (Complex.I * ↑θ / 2) = ↑(Real.cos (θ / 2)) + Complex.I * ↑(Real.sin (θ / 2)) := by
+  rw [show Complex.I * (θ : ℂ) / 2 = ((θ / 2 : ℝ) : ℂ) * Complex.I by
+    simp [Complex.ofReal_div]
+    ring]
+  rw [Complex.exp_ofReal_mul_I]
+  ring
+
+private lemma exp_neg_half (θ : ℝ) :
+    Complex.exp (-Complex.I * ↑θ / 2) = ↑(Real.cos (θ / 2)) - Complex.I * ↑(Real.sin (θ / 2)) := by
+  rw [show -Complex.I * (θ : ℂ) / 2 = ((-(θ / 2) : ℝ) : ℂ) * Complex.I by
+    simp [Complex.ofReal_div]
+    ring]
+  rw [Complex.exp_ofReal_mul_I]
+  simp [Real.cos_neg, Real.sin_neg]
+  ring
+
+/-- Rx(θ) = H · Rz(θ) · H as matrices (Hadamard conjugation identity). -/
+lemma rxMatrix_eq_conj_rz (θ : ℝ) :
+    rxMatrix θ = hadamardMatrix * rzMatrix θ * hadamardMatrix := by
+  have h2 := sqrt2_sq_cast
+  have hne : (Real.sqrt 2 : ℂ) ≠ 0 :=
+    by exact_mod_cast Real.sqrt_ne_zero'.mpr (by norm_num)
+  -- Expand entry-by-entry, apply Euler formula, clear 1/√2 via field_simp.
+  have hneg3 : Complex.exp (-(↑θ * Complex.I / 2)) =
+      ↑(Real.cos (θ / 2)) - Complex.I * ↑(Real.sin (θ / 2)) := by
+    rw [show -((θ : ℂ) * Complex.I / 2) = -Complex.I * (θ : ℂ) / 2 by ring]
+    exact exp_neg_half θ
+  have hneg4 : Complex.exp (-(Complex.I * ↑θ / 2)) =
+      ↑(Real.cos (θ / 2)) - Complex.I * ↑(Real.sin (θ / 2)) := by
+    rw [show -(Complex.I * (θ : ℂ) / 2) = -Complex.I * (θ : ℂ) / 2 by ring]
+    exact exp_neg_half θ
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [rxMatrix, hadamardMatrix, rzMatrix, Matrix.mul_apply, Fin.sum_univ_two,
+      exp_pos_half] <;>
+    field_simp [hne] <;>
+    simp [hneg3, hneg4] <;>
+    ring_nf <;>
+    rw [h2]
+
+lemma rxMatrix_isUnitary (θ : ℝ) : rxMatrix θ ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+  rw [rxMatrix_eq_conj_rz]
+  exact mul_mem (mul_mem hadamardMatrix_isUnitary (rzMatrix_isUnitary θ)) hadamardMatrix_isUnitary
+
+/-- The Rx (X-rotation) gate. Rx(θ) = exp(−iθX/2). -/
+noncomputable def rx (θ : ℝ) : QGate 1 := ⟨rxMatrix θ, rxMatrix_isUnitary θ⟩
+
+/-- The Ry (Y-rotation) gate matrix: [[cos(θ/2), −sin(θ/2)], [sin(θ/2), cos(θ/2)]].
+    Ry(θ) = exp(−iθY/2). (Nielsen & Chuang, Box 4.1.) -/
+noncomputable def ryMatrix (θ : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  !![↑(Real.cos (θ / 2)), -↑(Real.sin (θ / 2));
+     ↑(Real.sin (θ / 2)), ↑(Real.cos (θ / 2))]
+
+lemma ryMatrix_isUnitary (θ : ℝ) : ryMatrix θ ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+  -- ryMatrix has real entries so conj is trivial; diagonal reduces to cos²+sin²=1 by ring.
+  rw [Matrix.mem_unitaryGroup_iff]
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [ryMatrix, Matrix.mul_apply, Fin.sum_univ_two, map_neg, -Complex.ofReal_cos,
+      -Complex.ofReal_sin]
+  · ring_nf
+    simp
+  · ring
+  · ring
+  · ring_nf
+    rw [add_comm]
+    simp
+
+/-- The Ry (Y-rotation) gate. Ry(θ) = exp(−iθY/2). -/
+noncomputable def ry (θ : ℝ) : QGate 1 := ⟨ryMatrix θ, ryMatrix_isUnitary θ⟩
+
 end SingleQubit
 
 /-! ## Two-qubit gates -/
@@ -309,6 +413,18 @@ noncomputable def hadamardAt {n : ℕ} (q : Fin n) : QGate n :=
 /-- The phase-rotation gate `R_k` placed on qubit `q`. -/
 noncomputable def phaseRotationAt {n : ℕ} (q : Fin n) (k : ℕ) : QGate n :=
   onQubit q (phaseRotation k)
+
+/-- The Rz(θ) gate placed on qubit `q`. -/
+noncomputable def rzAt {n : ℕ} (q : Fin n) (θ : ℝ) : QGate n :=
+  onQubit q (rz θ)
+
+/-- The Rx(θ) gate placed on qubit `q`. -/
+noncomputable def rxAt {n : ℕ} (q : Fin n) (θ : ℝ) : QGate n :=
+  onQubit q (rx θ)
+
+/-- The Ry(θ) gate placed on qubit `q`. -/
+noncomputable def ryAt {n : ℕ} (q : Fin n) (θ : ℝ) : QGate n :=
+  onQubit q (ry θ)
 
 /-- Place a 2-qubit gate on an arbitrary ordered pair of qubits by moving that pair to the front,
     applying `U ⊗ I`, and moving the pair back. The order matters: `q₁` is the first input qubit

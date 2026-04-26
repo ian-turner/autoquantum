@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 23, 2026 (Mathlib v4.29.0).
+Last updated: April 26, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -88,6 +88,7 @@ Last updated: April 23, 2026 (Mathlib v4.29.0).
 | Pauli X, Y, Z gates + unitarity proofs | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | Hadamard gate + unitarity proof | Done | `Core/Gate.lean` |
 | Phase rotation R_k + unitarity proof | Done | `Core/Gate.lean` |
+| Rz/Rx/Ry rotation gates + unitarity proofs | **Done** (Apr 26, 2026) | `Core/Gate.lean` |
 | CNOT gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | SWAP gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Core/Gate.lean` |
@@ -582,3 +583,10 @@ calc
   _ = 2 ^ (k + 1) := by simpa using (pow_succ 2 k).symm
 ```
 This is the reliable bridge when packaging block-diagonal `diag(I, U)` matrices as `(k+1)`-qubit gates.
+
+### 34. Euler rewrites for rotation gates need the exact normalized exponent shape
+For `rxMatrix_eq_conj_rz`, `Complex.exp_ofReal_mul_I` proves Euler's formula cleanly after rewriting
+```lean
+Complex.I * (θ : ℂ) / 2 = ((θ / 2 : ℝ) : ℂ) * Complex.I
+```
+with `simp [Complex.ofReal_div]` followed by `ring`. However, after expanding `H * Rz θ * H`, the negative exponent can appear as `Complex.exp (-(↑θ * I / 2))` or `Complex.exp (-(I * ↑θ / 2))`, not just the definition-shape `Complex.exp (-I * ↑θ / 2)`. Add local helper rewrites for these exact shapes, then finish the 2×2 goals with `field_simp`, `ring_nf`, and `sqrt2_sq_cast`.
