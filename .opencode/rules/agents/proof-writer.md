@@ -49,6 +49,21 @@ If no goal stem is present, stop and ask for it. The comparator completion hook 
 
 Example: `Comm` -> `comm_goal`
 
+## Finding Mathlib lemmas
+
+**Never read files under `lean/.lake/` or grep Mathlib source.** Those directories are large and searching them manually is slow and error-prone.
+
+Instead, use `lean_search_mathlib` from the `lean` MCP server:
+
+```
+lean_search_mathlib(query="commutativity of addition", kind="leansearch")   -- natural language
+lean_search_mathlib(query="?a + ?b = ?b + ?a", kind="loogle")               -- type-pattern
+```
+
+`lean_search_mathlib` is an HTTP call — no LSP warmup, available immediately. Use it any time you need to find a lemma name or check whether something exists in Mathlib.
+
+Only fall back to `lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch` if `lean_search_mathlib` returns no results.
+
 ## Constraints
 
 - Only edit `lean/Solutions/<Goal>.lean` for the current goal, even though the edit tool is available.
@@ -58,3 +73,4 @@ Example: `Comm` -> `comm_goal`
 - Do not work on multiple goals in one session
 - Do not hand the user a patch description instead of editing the solution file
 - Treat comparator failures as real failures to fix, not as optional follow-up
+- Do not read files under `lean/.lake/` — use `lean_search_mathlib` instead

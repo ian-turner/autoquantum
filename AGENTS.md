@@ -79,8 +79,12 @@ Two MCP servers are registered for this project and available to all agents.
 | `build(target="AutoQuantum")` | `cd lean && lake build AutoQuantum` | Build after editing Lean files |
 | `check_file(file="AutoQuantum/Core/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Core/Gate.lean` | Quick typecheck of a single file |
 | `sorry_count()` | `grep -r sorry lean/AutoQuantum` | Count remaining sorrys across all source files |
+| `search_mathlib(query, kind="leansearch")` | — | Semantic natural-language Mathlib search (HTTP, no LSP) |
+| `search_mathlib(query, kind="loogle")` | — | Type-signature pattern Mathlib search (HTTP, no LSP) |
 
 `file` paths are relative to `lean/`. The server handles PATH setup for `lake` automatically.
+
+**Never grep Mathlib source files.** Use `search_mathlib` (fast, HTTP-based, available immediately) whenever you need to find a Mathlib lemma name, type, or concept. Fall back to `lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch` only if `search_mathlib` fails.
 
 ### `lean_lsp` — LSP-based proof tools
 

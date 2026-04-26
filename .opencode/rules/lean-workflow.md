@@ -14,8 +14,10 @@ single `lean_build` call rather than many per-file checks.
 | See elaboration errors for a file | `lean_lsp_lean_diagnostic_messages` |
 | Verify a lemma name exists | `lean_lsp_lean_local_search` |
 | Find tactic that closes a goal | `lean_lsp_lean_state_search` |
-| Lookup Mathlib by type shape | `lean_lsp_lean_loogle` |
-| Lookup Mathlib by concept | `lean_lsp_lean_leansearch` |
+| Search Mathlib by concept (fast, no LSP) | `lean_search_mathlib(query, kind="leansearch")` ← **prefer this** |
+| Search Mathlib by type-signature pattern (fast, no LSP) | `lean_search_mathlib(query, kind="loogle")` |
+| Lookup Mathlib by type shape (LSP-backed) | `lean_lsp_lean_loogle` |
+| Lookup Mathlib by concept (LSP-backed) | `lean_lsp_lean_leansearch` |
 | Get type/doc for a symbol | `lean_lsp_lean_hover_info` |
 | Resolve file path + format multi_attempt call | `lean_proof_step` (custom tool) |
 | Find sorry positions with context | `lean_find_sorry` (custom tool) |
@@ -46,8 +48,12 @@ Writing a tactic?
 
 Stuck on a goal?
   → lean_lsp_lean_state_search  (finds tactics that close it)
-  → lean_lsp_lean_loogle        (if you know the type shape of the lemma you need)
-  → lean_lsp_lean_leansearch    (if you know the concept but not the name)
+  → lean_search_mathlib(q, kind="leansearch")  (concept search — fast, no LSP warmup)
+  → lean_search_mathlib(q, kind="loogle")      (type-pattern search — fast, no LSP warmup)
+  → lean_lsp_lean_loogle / lean_lsp_lean_leansearch  (LSP-backed alternatives if MCP fails)
+
+Looking for a Mathlib lemma name?
+  → lean_search_mathlib — NEVER grep Mathlib source files directly
 
 About to write rw [X] or exact X?
   → lean_lsp_lean_local_search first to confirm X exists
