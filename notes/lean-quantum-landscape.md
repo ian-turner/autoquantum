@@ -126,6 +126,7 @@ Last updated: April 26, 2026 (Mathlib v4.29.0).
 | `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (tensor support done; correctness still open) | `Algorithms/HPlus.lean` |
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | involution matrix exponential example `exp (z • A) = cosh z • I + sinh z • A` under `A ^ 2 = 1` | **Done** (Apr 25, 2026) | `Goals/NC_Ex4_2.lean` |
+| Nielsen-Chuang theorem 4.1 single-qubit `Z-Y-Z` Euler decomposition goal using `rz`/`ry` | Partial (goal stated; proof open) | `Goals/NC_Thm4_1.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 

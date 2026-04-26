@@ -30,6 +30,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
 | `Algorithms/HPlus.lean` | No | All supporting lemmas proved (Gaps 1–4: `tensorState`, `hPlusVector_norm`, `basisState_zero_tensor`, `hPlusVector_succ`, `tensorWithId_apply`). Added `idTensorWith_apply`, `hadamardAt_last_eq`, `basisState_zero_tensor'`, `hPlusVector_succ'`. The file now uses the shared `tensorIndexEquiv` helper instead of repeating the `finProdFinEquiv`/`pow_add` bridge. `hPlus_correct` has structured inductive proof with n=0 base case complete; inductive step scaffolded using `hadamardAt_last_eq` and `idTensorWith_apply`, blocked on `hadamardAt_castSucc_eq`. Current proof work in `Lemmas/Gate.lean` has reduced that blocker to the split-entry transport identity for the larger swap under `(tensorIndexEquiv (m+1) 1)`, not to a simple lifted-permutation rewrite. |
 | `Goals/NC_Ex4_2.lean` | **Yes** | Worked example proving `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1`, with the Nielsen-Chuang specialization `exp(i x A) = cos x • I + i sin x • A` |
+| `Goals/NC_Thm4_1.lean` | No | New goal for Nielsen-Chuang theorem 4.1: every single-qubit unitary has a global-phase `Rz(β) Ry(γ) Rz(δ)` decomposition using AutoQuantum's `rz` and `ry` gates. |
 
 ## Container Usage
 
@@ -46,13 +47,14 @@ docker compose down                         # Stop when done
 
 ## Open Work
 
-Current sorry count: **7** (as of April 26, 2026).
+Current AutoQuantum source sorry count: **7** (as of April 26, 2026). The separate `Goals/` library also contains open goal statements, including `nc_thm4_1_goal`.
 
 | Algorithm | Remaining gap | Primary reference |
 |-----------|--------------|-------------------|
 | `QFT.lean` | `qft2_correct` — explicit 4×4 proof; `qft_correct` — general inductive proof | [QFT Formalization Plan](qft-formalization-plan.md), [QFT General Proof Obligations](qft-general-proof-obligations.md) |
 | `GHZ.lean` | Correctness for n=1, n=2, and general case | GHZ section of this file |
 | `HPlus.lean` | `hPlus_correct` — tensor-induction proof | [HPlus Proof Plan](hplus-proof-plan.md) |
+| `Goals/NC_Thm4_1.lean` | `nc_thm4_1_goal` — single-qubit Z-Y-Z Euler decomposition up to global phase | Nielsen & Chuang, theorem 4.1, p. 175 |
 
 For QFT, the recommended next step is proving explicit 4×4 matrix lemmas for `hadamardAt 0`, `hadamardAt 1`, `controlledPhaseAt 1 0 2`, and `bitReverse`, then assembling `qft2_correct`. The general proof requires shifted-gate-placement lemmas (`hadamardAt q.succ = tensorWithId 1 ...`) plus recursive bit-reversal decomposition — see [QFT Recursion Indexing](qft-recursion-indexing.md).
 
