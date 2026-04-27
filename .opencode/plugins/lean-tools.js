@@ -79,7 +79,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
         await client.tui.showToast({
           directory,
           title: "Comparator skipped",
-          message: "No proof goal found in the proof-writer prompt. Pass `goal=<Stem>`.",
+          message: "No proof goal found in the prove prompt. Pass `goal=<Stem>`.",
           variant: "error",
           duration: 8000,
         });
@@ -280,11 +280,11 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
     },
 
     "chat.message": async (input, output) => {
-      if (input.agent && input.agent !== "proof-writer") {
+      if (input.agent && input.agent !== "prove") {
         proofWriterSessions.delete(input.sessionID);
         return;
       }
-      if (input.agent !== "proof-writer") return;
+      if (input.agent !== "prove") return;
       proofWriterSessions.add(input.sessionID);
       const promptText = output.parts
         .filter((part) => part.type === "text")

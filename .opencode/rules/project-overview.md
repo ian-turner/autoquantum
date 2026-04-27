@@ -34,15 +34,15 @@ autoquantum/
 │   ├── lean-tools/               -- build/check/sorry_count (Python, runs via uv)
 │   └── run-lean-lsp-mcp.sh       -- launcher for lean-lsp-mcp LSP server
 ├── .opencode/
-│   ├── rules/                    -- common rules (this directory, auto-loaded)
-│   │   └── agents/               -- agent-specific rules (inlined into opencode.json prompt fields)
+│   ├── rules/                    -- common rules (this directory, auto-loaded into every session)
+│   ├── agents/                   -- per-agent .md files (frontmatter + prompt body, loaded by OpenCode)
 │   └── plugins/lean-tools.js     -- custom tools + post-edit diagnostic hook
 ├── notes/                       # Research wiki — start at notes/home.md
 ├── references/                  # Local PDFs (Nielsen & Chuang, course notes)
 ├── Dockerfile
 ├── docker-compose.yml
 ├── entrypoint.sh                # Container startup: seeds Lake cache, starts opencode serve
-└── opencode.json                # OpenCode config: MCP servers, agents, plugin
+└── opencode.json                # OpenCode config: MCP servers, plugin (agents defined in .opencode/agents/)
 ```
 
 ## Build
@@ -59,9 +59,10 @@ cd lean && lake build AutoQuantum  # default target
 | Agent | Invoked via | Role |
 |-------|-------------|------|
 | `build` | `@build` | Full-permission project and framework engineering |
-| `proof-writer` | `@proof-writer` | Goal-scoped Lean proof writing in `lean/Solutions/`, with mandatory comparator verification on response completion |
-| `reading` | `@reading` | arXiv/PDF ingestion, theorem extraction, Lean skeleton generation |
-| `latex-writer` | `@latex-writer` | Lean-to-LaTeX transcription and PDF compilation |
+| `prove` | `@prove` | Goal-scoped Lean proof writing in `lean/Solutions/`, with mandatory comparator verification on response completion |
+| `plan` | `@plan` | Proof strategy and multi-agent workflow planning (read-only) |
+| `read` | `@read` | arXiv/PDF ingestion, theorem extraction, Lean skeleton generation |
+| `latex` | `@latex` | Lean-to-LaTeX transcription and PDF compilation |
 | `verifier` | `@verifier` | Read-only proof and result validation *(planned)* |
 | `code-reviewer` | `@code-reviewer` | Read-only code review *(planned)* |
 

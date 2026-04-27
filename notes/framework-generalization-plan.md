@@ -76,10 +76,10 @@ The recent cache design is worth keeping: shared Elan and seeded Lake package ca
 Four agents implemented:
 1. **`build`** — highest-permission, general project and framework work (originally named `developer`)
 2. **`plan`** — read-only, designs proof/formalization strategies before execution (added alongside `build`)
-3. **`reading`** — arXiv + local PDF ingestion, theorem extraction, Lean skeleton generation
-4. **`latex-writer`** — Lean-to-LaTeX transcription and PDF compilation
+3. **`read`** — arXiv + local PDF ingestion, theorem extraction, Lean skeleton generation
+4. **`latex`** — Lean-to-LaTeX transcription and PDF compilation
 
-The remaining agents (`proof-writer`, `verifier`, `code-reviewer`) remain for a later pass.
+The remaining agents (`prove`, `verifier`, `code-reviewer`) remain for a later pass.
 
 #### Confirmed OpenCode `agent` Block Schema
 
@@ -111,10 +111,10 @@ Rules are split into two layers:
 - `lean-workflow.md` — MCP tool reference, decision tree, iterative workflow, stop conditions
 - `lean-proof-patterns.md` — confirmed tensor-product, gate-placement, and circuit patterns
 
-**Layer 2 — Agent-specific instructions (`prompt` field in `opencode.json`):**
-- Each priority agent has a dedicated rules file in `.opencode/rules/agents/<name>.md`
-- The full content of that file is inlined into the agent's `prompt` field — this maximizes context quality without loading all agent rules into every session
-- Files in `.opencode/rules/agents/` serve as the canonical editable source; `prompt` values in `opencode.json` are kept in sync
+**Layer 2 — Agent-specific instructions (`.opencode/agents/<name>.md`):**
+- Each agent is defined as a standalone `.md` file with YAML frontmatter (`name`, `description`, `mode`, `permission`) and a prompt body
+- OpenCode scans `.opencode/agents/` automatically — no `opencode.json` agent block needed
+- Editing an agent file takes effect on next OpenCode startup with no other changes required
 
 The split means all agents share the common foundation (project layout, Lean tools) while each gets deep, targeted instructions without cluttering other agents' contexts.
 
@@ -127,13 +127,13 @@ Implemented agents (using `"agent"` key in `opencode.json`):
   "agent": {
     "build": { ... },      // highest-permission; general project + framework work
     "plan": { ... },       // read-only; designs proof/formalization strategies before execution
-    "reading": { ... },    // arXiv + local PDF ingestion, Lean skeleton generation
-    "latex-writer": { ... } // Lean → LaTeX + PDF compilation via latex MCP server
+    "read": { ... },    // arXiv + local PDF ingestion, Lean skeleton generation
+    "latex": { ... } // Lean → LaTeX + PDF compilation via latex MCP server
   }
 }
 ```
 
-Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was added alongside it. `reading` still uses `edit: "ask"` to require confirmation before writing. `latex-writer` was later widened to plain `edit: "allow"` because scoped edit permissions were leaving the edit tool unavailable in practice. Agent instructions live in `.opencode/rules/agents/<name>.md`; `opencode.json` `prompt` fields are kept in sync.
+Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was added alongside it. `read` still uses `edit: "ask"` to require confirmation before writing. `latex` was later widened to plain `edit: "allow"` because scoped edit permissions were leaving the edit tool unavailable in practice. Agent definitions now live in `.opencode/agents/<name>.md` (YAML frontmatter + prompt body); the `opencode.json` agent block has been removed.
 
 #### Agent Capabilities
 
@@ -148,14 +148,14 @@ Note: the `developer` agent was renamed `build`; a `plan` agent (read-only) was 
 - Checks `notes/` for prior attempts before proposing a strategy
 - Outputs structured plans to `.opencode/plans/` or inline; does not edit Lean source
 
-**`reading`:**
+**`read`:**
 - Fetch papers from arXiv; read local PDFs from `references/`
 - Extract text, equations, and mathematical notation
 - Identify formalizable theorems and circuit descriptions
 - Generate structured notes in `notes/papers/<id>.md`
-- Draft a basic Lean file skeleton (imports, declarations, theorem stubs) for the proof-writer
+- Draft a basic Lean file skeleton (imports, declarations, theorem stubs) for the prove agent
 
-**`latex-writer`:**
+**`latex`:**
 - Transcribe Lean theorem statements and proofs into mathematical prose
 - Rewrite Lean syntax into standard LaTeX notation while preserving meaning
 - Produce paper-style sections, theorem environments, and appendices in `latex/`
@@ -268,10 +268,10 @@ includes:
 - `generate_basic_lean_skeleton(concepts)`: Draft imports, definitions, and theorem placeholders from extracted concepts
 
 ### Integration with Existing Workflow
-- Reading agent can be invoked via `@reading-agent` in OpenCode
+- Read agent can be invoked via `@read` in OpenCode
 - Can save extracted content to `notes/research/` for reference
 - Can create `notes/papers/<paper-id>.md` with summary and formalization targets
-- Can draft an initial Lean skeleton for the proof-writer when a paper contains a clear formalization target
+- Can draft an initial Lean skeleton for the prove agent when a paper contains a clear formalization target
 
 ## Implementation Roadmap
 
@@ -282,7 +282,7 @@ includes:
 4. Update `AGENTS.md` with new framework structure
 
 ### Phase 2: Agent System ✅ Complete
-1. Define `build`, `plan`, `reading`, and `latex-writer` agents in `opencode.json` with permissions
+1. Define `build`, `plan`, `read`, and `latex` agents in `opencode.json` with permissions
 2. Agent instructions in `.opencode/rules/agents/<name>.md`; `prompt` fields in `opencode.json` kept in sync
 3. `latex` MCP server added to container (TeX Live + dedicated run.sh)
 4. Agent switching via `@<name>` syntax
@@ -324,7 +324,7 @@ includes:
 5. **Latex Writer Scope**: The latex writer owns `.tex` generation. PDF compilation goes through a dedicated `latex` MCP server — the agent has no bash permissions. Edit permissions are scoped to the `latex/` output directory.
 6. **Developer Agent Role**: Add a highest-permission developer agent for direct code work, framework engineering, and broader Lean development beyond proof-writing-only tasks.
 7. **Backward Compatibility**: Compatibility can be broken during the transition; the framework should optimize for the new architecture rather than preserving the old layout.
-8. **Priority Agent Order**: Implement `developer`, `reading`, and `latex-writer` first. `proof-writer`, `verifier`, and `code-reviewer` follow in a later pass.
+8. **Priority Agent Order**: Implement `developer`, `read`, and `latex` first. `prove`, `verifier`, and `code-reviewer` follow in a later pass.
 9. **Tiered Rules Architecture**: Common rules in `.opencode/rules/*.md` (auto-loaded to all sessions); agent-specific rules in `.opencode/rules/agents/<name>.md`, inlined into each agent's `prompt` field in `opencode.json`. The files are the editable source; `prompt` values are kept in sync.
 10. **Inline Agent Instructions**: Agent `prompt` fields should contain the full text of the corresponding rules file to maximize per-agent context quality without polluting other agents' sessions.
 
@@ -344,9 +344,9 @@ includes:
 - **April 23, 2026**: Phase 2 planning complete:
   - OpenCode `agent` block schema confirmed; permission categories confirmed
   - Tiered rules architecture decided: common rules auto-loaded from `.opencode/rules/`; agent-specific rules inlined into `prompt` field from `.opencode/rules/agents/<name>.md`
-  - Priority agents decided: `build` (formerly `developer`), `plan`, `reading`, `latex-writer`
+  - Priority agents decided: `build` (formerly `developer`), `plan`, `read`, `latex`
 - **April 23–24, 2026**: Phase 2 implemented:
-  - All four agents (`build`, `plan`, `reading`, `latex-writer`) wired into `opencode.json`
+  - All four agents (`build`, `plan`, `read`, `latex`) wired into `opencode.json`
   - `latex` MCP server added (`.mcp/latex-tools/`); TeX Live installed in container
   - Agent instructions written in `.opencode/rules/agents/`
   - `latex-out/` designated as latex-writer's output directory (gitignored)

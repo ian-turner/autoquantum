@@ -82,26 +82,27 @@ opencode run --attach http://localhost:4096 --model anthropic/claude-3-5-sonnet 
 
 ## OpenCode rules (`.opencode/rules/`)
 
-Rules are split into two layers:
-
-**Layer 1 — Common rules (auto-loaded into every session):**
+Common rules are auto-loaded into every session:
 
 | File | Contents |
 |------|----------|
-| `project-overview.md` | Project layout, key files, build commands, agent roster and how they relate *(to be created)* |
+| `project-overview.md` | Project layout, key files, build commands, agent roster and how they relate |
 | `lean-workflow.md` | Tool reference table, decision tree, mandatory iterative workflow, file-path format guidance, stop conditions |
 | `lean-proof-patterns.md` | Tensor-product proof patterns (Patterns 1–4), `onQubit`/`permuteGate` algebra notes, circuit decomposition patterns, pitfall table |
 
-**Layer 2 — Agent-specific instructions (inlined into each agent's `prompt` field in `opencode.json`):**
+## Agent files (`.opencode/agents/`)
+
+Each agent is defined as a `.md` file with YAML frontmatter (`name`, `description`, `mode`, `permission`) and a prompt body. OpenCode loads these automatically — no sync with `opencode.json` needed.
 
 | File | Agent | Contents |
 |------|-------|----------|
-| `agents/build.md` | `build` | Project engineering guidance, delegation patterns, cross-cutting change conventions |
-| `agents/proof-writer.md` | `proof-writer` | Goal-scoped Lean proof workflow for `Goals/` + `Solutions/`, with mandatory comparator verification hook |
-| `agents/reading.md` | `reading` | arXiv/PDF workflow, theorem extraction protocol, notes format, Lean skeleton conventions |
-| `agents/latex-writer.md` | `latex-writer` | Lean-to-LaTeX translation conventions, document structure, PDF compilation workflow |
+| `build.md` | `build` | Project engineering guidance, delegation patterns, cross-cutting change conventions |
+| `prove.md` | `prove` | Goal-scoped Lean proof workflow for `Goals/` + `Solutions/`, with mandatory comparator verification hook |
+| `plan.md` | `plan` | Proof strategy and multi-agent workflow planning (read-only) |
+| `read.md` | `read` | arXiv/PDF workflow, theorem extraction protocol, notes format, Lean skeleton conventions |
+| `latex.md` | `latex` | Lean-to-LaTeX translation conventions, document structure, PDF compilation workflow |
 
-Files in `.opencode/rules/agents/` are the canonical editable source. The `prompt` field in `opencode.json` for each agent is kept in sync with the corresponding file's contents.
+To edit an agent's prompt or permissions, edit the corresponding file directly. No `opencode.json` update required.
 
 ## OpenCode plugin (`.opencode/plugins/lean-tools.js`)
 
@@ -115,19 +116,19 @@ Provides four custom tools and three hooks:
 | `lean_find_sorry` | tool | Scans a file for `sorry` occurrences and returns each with 3 lines of context and `>>>` markers |
 | `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>.lean` and shows the paired `lean/Solutions/<Stem>.lean` target |
 | `verify_comparator_goal` | tool | Manually runs `scripts/verify_comparator.py --goal <Stem>` and returns the transcript |
-| `chat.message` | hook | Tracks the requested `goal=<Stem>` value for `@proof-writer` sessions from the incoming prompt text |
-| `event` + `session.idle` | hook | Mandatory post-response comparator run for `@proof-writer` sessions; shows a toast on pass/fail or missing goal |
+| `chat.message` | hook | Tracks the requested `goal=<Stem>` value for `@prove` sessions from the incoming prompt text |
+| `event` + `session.idle` | hook | Mandatory post-response comparator run for `@prove` sessions; shows a toast on pass/fail or missing goal |
 | `tool.execute.after` | hook | Best-effort: appends a `lean_lsp_lean_diagnostic_messages` reminder after any `.lean` file edit |
 
 **Diagnostic:** If `lean_lsp_lean_goal` and `lean_lsp_lean_multi_attempt` are not being used, check that MCP servers are connected (`opencode mcp list`) and that timeouts are not hitting. The original 15 s `lean` timeout was the root cause of DeepSeek skipping all interactive proof tools.
 
 ### Proof-writer invocation
 
-The `proof-writer` agent is goal-scoped. Pass the goal stem directly in the prompt:
+The `prove` agent is goal-scoped. Pass the goal stem directly in the prompt:
 
 ```text
-@proof-writer goal=Comm
-@proof-writer goal: HPlusCorrect
+@prove goal=Comm
+@prove goal: HPlusCorrect
 ```
 
-The plugin tracks that goal from the prompt and runs comparator automatically whenever the `proof-writer` session returns to idle, regardless of whether the agent chose to call any verification tool itself.
+The plugin tracks that goal from the prompt and runs comparator automatically whenever the `prove` session returns to idle, regardless of whether the agent chose to call any verification tool itself.
