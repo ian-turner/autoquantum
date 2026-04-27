@@ -1,75 +1,8 @@
-# Docker Containerization Plan for AutoQuantum
+# Docker Setup
 
-**Status**: ✅ **Implemented and verified** (2026-04-20)
+**Status**: Implemented (2026-04-20)
 
-All steps have been completed. The container runs OpenCode server with MCP tools `lean` and `lean_lsp` fully functional. Lean builds succeed inside container; host can connect via `opencode attach http://localhost:4096`.
-
-## Goal
-Create a fully reproducible, sandboxed environment where the **entire OpenCode session** (agent + Lean toolchain + MCP servers) runs inside a Docker container. The host only interacts with the container via mounted directories and Git operations; all file edits, builds, and proof verification happen in isolation.
-
-## Why
-- **Reproducibility** – anyone can run the same container and get identical Lean compilation results.
-- **Isolation** – agent cannot affect the host beyond the mounted workspace.
-- **Toolchain consistency** – eliminates “works on my machine” issues.
-- **CI readiness** – same container can be used in GitHub Actions for automated proof checking.
-
-## Prerequisites
-
-- **Host machine** must have Docker and Docker Compose installed.
-- **Host machine** must have OpenCode CLI installed (`npm install -g @anomalyco/opencode`) to connect to the container’s server (the TUI runs on the host).
-- **Git** installed on host (for commits outside the container).
-
-## Architecture
-
-### Container Contents
-1. **OpenCode CLI** – `npm install -g @anomalyco/opencode` (includes `opencode serve` command)
-2. **Minimal base image** – no Lean toolchain or Mathlib cache is baked into the image.
-3. **Dedicated cache-warmer service** – runs `scripts/bootstrap-lean.sh` and `scripts/setup_comparator.sh` with writable volume mounts to install `elan`, the Lean toolchain, the Lake package tree, and the comparator runtime binaries.
-4. **Main OpenCode service** – mounts the warmed `elan` volume read-only, mounts the warmed Lake package cache at a read-only seed path, mounts the warmed comparator tool cache read-only on `PATH`, copies that package tree into its own anonymous writable `.lake/packages` volume, and runs `lake update` against that private worktree before startup.
-5. **MCP server dependencies** – Python 3, `uv`, `mcp>=1.0.0`, `lean-lsp-mcp` (via npm or uvx).
-6. **Git, bash, coreutils** – for standard operations.
-7. **Non‑root user** (`opencode`) with UID/GID matching the host user (501:20) to preserve file ownership.
-
-### Workspace Layout
-```
-/workspace
-├── autoquantum/          # Mounted from host (─v $(pwd):/workspace)
-│   ├── lean/
-│   ├── .mcp/
-│   ├── notes/
-│   └── …
-├── .elan/                # Persistent volume, warmed by cache-warmer
-├── /home/opencode/.cache/lake-packages-seed  # Shared read-only warmed package cache
-├── /home/opencode/.cache/autoquantum-tools  # Shared read-only comparator tool cache
-└── autoquantum/lean/.lake/packages  # Per-container anonymous writable volume
-```
-
-### Sync Strategy
-- **Git commits** made inside the container write directly to the host’s `.git/` directory (instant sync).
-- **File edits** via OpenCode’s `edit` tool modify the mounted workspace immediately.
-- **Permissions** – container user matches host UID/GID so created files belong to the host user.
-- **Git credentials** – mount `~/.gitconfig` (read‑only) to inherit user name/email; SSH keys are not mounted (remote operations handled by host).
-
-## Decisions
-
-### 1. Container Scope
-**AutoQuantum‑specific image** – pre-install the OpenCode/MCP runtime in the image, keep the image itself lean, and use a separate compose service to warm the shared Lean volumes before the main service starts. The main `opencode` container uses the shared caches as read-only seeds but keeps its own private writable Lake package worktree because `lake build` mutates package directories.
-
-### 2. Git Credentials
-- **Do not mount SSH keys** – keep container simple and secure.
-- **Mount `~/.gitconfig` (read‑only)** to inherit user’s name and email.
-- **Agent authorship** – the OpenCode agent will add itself as a co‑author (`Co‑authored‑by:`) in commit messages, as specified in AGENTS.md.
-- **Push/pull** – if remote operations are needed, the host’s Git must handle them (container only makes commits to the mounted workspace).
-
-### 3. Development Workflow
-**Use Docker Compose** – define volumes, environment, and services in `docker‑compose.yml`. Provides a clear, extensible configuration that can be used both interactively and in CI.
-
-### 4. CI Integration
-**Design for CI** – the same image will be usable in GitHub Actions (non‑interactive, `lake build`). However, CI‑specific optimizations (e.g., caching strategy) can be deferred until needed.
-
-## Implementation
-
-All steps are complete. The `Dockerfile`, `docker-compose.yml`, and `scripts/bootstrap-lean.sh` implement the architecture above. MCP servers (`lean_tools` and `lean_lsp`) run inside the container via `.mcp/` launchers alongside the Python server implementations; `opencode.json` wires those launchers directly.
+Docker container runs an OpenCode server with the full Lean toolchain and MCP servers (`lean`, `lean_lsp`, `latex`).
 
 ## Workflow
 
@@ -80,11 +13,12 @@ opencode attach http://localhost:4096       # Connect from the host
 docker compose down                         # Stop when done
 ```
 
-The container mounts the repo as a volume, so file edits and git commits are immediately visible on the host.
-
 ## Operational Notes
-- **Dedicated prewarming with runtime fallback** — the `cache-warmer` compose service now pre-populates the shared `elan`, Lake, and comparator caches. `scripts/entrypoint.sh` still seeds a writable package worktree from the shared Lake cache and prepends the shared comparator `bin/` directory to `PATH`. When those runtime Lean caches are missing, `scripts/entrypoint.sh` still calls `scripts/bootstrap-lean.sh` directly so standalone containers can populate Lean on first start when their mounts are writable.
-- **Mutable Lake packages** — `lake build` writes into dependency directories such as `proofwidgets`, so the shared warmed package cache cannot be mounted directly at `.lake/packages` in read-only mode. The main service instead mounts the shared package cache read-only at a seed path and uses an anonymous per-container writable volume for `.lake/packages`.
-- **Bootstrap PATH handling** — `scripts/bootstrap-lean.sh` exports `~/.elan/bin` itself before invoking `lake`; do not rely on profile side effects alone, because the container entrypoints run non-login shells.
-- **Cache staleness** — if the Mathlib version or comparator refs change, prune the named volumes (`autoquantum-elan-cache`, `autoquantum-mathlib-cache`, `autoquantum-comparator-cache`) and rebuild.
-- **UID/GID** — the compose file hardcodes `user: “501:20”`. If your host UID/GID differs, override in a `docker-compose.override.yml`.
+
+- **Cache volumes** — `autoquantum-elan-cache`, `autoquantum-mathlib-cache`, `autoquantum-comparator-cache` persist across restarts. If Mathlib version or comparator refs change, prune these volumes and rebuild.
+- **Cache-warmer** — the `cache-warmer` compose service seeds shared Elan / Lake caches before the main service starts. The main container also falls back to running `scripts/bootstrap-lean.sh` directly if the shared caches are missing.
+- **Mutable Lake packages** — the main service mounts the warmed Lake seed read-only and copies it into a per-container writable anonymous volume at `.lake/packages`, because `lake build` mutates dependency directories.
+- **UID/GID** — compose hardcodes `user: "501:20"`. If your host UID/GID differs, override in `docker-compose.override.yml`.
+- **Bash recursion** — `.bashrc` sources `~/.elan/env` directly; do not source `.profile` from `.bashrc` (causes recursive segfault).
+- **Comparator tools** — installed under `/home/opencode/.cache/autoquantum-tools/bin` by `scripts/setup_comparator.sh`; the `cache-warmer` handles this via block-aware `rev` rewriting in `lakefile.toml` (the earlier regex was brittle against intervening TOML fields).
+- **Git sync** — container user UID/GID matches host; file edits and commits are immediately visible on the host. SSH keys are not mounted; remote operations must go through the host.

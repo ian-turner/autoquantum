@@ -29,13 +29,14 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now uses shared circuit-lift support (`idTensorCircuit`, `tensorWithIdCircuit`, and their `circuitMatrix_*` lemmas) plus `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Correctness statements were simplified to direct matrix equalities after removing `Circuit.CorrectFor`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB); remaining gaps are `qft_correct` and `qft2_correct` |
 | `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
 | `Algorithms/HPlus.lean` | No | All supporting lemmas proved (Gaps 1–4: `tensorState`, `hPlusVector_norm`, `basisState_zero_tensor`, `hPlusVector_succ`, `tensorWithId_apply`). Added `idTensorWith_apply`, `hadamardAt_last_eq`, `basisState_zero_tensor'`, `hPlusVector_succ'`. The file now uses the shared `tensorIndexEquiv` helper instead of repeating the `finProdFinEquiv`/`pow_add` bridge. `hPlus_correct` has structured inductive proof with n=0 base case complete; inductive step scaffolded using `hadamardAt_last_eq` and `idTensorWith_apply`, blocked on `hadamardAt_castSucc_eq`. Current proof work in `Lemmas/Gate.lean` has reduced that blocker to the split-entry transport identity for the larger swap under `(tensorIndexEquiv (m+1) 1)`, not to a simple lifted-permutation rewrite. |
-| `Goals/NC_Ex4_2.lean` | **Yes** | Worked example proving `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1`, with the Nielsen-Chuang specialization `exp(i x A) = cos x • I + i sin x • A` |
-| `Goals/NC_Thm4_1.lean` | No | New goal for Nielsen-Chuang theorem 4.1: every single-qubit unitary has a global-phase `Rz(β) Ry(γ) Rz(δ)` decomposition using AutoQuantum's `rz` and `ry` gates. |
-| `Goals/NC_Fig4_6.lean` | No | New goal for Nielsen-Chuang Figure 4.6: the two-CNOT decomposition with target gates `A`, `B`, `C` and core `controlPhase` implements `controlled U` when `U = exp(iα) A X B X C` and `ABC = I`. |
+| `Goals/NC_Ex4_2.lean` | **Solution exists** | `Solutions/NC_Ex4_2.lean` proves `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1`, with the Nielsen-Chuang specialization `exp(i x A) = cos x • I + i sin x • A` |
+| `Goals/NC_Thm4_1.lean` | No solution | Nielsen-Chuang theorem 4.1: every single-qubit unitary has a global-phase `Rz(β) Ry(γ) Rz(δ)` decomposition using AutoQuantum's `rz` and `ry` gates. |
+| `Goals/NC_Fig4_6.lean` | No solution | Nielsen-Chuang Figure 4.6: the two-CNOT decomposition with target gates `A`, `B`, `C` and core `controlPhase` implements `controlled U` when `U = exp(iα) A X B X C` and `ABC = I`. |
+| `Goals/Comm.lean` | Trusted challenge | Minimal end-to-end comparator check (`n + m = m + n`); always carries a sorry by design. `Solutions/Comm.lean` has the `omega` proof. |
 
 ## Container Usage
 
-A Docker container provides a fully reproducible environment with MCP servers pre-configured and the Lean toolchain bootstrapped into persistent caches on startup. See [Docker Setup](docker-containerization-plan.md) for the architecture.
+A Docker container provides a fully reproducible environment with MCP servers pre-configured and the Lean toolchain bootstrapped into persistent caches on startup. See [Docker Setup](docker-containerization-plan.md) for operational notes.
 
 ```bash
 docker compose build                        # Build the image (once)
@@ -48,7 +49,7 @@ docker compose down                         # Stop when done
 
 ## Open Work
 
-Current AutoQuantum source sorry count: **7** (as of April 26, 2026). The separate `Goals/` library also contains open goal statements, including `nc_thm4_1_goal` and `nc_fig4_6_goal`.
+Current AutoQuantum source sorry count: **7** (as of April 27, 2026) — HPlus:1, GHZ:3, QFT:2, Lemmas/Gate:1. `Goals/` files always carry one sorry each by design (they are trusted challenge statements); solution status is tracked in the table above.
 
 | Algorithm | Remaining gap | Primary reference |
 |-----------|--------------|-------------------|
@@ -79,14 +80,13 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Matrix Exponential for Involutions](matrix-exponential-involution.md) — Worked proof pattern for `exp (z • A)` when `A^2 = I`, including the `expSeries`/`HasSum.even_add_odd` route
-- [LaTeX Writer Edit Permission Fix](latex-writer-edit-permission-fix.md) — Why scoped `edit` permissions hid the edit tool from `latex` (formerly `latex-writer`), and why the repo now uses plain `edit: "allow"` with prompt-enforced write scope
-- [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — Planned `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs
+- [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs; scaffolding implemented
 - [Prove Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@prove` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
 - [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations
 - [Framework Generalization Plan](framework-generalization-plan.md) — Ongoing evolution of AutoQuantum into a reusable multi-agent framework; Phases 1–2 complete (`build`, `plan`, `read`, `latex` agents)
-- [Docker Containerization Plan](docker-containerization-plan.md) — Architecture and workflow for the fully reproducible OpenCode+Lean Docker environment (implemented)
+- [Docker Setup](docker-containerization-plan.md) — Workflow and operational notes for the OpenCode+Lean Docker environment
 - [QFT Gate Placement API](qft-api-roadmap.md) — Implemented gate placement API: `onQubit`, `controlledPhaseAt`, `bitReverse`, and the permutation-conjugation pattern
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 
