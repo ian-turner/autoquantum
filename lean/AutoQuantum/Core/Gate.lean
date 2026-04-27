@@ -160,6 +160,28 @@ lemma phaseRotationMatrix_isUnitary (k : ℕ) :
 noncomputable def phaseRotation (k : ℕ) : QGate 1 :=
   ⟨phaseRotationMatrix k, phaseRotationMatrix_isUnitary k⟩
 
+/-- The single-qubit phase gate `diag(1, exp(i α))` used on the control wire in
+Nielsen--Chuang Figure 4.6. -/
+noncomputable def controlPhaseMatrix (α : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  !![1, 0; 0, Complex.exp (Complex.I * (α : ℂ))]
+
+lemma controlPhaseMatrix_isUnitary (α : ℝ) :
+    controlPhaseMatrix α ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+  rw [Matrix.mem_unitaryGroup_iff]
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [controlPhaseMatrix, Matrix.mul_apply]
+  rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
+  have hθ : (starRingEnd ℂ) (Complex.I * (α : ℂ)) + Complex.I * (α : ℂ) = 0 := by
+    simp only [map_mul, Complex.conj_I, Complex.conj_ofReal]
+    ring
+  rw [hθ]
+  simp
+
+/-- The single-qubit phase gate `diag(1, exp(i α))`. -/
+noncomputable def controlPhase (α : ℝ) : QGate 1 :=
+  ⟨controlPhaseMatrix α, controlPhaseMatrix_isUnitary α⟩
+
 /-- The S gate = R_2: [[1, 0], [0, i]]. -/
 noncomputable def sGate : QGate 1 := phaseRotation 2
 

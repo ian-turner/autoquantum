@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 26, 2026 (Mathlib v4.29.0).
+Last updated: April 27, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -88,6 +88,7 @@ Last updated: April 26, 2026 (Mathlib v4.29.0).
 | Pauli X, Y, Z gates + unitarity proofs | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | Hadamard gate + unitarity proof | Done | `Core/Gate.lean` |
 | Phase rotation R_k + unitarity proof | Done | `Core/Gate.lean` |
+| `controlPhase α = diag(1, exp(iα))` + unitarity proof | Done | `Core/Gate.lean` (Apr 27, 2026) |
 | Rz/Rx/Ry rotation gates + unitarity proofs | **Done** (Apr 26, 2026) | `Core/Gate.lean` |
 | CNOT gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | SWAP gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
@@ -127,6 +128,7 @@ Last updated: April 26, 2026 (Mathlib v4.29.0).
 | GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
 | involution matrix exponential example `exp (z • A) = cosh z • I + sinh z • A` under `A ^ 2 = 1` | **Done** (Apr 25, 2026) | `Goals/NC_Ex4_2.lean` |
 | Nielsen-Chuang theorem 4.1 single-qubit `Z-Y-Z` Euler decomposition goal using `rz`/`ry` | Partial (goal stated; proof open) | `Goals/NC_Thm4_1.lean` |
+| Nielsen-Chuang Figure 4.6 controlled-`U` two-CNOT decomposition goal | Partial (goal stated using core `controlPhase`; circuit identity proof open) | `Goals/NC_Fig4_6.lean` |
 | `qft_correct` — main theorem | Deferred | `QFT.lean` |
 | Qubit measurement / Born rule | Future | — |
 
