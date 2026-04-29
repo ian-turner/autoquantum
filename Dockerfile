@@ -72,6 +72,7 @@ RUN mkdir -p .tools/bin && \
         https://github.com/leanprover/comparator.git .tools/src/comparator && \
     lake --dir .tools/src/comparator update && \
     lake --dir .tools/src/comparator build && \
+    lake --dir .tools/src/comparator/.lake/packages/lean4export build && \
     cp .tools/src/comparator/.lake/build/bin/comparator .tools/bin/comparator && \
     cp .tools/src/comparator/.lake/packages/lean4export/.lake/build/bin/lean4export .tools/bin/lean4export
 
