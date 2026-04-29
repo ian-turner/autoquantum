@@ -83,13 +83,13 @@ Finished a proof block?
 
 All `lean_lsp_*` tools require **absolute paths**. Use `lean_proof_step` to resolve paths automatically. If calling LSP tools directly, the path must be:
 ```
-/workspace/autoquantum/lean/AutoQuantum/Algorithms/HPlus.lean   ✓ absolute
-AutoQuantum/Algorithms/HPlus.lean                                ✗ relative (will fail)
+/workspace/autoquantum/lean/Goals/HPlus/HPlus.lean   ✓ absolute
+Goals/HPlus/HPlus.lean                               ✗ relative (will fail)
 ```
 
 `lean_check_file` uses paths **relative to `lean/`**:
 ```
-AutoQuantum/Algorithms/HPlus.lean   ✓ relative to lean/
+Goals/HPlus/HPlus.lean   ✓ relative to lean/
 ```
 
 ## Stop conditions

@@ -22,10 +22,15 @@ autoquantum/
 │   │       ├── Qubit.lean        -- Single-qubit primitives
 │   │       ├── Gate.lean         -- Gate definitions, placement API, permutations
 │   │       └── Circuit.lean      -- Circuit composition & semantics
-│   ├── Goals/                   # Problem statements (specs + theorems, sorry'd)
-│   │   ├── QFT.lean, GHZ.lean, HPlus.lean, Comm.lean
-│   │   └── NC_Ex4_2.lean, NC_Fig4_6.lean, NC_Thm4_1.lean
-│   └── Solutions/               # Completed proofs (mirrors Goals/, sorry-free when done)
+│   ├── Goals/                   # Problem statements — one subdirectory per goal
+│   │   ├── QFT/        -- QFT.lean + comparator.json
+│   │   ├── GHZ/        -- GHZ.lean + comparator.json
+│   │   ├── HPlus/      -- HPlus.lean + comparator.json
+│   │   ├── Comm/       -- Comm.lean + comparator.json
+│   │   ├── NC_Ex4_2/   -- NC_Ex4_2.lean + comparator.json
+│   │   ├── NC_Fig4_6/  -- NC_Fig4_6.lean + comparator.json
+│   │   └── NC_Thm4_1/ -- NC_Thm4_1.lean + comparator.json
+│   └── Solutions/               # Completed proofs (flat, sorry-free when done)
 │       └── Comm.lean, NC_Ex4_2.lean, NC_Fig4_6.lean, NC_Thm4_1.lean
 ├── .mcp/                        # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/               -- build/check/sorry_count (Python, runs via uv)

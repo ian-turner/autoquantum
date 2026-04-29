@@ -40,15 +40,29 @@ autoquantum/
 │   │       ├── Qubit.lean    -- Single-qubit primitives
 │   │       ├── Gate.lean     -- Gate definitions, placement API, permutations
 │   │       └── Circuit.lean  -- Circuit composition & semantics
-│   ├── Goals/          # Problem statements (circuit specs + correctness theorems, sorry'd)
-│   │   ├── QFT.lean    -- Quantum Fourier Transform
-│   │   ├── GHZ.lean    -- GHZ state and circuit
-│   │   ├── HPlus.lean  -- Uniform superposition |+⟩^⊗n
-│   │   ├── Comm.lean   -- Gate commutativity examples
-│   │   ├── NC_Ex4_2.lean    -- Nielsen & Chuang Exercise 4.2
-│   │   ├── NC_Fig4_6.lean   -- Nielsen & Chuang Figure 4.6
-│   │   └── NC_Thm4_1.lean   -- Nielsen & Chuang Theorem 4.1
-│   └── Solutions/      # Completed proofs (mirrors Goals/, sorry-free when done)
+│   ├── Goals/          # Problem statements — one subdirectory per goal
+│   │   ├── QFT/        -- Quantum Fourier Transform
+│   │   │   ├── QFT.lean
+│   │   │   └── comparator.json
+│   │   ├── GHZ/        -- GHZ state and circuit
+│   │   │   ├── GHZ.lean
+│   │   │   └── comparator.json
+│   │   ├── HPlus/      -- Uniform superposition |+⟩^⊗n
+│   │   │   ├── HPlus.lean
+│   │   │   └── comparator.json
+│   │   ├── Comm/       -- Gate commutativity examples
+│   │   │   ├── Comm.lean
+│   │   │   └── comparator.json
+│   │   ├── NC_Ex4_2/   -- Nielsen & Chuang Exercise 4.2
+│   │   │   ├── NC_Ex4_2.lean
+│   │   │   └── comparator.json
+│   │   ├── NC_Fig4_6/  -- Nielsen & Chuang Figure 4.6
+│   │   │   ├── NC_Fig4_6.lean
+│   │   │   └── comparator.json
+│   │   └── NC_Thm4_1/ -- Nielsen & Chuang Theorem 4.1
+│   │       ├── NC_Thm4_1.lean
+│   │       └── comparator.json
+│   └── Solutions/      # Completed proofs (flat, sorry-free when done)
 │       ├── Comm.lean
 │       ├── NC_Ex4_2.lean
 │       ├── NC_Fig4_6.lean
@@ -172,9 +186,11 @@ When generating or verifying a quantum circuit proof, follow this template:
 
 ## Adding New Algorithms
 
-1. Create `lean/Goals/<AlgorithmName>.lean` with the circuit definition and correctness theorem (use `sorry` for unproven goals).
-2. Put `import AutoQuantum.Core.Circuit` (and any Mathlib imports) at the very top, before the module doc comment.
-3. Once the proof is complete, create the corresponding `lean/Solutions/<AlgorithmName>.lean` (sorry-free).
+1. Create a folder `lean/Goals/<AlgorithmName>/` containing:
+   - `<AlgorithmName>.lean` — circuit definition and correctness theorem (use `sorry` for unproven goals).
+   - `comparator.json` — comparator config with `challenge_module: "Goals.<AlgorithmName>.<AlgorithmName>"`, `solution_module: "Solutions.<AlgorithmName>"`, and the theorem names.
+2. Put `import AutoQuantum.Core.Circuit` (and any Mathlib imports) at the very top of the `.lean` file, before the module doc comment.
+3. Once the proof is complete, create the corresponding flat `lean/Solutions/<AlgorithmName>.lean` (sorry-free).
 4. Add a kebab-case note in `notes/` and link it from `notes/home.md` if the algorithm has non-trivial prerequisites.
 
 ## Testing

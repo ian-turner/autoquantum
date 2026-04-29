@@ -13,14 +13,14 @@ permission:
 
 # Prove Agent — Instructions
 
-You are the `prove` agent for AutoQuantum. Your job is to prove exactly one comparator goal at a time by writing a candidate theorem in `lean/Solutions/<Goal>.lean` that matches the trusted statement in `lean/Goals/<Goal>.lean`.
+You are the `prove` agent for AutoQuantum. Your job is to prove exactly one comparator goal at a time by writing a candidate theorem in `lean/Solutions/<Goal>.lean` that matches the trusted statement in `lean/Goals/<Goal>/<Goal>.lean`.
 
 ## Identifying the goal
 
 Infer the goal stem from the user's prompt. Any of the following are valid ways to specify it:
 
-- A file path: `lean/Goals/Comm.lean` or `Goals/Comm.lean`
-- A module name: `Goals.Comm` or `Solutions.Comm`
+- A file path: `lean/Goals/Comm/Comm.lean` or `Goals/Comm/Comm.lean`
+- A module name: `Goals.Comm.Comm` or `Solutions.Comm`
 - A bare name: `Comm`, `NC_Ex4_2`, `HPlus`
 - Natural language: "prove the goal in TestGoal.lean", "work on the NC_Ex4_2 goal"
 
@@ -28,7 +28,7 @@ The goal stem is the filename without the `.lean` extension (e.g. `Comm`, `NC_Ex
 
 ## Responsibilities
 
-- Read the trusted theorem from `lean/Goals/<Goal>.lean`
+- Read the trusted theorem from `lean/Goals/<Goal>/<Goal>.lean`
 - Edit only `lean/Solutions/<Goal>.lean`
 - Use Lean MCP and LSP tools to iterate on the proof
 - Keep the solution theorem name and statement aligned with the trusted goal
@@ -59,11 +59,13 @@ The goal stem is the filename without the `.lean` extension (e.g. `Comm`, `NC_Ex
 
 ## Comparator contract
 
-- Trusted module: `Goals.<Goal>`
-- Candidate module: `Solutions.<Goal>`
-- Theorem name: derived from the file stem in snake case with `_goal` suffix
+Each goal folder contains a `comparator.json` that is the authoritative source for these values. Read it before starting — do not guess.
 
-Example: `Comm` -> `comm_goal`
+- Trusted module: `Goals.<Goal>.<Goal>` (two-level path — folder then file)
+- Candidate module: `Solutions.<Goal>` (flat)
+- Theorem names: listed in `comparator.json` under `"theorem_names"`
+
+Example for `Comm`: trusted `Goals.Comm.Comm`, candidate `Solutions.Comm`, theorem `comm_goal`.
 
 ## Finding Mathlib lemmas
 

@@ -28,7 +28,8 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
 
   function goalPaths(stem) {
     return {
-      goalFile: join(leanRoot, "Goals", `${stem}.lean`),
+      goalFile: join(leanRoot, "Goals", stem, `${stem}.lean`),
+      comparatorFile: join(leanRoot, "Goals", stem, "comparator.json"),
       solutionFile: join(leanRoot, "Solutions", `${stem}.lean`),
     };
   }
@@ -38,6 +39,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
     const patterns = [
       /(?:^|\b)goal\s*[:=]\s*([A-Za-z0-9_]+)\b/i,
       /(?:^|\b)goal\s+([A-Za-z0-9_]+)\b/i,
+      /lean\/Goals\/([A-Za-z0-9_]+)\/[A-Za-z0-9_]+\.lean\b/,
       /lean\/Goals\/([A-Za-z0-9_]+)\.lean\b/,
       /Goals\.([A-Za-z0-9_]+)\b/,
       /lean\/Solutions\/([A-Za-z0-9_]+)\.lean\b/,
@@ -117,9 +119,9 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
             .describe(
               "Lean file path in any format: relative to project root, " +
               "relative to lean/, or absolute. Examples: " +
-              "'AutoQuantum/Algorithms/HPlus.lean', " +
-              "'lean/AutoQuantum/Algorithms/HPlus.lean', " +
-              "'/workspace/autoquantum/lean/AutoQuantum/Algorithms/HPlus.lean'"
+              "'Goals/HPlus/HPlus.lean', " +
+              "'lean/Goals/HPlus/HPlus.lean', " +
+              "'/workspace/autoquantum/lean/Goals/HPlus/HPlus.lean'"
             ),
           line: tool.schema
             .number()
@@ -201,19 +203,28 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
       lean_goal_context: tool({
         description:
           "Load the trusted comparator goal contract for a goal stem in " +
-          "`lean/Goals/<Stem>.lean` and show the matching `Solutions` target.",
+          "`lean/Goals/<Stem>/<Stem>.lean` and show the matching `Solutions` target.",
         args: {
           goal: tool.schema
             .string()
             .describe("Goal stem, for example `Comm` or `HPlusCorrect`"),
         },
         async execute({ goal }) {
-          const { goalFile, solutionFile } = goalPaths(goal);
+          const { goalFile, comparatorFile, solutionFile } = goalPaths(goal);
           if (!existsSync(goalFile)) {
             return `Goal file not found: ${goalFile}`;
           }
 
-          const theoremName = stemToTheorem(goal);
+          let theoremNames = [stemToTheorem(goal)];
+          let challengeModule = `Goals.${goal}.${goal}`;
+          if (existsSync(comparatorFile)) {
+            try {
+              const cfg = JSON.parse(readFileSync(comparatorFile, "utf8"));
+              if (cfg.theorem_names?.length) theoremNames = cfg.theorem_names;
+              if (cfg.challenge_module) challengeModule = cfg.challenge_module;
+            } catch (_) {}
+          }
+
           const goalSource = readFileSync(goalFile, "utf8").trim();
           const solutionExists = existsSync(solutionFile);
           const solutionSource = solutionExists
@@ -222,10 +233,11 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
 
           return [
             `Goal stem: ${goal}`,
-            `Theorem name: ${theoremName}`,
-            `Challenge module: Goals.${goal}`,
+            `Theorem names: ${theoremNames.join(", ")}`,
+            `Challenge module: ${challengeModule}`,
             `Solution module: Solutions.${goal}`,
             `Goal file: ${goalFile}`,
+            `Comparator config: ${comparatorFile}`,
             `Solution file: ${solutionFile}`,
             "",
             "Trusted goal source:",
