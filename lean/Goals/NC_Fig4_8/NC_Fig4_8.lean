@@ -28,6 +28,6 @@ noncomputable def nc_fig4_8_circuit (U : QGate 1) (V : QGate 1)
   ]
 
 /-- Nielsen--Chuang Figure 4.8 circuit identity -/
-theorem nc_fig_4_8_goal (U : QGate 1) (V : QGate 1) (hv : V * V = U) :
+theorem nc_fig4_8_goal (U : QGate 1) (V : QGate 1) (hv : V * V = U) :
     Circuit.Implements (nc_fig4_8_circuit U V hv) (controlled (controlled U)) := by
   sorry
