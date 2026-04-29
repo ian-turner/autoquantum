@@ -54,7 +54,8 @@ RUN curl -sSf https://elan.lean-lang.org/elan-init.sh | sh -s -- -y --default-to
 # Copy project and resolve Lean dependencies (packages land at lean/.lake/packages)
 COPY --chown=opencode:20 . /workspace/autoquantum
 WORKDIR /workspace/autoquantum/lean
-RUN lake update && lake exe cache get
+# Shallow-clone dependencies so the large mathlib repo doesn't time out
+RUN git config --global fetch.depth 1 && lake update && lake exe cache get
 
 # Build lean4export
 WORKDIR /home/opencode
