@@ -54,8 +54,16 @@ RUN curl -sSf https://elan.lean-lang.org/elan-init.sh | sh -s -- -y --default-to
 # Copy project and resolve Lean dependencies (packages land at lean/.lake/packages)
 COPY --chown=opencode:20 . /workspace/autoquantum
 WORKDIR /workspace/autoquantum/lean
-# Shallow-clone dependencies so the large mathlib repo doesn't time out
-RUN git config --global fetch.depth 1 && lake update && lake exe cache get
+# Pre-clone large dependencies with --depth 1 before lake update so Lake
+# doesn't do a full clone of the ~500 MB mathlib repo
+RUN mkdir -p .lake/packages && \
+    git clone --depth 1 --branch v4.29.0 \
+        https://github.com/leanprover-community/mathlib4 \
+        .lake/packages/mathlib && \
+    git clone --depth 1 --branch v4.29.0 \
+        https://github.com/leanprover-community/repl \
+        .lake/packages/repl && \
+    lake update && lake exe cache get
 
 # Build lean4export
 WORKDIR /home/opencode
