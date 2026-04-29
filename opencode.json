@@ -11,7 +11,7 @@
         ".mcp/lean-tools/run.sh"
       ],
       "enabled": true,
-      "timeout": 180000
+      "timeout": 600000
     },
     "lean_lsp": {
       "type": "local",
@@ -21,7 +21,7 @@
         "LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh"
       ],
       "enabled": true,
-      "timeout": 120000
+      "timeout": 300000
     },
     "latex": {
       "type": "local",
@@ -30,7 +30,7 @@
         ".mcp/latex-tools/run.sh"
       ],
       "enabled": true,
-      "timeout": 120000
+      "timeout": 300000
     }
   }
 }
