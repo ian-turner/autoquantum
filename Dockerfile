@@ -65,22 +65,15 @@ RUN mkdir -p .lake/packages && \
         .lake/packages/repl && \
     lake update && lake exe cache get
 
-# Build lean4export
+# Build comparator and lean4export (lean4export is a dependency of comparator)
 WORKDIR /home/opencode
-RUN mkdir -p .tools/src .tools/bin && \
-    git clone --depth 1 --branch v4.29.0 https://github.com/leanprover/lean4export.git .tools/src/lean4export && \
-    lake --dir .tools/src/lean4export update && \
-    lake --dir .tools/src/lean4export build && \
-    cp .tools/src/lean4export/.lake/build/bin/lean4export .tools/bin/lean4export
-
-# Build comparator (pin its lean4export dependency to v4.29.0)
-RUN git clone --depth 1 --branch v4.29.0 https://github.com/leanprover/comparator.git .tools/src/comparator && \
-    python3 /workspace/autoquantum/scripts/pin-comparator.py .tools/src/comparator/lakefile.toml v4.29.0 && \
-    rm -f .tools/src/comparator/lake-manifest.json && \
-    rm -rf .tools/src/comparator/.lake && \
+RUN mkdir -p .tools/bin && \
+    git clone --filter=blob:none --depth 1 --branch v4.29.0 \
+        https://github.com/leanprover/comparator.git .tools/src/comparator && \
     lake --dir .tools/src/comparator update && \
     lake --dir .tools/src/comparator build && \
-    cp .tools/src/comparator/.lake/build/bin/comparator .tools/bin/comparator
+    cp .tools/src/comparator/.lake/build/bin/comparator .tools/bin/comparator && \
+    cp .tools/src/comparator/.lake/packages/lean4export/.lake/build/bin/lean4export .tools/bin/lean4export
 
 # Build landrun
 RUN git clone --depth 1 https://github.com/Zouuup/landrun.git .tools/src/landrun && \
