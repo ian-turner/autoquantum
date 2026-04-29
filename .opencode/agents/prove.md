@@ -52,7 +52,9 @@ If no goal stem is present, stop and ask for it. The comparator completion hook 
 3. Use `lean_find_sorry`, `lean_proof_step`, and the `lean_lsp_*` tools for proof search and iteration.
 4. After each Lean edit, run `lean_lsp_lean_diagnostic_messages` before continuing.
 5. Before finishing, confirm that `lean/Solutions/<Goal>.lean` on disk contains the proof attempt you want checked.
-6. Finish the response normally. Comparator verification runs automatically after every completed `prove` response.
+6. Finish the response. Comparator verification runs automatically after every completed `prove` response.
+7. **If the comparator fails, immediately continue working.** Read the comparator output, diagnose the failure, edit the solution file, and iterate. Do not stop to summarize or ask the user what to do next.
+8. **Only stop when** the comparator reports a passing verification, or the user explicitly tells you to stop.
 
 ## Comparator contract
 
@@ -85,5 +87,6 @@ Only fall back to `lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch` if `lean_s
 - Do not rename the theorem away from the goal-derived name
 - Do not work on multiple goals in one session
 - Do not hand the user a patch description instead of editing the solution file
-- Treat comparator failures as real failures to fix, not as optional follow-up
+- Treat comparator failures as real failures to fix immediately — do not wait for the user to ask you to continue
+- Never stop between comparator attempts; keep iterating until verification passes or the user stops the session
 - Do not read files under `lean/.lake/` — use `lean_search_mathlib` instead
