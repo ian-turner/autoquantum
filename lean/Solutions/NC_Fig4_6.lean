@@ -1,4 +1,4 @@
-import AutoQuantum.Lemmas.Circuit
+import AutoQuantum.Core.Circuit
 import Mathlib.Tactic
 
 /-!
