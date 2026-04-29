@@ -10,8 +10,7 @@ Central index for all project notes. Start here.
 
 ## Build Status
 
-Mathlib pinned to **v4.29.0** (`lean/lean-toolchain`). `lake build AutoQuantum` succeeds with 0 errors.
-All non-`sorry` linter warnings in the Lean sources were cleaned up on April 17, 2026; current warnings come from the unfinished QFT development.
+Mathlib pinned to **v4.29.0** (`lean/lean-toolchain`). `lake build AutoQuantum` succeeds with 0 errors and 0 warnings.
 
 ```bash
 cd lean && lake update && lake exe cache get && lake build AutoQuantum
@@ -23,16 +22,16 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 |------|-------------|-------|
 | `Core/Hilbert.lean` | **Yes** | All proofs complete as of c4dcc6b |
 | `Core/Qubit.lean` | **Yes** | All single-qubit basis, superposition, and Bloch-sphere proofs complete; lint-clean as of April 17, 2026 |
-| `Core/Gate.lean` | **Yes** | Core gates are sorry-free; qubit-permutation and arbitrary single-qubit placement groundwork added on April 18, 2026, the generic `controlled : QGate k -> QGate (k + 1)` constructor was added on April 23, 2026, Rx/Ry rotation-gate unitarity was completed on April 26, 2026, and the one-qubit `controlPhase` gate from Nielsen-Chuang Figure 4.6 was added on April 27, 2026 |
-| `Lemmas/Gate.lean` | **No** | `tensorWithId_apply`, `idTensorWith_apply`, `hadamardAt_last_eq` proved. Added permutation-matrix helper lemmas (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`), base-2 digit lemmas for `tensorIndexEquiv n 1` under `finFunctionFinEquiv.symm`, `finFunctionFinEquiv_symm_qubitPerm_apply`, and new tensor-decomposition helpers (`finFunctionFinEquiv_symm_tensorIndex_cons`, `tensorIndexEquiv_symm_{snd_eq_digit_zero,fst_apply_eq_digit_succ}`, `tensorWithId_one_entry`). `hadamardAt_castSucc_eq` is still the remaining sorry; the blocker is now isolated as the exact transport identity for the big swap through the `(tensorIndexEquiv (m+1) 1)` split. |
-| `Core/Circuit.lean` | **Yes** | Core circuit API simplified: `Circuit n = List (QGate n)` and the primary correctness predicate is now `Circuit.Implements` |
-| `Algorithms/QFT.lean` | No | `dft_orthogonality`, `qftMatrix_isUnitary`, `omega_two`, `qftCircuit_two`, and the explicit target lemma `qftMatrix_two` are proved; general-case scaffolding now uses shared circuit-lift support (`idTensorCircuit`, `tensorWithIdCircuit`, and their `circuitMatrix_*` lemmas) plus `msbIndex`, `lsbIndex`, and `dftMatrix_succ_entry`. Correctness statements were simplified to direct matrix equalities after removing `Circuit.CorrectFor`. Current blocker: the recursive `target.succ` layers appear to align with `tensorWithId 1` (new LSB); remaining gaps are `qft_correct` and `qft2_correct` |
-| `Algorithms/GHZ.lean` | No | GHZ state and circuit defined; **normalization lemma proved**; correctness proofs for n=1,2 and general case are `sorry`-tagged; scaffolding includes `allOnesIndex`, `ghzVector`, `ghzState`, `ghzCircuit` (now requires n ≥ 1), and correctness theorems for n=1,2 with general theorem requiring n ≥ 1. |
-| `Algorithms/HPlus.lean` | No | All supporting lemmas proved (Gaps 1–4: `tensorState`, `hPlusVector_norm`, `basisState_zero_tensor`, `hPlusVector_succ`, `tensorWithId_apply`). Added `idTensorWith_apply`, `hadamardAt_last_eq`, `basisState_zero_tensor'`, `hPlusVector_succ'`. The file now uses the shared `tensorIndexEquiv` helper instead of repeating the `finProdFinEquiv`/`pow_add` bridge. `hPlus_correct` has structured inductive proof with n=0 base case complete; inductive step scaffolded using `hadamardAt_last_eq` and `idTensorWith_apply`, blocked on `hadamardAt_castSucc_eq`. Current proof work in `Lemmas/Gate.lean` has reduced that blocker to the split-entry transport identity for the larger swap under `(tensorIndexEquiv (m+1) 1)`, not to a simple lifted-permutation rewrite. |
-| `Goals/NC_Ex4_2.lean` | **Solution exists** | `Solutions/NC_Ex4_2.lean` proves `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1`, with the Nielsen-Chuang specialization `exp(i x A) = cos x • I + i sin x • A` |
-| `Goals/NC_Thm4_1.lean` | No solution | Nielsen-Chuang theorem 4.1: every single-qubit unitary has a global-phase `Rz(β) Ry(γ) Rz(δ)` decomposition using AutoQuantum's `rz` and `ry` gates. |
-| `Goals/NC_Fig4_6.lean` | No solution | Nielsen-Chuang Figure 4.6: the two-CNOT decomposition with target gates `A`, `B`, `C` and core `controlPhase` implements `controlled U` when `U = exp(iα) A X B X C` and `ABC = I`. |
-| `Goals/Comm.lean` | Trusted challenge | Minimal end-to-end comparator check (`n + m = m + n`); always carries a sorry by design. `Solutions/Comm.lean` has the `omega` proof. |
+| `Core/Gate.lean` | **Yes** | Core gates, qubit permutations, generic `controlled` constructor, Rx/Ry rotation gates, and one-qubit `controlPhase` gate (April 27, 2026) |
+| `Core/Circuit.lean` | **Yes** | `Circuit n = List (QGate n)`; includes `idTensorCircuit`, `tensorWithIdCircuit`, `circuitMatrix`, `circuitMatrix_append`, and `Circuit.Implements` |
+| `Core/Tensor.lean` | **Yes** | Tensor basis equivalence `tensorIndexEquiv k m` |
+| `Goals/Comm.lean` | Trusted challenge | `n + m = m + n`; always sorry by design. `Solutions/Comm.lean` has the `omega` proof. |
+| `Goals/NC_Ex4_2.lean` | **Solution exists** | `Solutions/NC_Ex4_2.lean` proves `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1` |
+| `Goals/NC_Thm4_1.lean` | **Solution exists** | `Solutions/NC_Thm4_1.lean` proves Nielsen-Chuang theorem 4.1: single-qubit Z-Y-Z Euler decomposition |
+| `Goals/NC_Fig4_6.lean` | **Solution exists** | `Solutions/NC_Fig4_6.lean` proves Nielsen-Chuang Figure 4.6: two-CNOT controlled-U decomposition |
+| `Goals/HPlus.lean` | No solution | `hPlusState` norm proof + `hPlus_correct` both sorry'd |
+| `Goals/GHZ.lean` | No solution | `ghzState` norm proof + `ghz_correct` both sorry'd |
+| `Goals/QFT.lean` | No solution | `qftGate` isUnitary + `qft_correct` both sorry'd |
 
 ## Container Usage
 
@@ -47,21 +46,27 @@ docker compose down                         # Stop when done
 
 **Prerequisites:** Docker, Docker Compose, OpenCode CLI on the host.
 
-## Open Work
+## Open Goals
 
-Current AutoQuantum source sorry count: **7** (as of April 27, 2026) — HPlus:1, GHZ:3, QFT:2, Lemmas/Gate:1. `Goals/` files always carry one sorry each by design (they are trusted challenge statements); solution status is tracked in the table above.
+Six open sorries across three `Goals/` files. Goals carry sorry'd theorems by design; the aim is to write a `Solutions/` file that eliminates each sorry.
 
-| Algorithm | Remaining gap | Primary reference |
-|-----------|--------------|-------------------|
-| `QFT.lean` | `qft2_correct` — explicit 4×4 proof; `qft_correct` — general inductive proof | [QFT Formalization Plan](qft-formalization-plan.md), [QFT General Proof Obligations](qft-general-proof-obligations.md) |
-| `GHZ.lean` | Correctness for n=1, n=2, and general case | GHZ section of this file |
-| `HPlus.lean` | `hPlus_correct` — tensor-induction proof | [HPlus Proof Plan](hplus-proof-plan.md) |
-| `Goals/NC_Thm4_1.lean` | `nc_thm4_1_goal` — single-qubit Z-Y-Z Euler decomposition up to global phase | Nielsen & Chuang, theorem 4.1, p. 175 |
-| `Goals/NC_Fig4_6.lean` | `nc_fig4_6_goal` — controlled-`U` two-CNOT decomposition using core `controlPhase` | Nielsen & Chuang, Figure 4.6, p. 181 |
+| Goal file | Theorems to prove | Notes |
+|-----------|------------------|-------|
+| `Goals/HPlus.lean` | `hPlus_correct` (uniform superposition circuit), `hPlusState` norm | Induction on n; back-qubit route (Hadamard at last qubit) is likely easiest. See HPlus section below for dead ends. |
+| `Goals/GHZ.lean` | `ghz_correct` (GHZ state preparation circuit), `ghzState` norm | Hadamard on qubit 0 then CNOT chain; n=1,2 cases may be a useful warmup. |
+| `Goals/QFT.lean` | `qft_correct` (QFT circuit = QFT matrix), `qftGate` isUnitary | QFT matrix unitarity requires DFT orthogonality; circuit correctness requires tensor-product induction over `hadamardAt`, `controlledPhaseAt`, and `bitReverse` layers. |
 
-For QFT, the recommended next step is proving explicit 4×4 matrix lemmas for `hadamardAt 0`, `hadamardAt 1`, `controlledPhaseAt 1 0 2`, and `bitReverse`, then assembling `qft2_correct`. The general proof requires shifted-gate-placement lemmas (`hadamardAt q.succ = tensorWithId 1 ...`) plus recursive bit-reversal decomposition — see [QFT Recursion Indexing](qft-recursion-indexing.md).
+### HPlus
 
-For HPlus, Gaps 1–4 are complete and the back-qubit induction route was taken: `hadamardAt_last_eq` and `idTensorWith_apply` are both proved. The current blocker is `hadamardAt_castSucc_eq` in `Lemmas/Gate.lean` — a conjugation-by-swap identity showing that swapping the last qubit with position `castSucc i` transforms `idTensorWith (m+1) hadamard` into `tensorWithId 1 (hadamardAt i)`. The goal is reduced to a transport fact through `(tensorIndexEquiv (m+1) 1)`. See [HPlus Proof Plan](hplus-proof-plan.md).
+The n-qubit uniform superposition state is `(1/√(2^n)) ∑_k |k⟩`. The preparation circuit applies `hadamardAt i` for each `i : Fin n`.
+
+**Dead ends (do not retry):**
+- Front-qubit induction with `hadamardAt 0 = tensorWithId n hadamard` — requires unpacking `qubitPerm (swap last 0)` through `finFunctionFinEquiv`. Confirmed hard; DeepSeek failed after ~6 attempts (April 20, 2026).
+
+**Recommended approach:**
+- Back-qubit induction: `hadamardAt (Fin.last n) = idTensorWith n hadamard` closes with `simp [Equiv.swap_self]`.
+- `idTensorWith_apply` mirrors `tensorWithId_apply` (same Matrix.reindex + Kronecker entry pattern).
+- Current blocker: `hadamardAt_castSucc_eq` — conjugation-by-swap identity showing swapping qubit `castSucc i` with the last qubit transforms `idTensorWith (m+1) H` into `tensorWithId 1 (hadamardAt i)`.
 
 ### GHZ
 
@@ -69,7 +74,11 @@ The n-qubit GHZ state is `(|0…0⟩ + |1…1⟩) / √2`. The preparation circu
 1. `hadamardAt 0` — put qubit 0 into superposition
 2. `controlledAt 0 i.succ pauliX` for each `i : Fin (n-1)` — spread the entanglement
 
-The normalization lemma `norm_ghzVector` is proved. The three remaining sorries are `ghz_correct_one` (n=1), `ghz_correct_two` (n=2), and `ghz_correct` (general, requires n ≥ 1). No proof attempts have been made yet; the n=1 case has a partial `simp` scaffold already in place.
+Circuit is defined for `n ≥ 1`. No proof attempts yet; the n=1 case is a reasonable starting point.
+
+### QFT
+
+The n-qubit QFT maps `|j⟩ ↦ (1/√(2^n)) ∑_k ω^{jk} |k⟩` where `ω = exp(2πi/2^n)`. The circuit applies Hadamard + controlled phase rotations per qubit, then a bit-reversal. Both `qftMatrix` and `qftCircuit` are defined; proving their equality requires tensor-product induction on circuit layers.
 
 ## Topics
 
@@ -79,7 +88,6 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
-- [Matrix Exponential for Involutions](matrix-exponential-involution.md) — Worked proof pattern for `exp (z • A)` when `A^2 = I`, including the `expSeries`/`HasSum.even_add_odd` route
 - [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs; scaffolding implemented
 - [Prove Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@prove` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
@@ -87,13 +95,5 @@ The normalization lemma `norm_ghzVector` is proved. The three remaining sorries 
 - [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations
 - [Framework Generalization Plan](framework-generalization-plan.md) — Ongoing evolution of AutoQuantum into a reusable multi-agent framework; Phases 1–2 complete (`build`, `plan`, `read`, `latex` agents)
 - [Docker Setup](docker-containerization-plan.md) — Workflow and operational notes for the OpenCode+Lean Docker environment
-- [QFT Gate Placement API](qft-api-roadmap.md) — Implemented gate placement API: `onQubit`, `controlledPhaseAt`, `bitReverse`, and the permutation-conjugation pattern
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 
-### Algorithms
-- [Proof Attempt Log](proof-attempts.md) — running log of approaches tried per sorry; brief new agent sessions from here
-- [QFT Formalization Plan](qft-formalization-plan.md) — Step-by-step proof strategy for QFT correctness; current sorry status and known obstacles
-- [QFT Recursion Indexing](qft-recursion-indexing.md) — Why the unfinished general proof appears to need `tensorWithId 1` rather than the older suffix-lift helper
-- [QFT Textbook Proof Audit](qft-textbook-proof-audit.md) — Comparison of `QFT.lean` against Nielsen–Chuang and Fenner, with the recommended proof shape for the remaining correctness theorem
-- [QFT General Proof Obligations](qft-general-proof-obligations.md) — Exact circuit-side lemma inventory needed to finish `qftCircuit_succ_matrix` without depending on `qft2_correct`
-- [HPlus Proof Plan](hplus-proof-plan.md) — Lemma inventory and recommended order for proving `hPlus_correct` via tensor-product induction; 7 gaps identified across Core/Hilbert, Lemmas/Gate, Lemmas/Circuit

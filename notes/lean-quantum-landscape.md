@@ -93,43 +93,21 @@ Last updated: April 27, 2026 (Mathlib v4.29.0).
 | CNOT gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | SWAP gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Core/Gate.lean` |
-| `applyGate_vec_apply` — coordinate formula for gate application | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
-| `applyGate_basisState_vec_apply` — gate on basis state gives matrix column | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
-| `hadamard_apply_ket0` — H\|0⟩ = \|+⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
-| `hadamard_apply_ket1` — H\|1⟩ = \|−⟩ | **Done** (Apr 19, 2026) | `Lemmas/Gate.lean` |
 | `tensorWithId`, `idTensorWith`, generic `controlled` | Done | `Core/Gate.lean` |
-| `tensorWithId_apply`, `idTensorWith_apply` — action on tensor states | Done | `Lemmas/Tensor.lean` |
 | `tensorIndexEquiv k m` — canonical tensor basis equivalence | Done | `Core/Tensor.lean` |
 | `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `Circuit n` — `List (QGate n)` | Done | `Core/Circuit.lean` |
-| `idTensorCircuit m c` — suffix-lift a circuit by mapping `idTensorWith m` over every gate | Done | `Core/Circuit.lean` |
-| `tensorWithIdCircuit m c` — prefix-lift a circuit by mapping `tensorWithId m` over every gate | Done | `Core/Circuit.lean` |
-| `circuitMatrix` — product of gate matrices | Done | `Core/Circuit.lean` |
-| `circuitMatrix_append` — composition lemma | Done | `Core/Circuit.lean` |
-| `Circuit.Implements` — primary correctness predicate | Done | `Core/Circuit.lean` |
-| `tensorWithId_mul`, `tensorWithId_one`, `idTensorWith_mul`, `idTensorWith_one`, `circuitMatrix_tensorWithIdCircuit`, `circuitMatrix_idTensorCircuit` | Done | `Lemmas/Gate.lean` / `Lemmas/Circuit.lean` |
-| permutation-matrix proof infrastructure (`permuteQubits_coe`, `permMatrix_mul_apply`, `mul_permMatrix_apply`, `finFunctionFinEquiv_symm_tensorIndex_{zero,succ,cons}`, `finFunctionFinEquiv_symm_qubitPerm_apply`, `tensorIndexEquiv_symm_{snd_eq_digit_zero,fst_apply_eq_digit_succ}`, and `tensorWithId_one_entry`) | **Done** (Apr 22, 2026) | `Lemmas/Gate.lean` |
-| `qftMatrix n` — the QFT unitary | Done | `QFT.lean` |
-| `omega_pow_two_pow` — QFT root-of-unity lemma | **Done** | `QFT.lean` |
-| `dft_orthogonality` — DFT orthogonality sum | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `qft1_correct` — 1-qubit QFT correctness | **Done** | `QFT.lean` |
-| `qftMatrix_isUnitary` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `qftCircuit n` — the decomposed QFT circuit | Done | `QFT.lean` (Apr 18, 2026) |
-| `qftLayers n` — the decomposed QFT layers without the final `bitReverse` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| shared circuit-lift scaffolding for inductive circuit proofs (`tensorWithIdCircuit`, `idTensorCircuit`, and their matrix lemmas) | **Done** | `Core/Circuit.lean` / `Lemmas/Circuit.lean` |
-| `dftMatrix_succ_entry` — recursive `(n+1)`-to-`n` DFT entry factorization | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `omega_two` — the 2-qubit QFT root identity `omega 2 = I` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `qftMatrix_two` — explicit 4×4 target matrix for `qftMatrix 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `qftCircuit_two` — explicit gate list for `qftCircuit 2` | **Done** (Apr 18, 2026) | `QFT.lean` |
-| `tensorState`, `tensorVec_norm` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` / `Lemmas/Hilbert.lean` |
-| `hPlusVector`, `hPlusVector_norm`, `hPlusState`, `hPlusCircuit` | Partial (tensor support done; correctness still open) | `Algorithms/HPlus.lean` |
-| GHZ state vector, circuit (requires n ≥ 1), and correctness scaffolding | Partial (normalization proved) | `Algorithms/GHZ.lean` |
-| involution matrix exponential example `exp (z • A) = cosh z • I + sinh z • A` under `A ^ 2 = 1` | **Done** (Apr 25, 2026) | `Goals/NC_Ex4_2.lean` |
-| Nielsen-Chuang theorem 4.1 single-qubit `Z-Y-Z` Euler decomposition goal using `rz`/`ry` | Partial (goal stated; proof open) | `Goals/NC_Thm4_1.lean` |
-| Nielsen-Chuang Figure 4.6 controlled-`U` two-CNOT decomposition goal | Partial (goal stated using core `controlPhase`; circuit identity proof open) | `Goals/NC_Fig4_6.lean` |
-| `qft_correct` — main theorem | Deferred | `QFT.lean` |
+| `idTensorCircuit`, `tensorWithIdCircuit` — suffix/prefix circuit lifts | Done | `Core/Circuit.lean` |
+| `circuitMatrix`, `circuitMatrix_append`, `Circuit.Implements` | Done | `Core/Circuit.lean` |
+| `tensorState`, `tensorVec` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` |
+| `hPlusVector`, `hPlusState`, `hPlusCircuit`, `hPlus_correct` (sorry) | Goal | `Goals/HPlus.lean` |
+| GHZ state, circuit, `ghz_correct` (sorry) | Goal | `Goals/GHZ.lean` |
+| QFT matrix, circuit, `qft_correct` (sorry) | Goal | `Goals/QFT.lean` |
+| involution matrix exponential `exp (z • A) = cosh z • I + sinh z • A` | **Done** (Apr 25, 2026) | `Solutions/NC_Ex4_2.lean` |
+| Nielsen-Chuang theorem 4.1 single-qubit Z-Y-Z Euler decomposition | **Done** | `Solutions/NC_Thm4_1.lean` |
+| Nielsen-Chuang Figure 4.6 controlled-U two-CNOT decomposition | **Done** | `Solutions/NC_Fig4_6.lean` |
 | Qubit measurement / Born rule | Future | — |
 
 ---
