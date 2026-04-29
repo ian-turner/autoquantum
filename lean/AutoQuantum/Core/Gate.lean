@@ -56,6 +56,9 @@ macro "fin_unitary" M:ident : tactic =>
 /-- A k-qubit quantum gate: a unitary matrix acting on 2^k-dimensional space. -/
 abbrev QGate (k : ℕ) := Matrix.unitaryGroup (Fin (2 ^ k)) ℂ
 
+/-- The dagger (conjugate transpose / inverse) of a gate, via the star involution. -/
+def QGate.dagger {k : ℕ} (U : QGate k) : QGate k := star U
+
 /-- Apply a gate to a quantum state, preserving normalization.
 
     Implementation note: `QHilbert k = EuclideanSpace ℂ (Fin (2^k))` is a `PiLp`
