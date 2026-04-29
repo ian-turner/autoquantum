@@ -9,8 +9,7 @@ unitary `U` from one-qubit gates `A`, `B`, `C`, two CNOTs, and a control-wire ph
 No proof is provided here yet; this is a goal file for later proof-writing work.
 -/
 
-namespace AutoQuantum
-
+open AutoQuantum
 open Complex Matrix
 
 /-- The right-hand side circuit in Nielsen--Chuang Figure 4.6.
@@ -37,5 +36,3 @@ theorem nc_fig4_6_goal (U A B C : QGate 1) (α : ℝ)
     (hABC : A * B * C = 1) :
     Circuit.Implements (nc_fig4_6_circuit α A B C) (controlled U) := by
   sorry
-
-end AutoQuantum
