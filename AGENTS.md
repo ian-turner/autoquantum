@@ -33,33 +33,39 @@ For detailed planning, see [Framework Generalization Plan](../notes/framework-ge
 autoquantum/
 ├── lean/               # Lean 4 project (lakefile.lean + source)
 │   ├── lean-toolchain   -- pins leanprover/lean4:v4.29.0
-│   └── AutoQuantum/    # Core Lean library
-│       ├── Core/
-│       │   ├── Hilbert.lean          -- Hilbert space & quantum state types
-│       │   ├── Qubit.lean            -- Single-qubit primitives
-│       │   ├── Gate.lean             -- Gate definitions, placement API, permutations
-│       │   └── Circuit.lean          -- Circuit composition & semantics
-│       ├── Lemmas/
-│       │   ├── Hilbert.lean          -- tensorState, tensorVec_norm
-│       │   ├── Qubit.lean            -- Basis orthonormality
-│       │   ├── Gate.lean             -- applyGate lemmas, hadamard_apply_ket*
-│       │   └── Circuit.lean          -- circuitMatrix lemmas
-│       └── Algorithms/
-│           ├── QFT.lean          -- Quantum Fourier Transform
-│           ├── GHZ.lean          -- GHZ state and circuit
-│           └── HPlus.lean        -- Uniform superposition |+⟩^⊗n
+│   ├── AutoQuantum/    # Core Lean library (imported by Goals and Solutions)
+│   │   └── Core/
+│   │       ├── Hilbert.lean  -- Hilbert space & quantum state types
+│   │       ├── Tensor.lean   -- Tensor product machinery
+│   │       ├── Qubit.lean    -- Single-qubit primitives
+│   │       ├── Gate.lean     -- Gate definitions, placement API, permutations
+│   │       └── Circuit.lean  -- Circuit composition & semantics
+│   ├── Goals/          # Problem statements (circuit specs + correctness theorems, sorry'd)
+│   │   ├── QFT.lean    -- Quantum Fourier Transform
+│   │   ├── GHZ.lean    -- GHZ state and circuit
+│   │   ├── HPlus.lean  -- Uniform superposition |+⟩^⊗n
+│   │   ├── Comm.lean   -- Gate commutativity examples
+│   │   ├── NC_Ex4_2.lean    -- Nielsen & Chuang Exercise 4.2
+│   │   ├── NC_Fig4_6.lean   -- Nielsen & Chuang Figure 4.6
+│   │   └── NC_Thm4_1.lean   -- Nielsen & Chuang Theorem 4.1
+│   └── Solutions/      # Completed proofs (mirrors Goals/, sorry-free when done)
+│       ├── Comm.lean
+│       ├── NC_Ex4_2.lean
+│       ├── NC_Fig4_6.lean
+│       └── NC_Thm4_1.lean
 ├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
 │   ├── latex-tools/    -- LaTeX MCP server implementation
-│   ├── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp
-│   ├── lean-tools/run.sh    -- launcher for the Lean MCP server
-│   └── latex-tools/run.sh   -- launcher for the LaTeX MCP server
-├── scripts/            # Shell entrypoints, bootstrap helpers, and MCP launchers
-│   ├── entrypoint.sh
-│   ├── warm-cache.sh
-│   ├── bootstrap-lean.sh
-│   └── setup_comparator.sh
-├── .opencode/rules/    # OpenCode agent rules (proof workflow and patterns)
+│   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp
+├── scripts/            # Shell entrypoints and helper scripts
+│   ├── entrypoint.sh        -- container startup: starts opencode serve
+│   └── verify_comparator.py -- proof verification helper
+├── .opencode/
+│   ├── rules/          # Auto-loaded rules for every OpenCode session
+│   │   ├── lean-workflow.md       -- iterative proof workflow and tool decision tree
+│   │   ├── lean-proof-patterns.md -- tensor/gate/circuit proof patterns and pitfalls
+│   │   └── project-overview.md   -- project layout and agent roster
+│   └── agents/         # Per-agent .md files (build, prove, plan, read, latex)
 ├── notes/              # Research wiki — start at notes/home.md
 ├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
 ├── Dockerfile
@@ -166,11 +172,10 @@ When generating or verifying a quantum circuit proof, follow this template:
 
 ## Adding New Algorithms
 
-1. Create `lean/AutoQuantum/Algorithms/<AlgorithmName>.lean`.
+1. Create `lean/Goals/<AlgorithmName>.lean` with the circuit definition and correctness theorem (use `sorry` for unproven goals).
 2. Put `import AutoQuantum.Core.Circuit` (and any Mathlib imports) at the very top, before the module doc comment.
-3. Define the circuit, state the correctness theorem, and prove (or `sorry`) it.
-4. Add an entry in `lean/AutoQuantum.lean`.
-5. Add a kebab-case note in `notes/` and link it from `notes/home.md` if the algorithm has non-trivial prerequisites.
+3. Once the proof is complete, create the corresponding `lean/Solutions/<AlgorithmName>.lean` (sorry-free).
+4. Add a kebab-case note in `notes/` and link it from `notes/home.md` if the algorithm has non-trivial prerequisites.
 
 ## Testing
 

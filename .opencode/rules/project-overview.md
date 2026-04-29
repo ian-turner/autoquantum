@@ -15,34 +15,36 @@ AutoQuantum is a system for **automatic generation and formal verification of qu
 autoquantum/
 ├── lean/                        # Lean 4 project (lakefile.lean + source)
 │   ├── lean-toolchain            -- pins leanprover/lean4:v4.29.0
-│   └── AutoQuantum/             # Core Lean library
-│       ├── Core/
-│       │   ├── Hilbert.lean      -- Hilbert space & quantum state types
-│       │   ├── Qubit.lean        -- Single-qubit primitives
-│       │   ├── Gate.lean         -- Gate definitions, placement API, permutations
-│       │   └── Circuit.lean      -- Circuit composition & semantics
-│       ├── Lemmas/
-│       │   ├── Hilbert.lean      -- tensorState, tensorVec_norm
-│       │   ├── Qubit.lean        -- Basis orthonormality
-│       │   ├── Gate.lean         -- applyGate lemmas, hadamard_apply_ket*
-│       │   └── Circuit.lean      -- circuitMatrix lemmas
-│       └── Algorithms/
-│           ├── QFT.lean          -- Quantum Fourier Transform
-│           ├── GHZ.lean          -- GHZ state and circuit
-│           └── HPlus.lean        -- Uniform superposition |+⟩^⊗n
+│   ├── AutoQuantum/             # Core Lean library (imported by Goals and Solutions)
+│   │   └── Core/
+│   │       ├── Hilbert.lean      -- Hilbert space & quantum state types
+│   │       ├── Tensor.lean       -- Tensor product machinery
+│   │       ├── Qubit.lean        -- Single-qubit primitives
+│   │       ├── Gate.lean         -- Gate definitions, placement API, permutations
+│   │       └── Circuit.lean      -- Circuit composition & semantics
+│   ├── Goals/                   # Problem statements (specs + theorems, sorry'd)
+│   │   ├── QFT.lean, GHZ.lean, HPlus.lean, Comm.lean
+│   │   └── NC_Ex4_2.lean, NC_Fig4_6.lean, NC_Thm4_1.lean
+│   └── Solutions/               # Completed proofs (mirrors Goals/, sorry-free when done)
+│       └── Comm.lean, NC_Ex4_2.lean, NC_Fig4_6.lean, NC_Thm4_1.lean
 ├── .mcp/                        # MCP servers (shared by Claude Code and OpenCode)
 │   ├── lean-tools/               -- build/check/sorry_count (Python, runs via uv)
+│   ├── latex-tools/              -- LaTeX MCP server
 │   └── run-lean-lsp-mcp.sh       -- launcher for lean-lsp-mcp LSP server
 ├── .opencode/
 │   ├── rules/                    -- common rules (this directory, auto-loaded into every session)
-│   ├── agents/                   -- per-agent .md files (frontmatter + prompt body, loaded by OpenCode)
-│   └── plugins/lean-tools.js     -- custom tools + post-edit diagnostic hook
+│   │   ├── lean-workflow.md       -- iterative proof workflow and tool decision tree
+│   │   ├── lean-proof-patterns.md -- tensor/gate/circuit proof patterns and pitfalls
+│   │   └── project-overview.md   -- this file
+│   └── agents/                   -- per-agent .md files (build, prove, plan, read, latex)
+├── scripts/                     # Shell entrypoints and helpers
+│   ├── entrypoint.sh             -- container startup: starts opencode serve
+│   └── verify_comparator.py      -- proof verification helper
 ├── notes/                       # Research wiki — start at notes/home.md
 ├── references/                  # Local PDFs (Nielsen & Chuang, course notes)
 ├── Dockerfile
 ├── docker-compose.yml
-├── entrypoint.sh                # Container startup: seeds Lake cache, starts opencode serve
-└── opencode.json                # OpenCode config: MCP servers, plugin (agents defined in .opencode/agents/)
+└── opencode.json                # OpenCode config: MCP servers, agents
 ```
 
 ## Build
