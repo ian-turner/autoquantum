@@ -81,6 +81,6 @@ RUN git clone --depth 1 https://github.com/Zouuup/landrun.git .tools/src/landrun
     cd .tools/src/landrun && \
     go build -o /home/opencode/.tools/bin/landrun cmd/landrun/main.go
 
-WORKDIR /workspace
+WORKDIR /workspace/autoquantum
 
-ENTRYPOINT ["/workspace/autoquantum/scripts/entrypoint.sh"]
+ENTRYPOINT ["./scripts/entrypoint.sh"]
