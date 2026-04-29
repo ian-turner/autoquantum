@@ -7,14 +7,3 @@ import AutoQuantum.Core.Qubit
 import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Circuit
 
--- Lemmas: AI-generated proofs of mathematical properties
-import AutoQuantum.Lemmas.Hilbert
-import AutoQuantum.Lemmas.Tensor
-import AutoQuantum.Lemmas.Qubit
-import AutoQuantum.Lemmas.Gate
-import AutoQuantum.Lemmas.Circuit
-
--- Algorithms: circuit implementations and correctness theorems
-import AutoQuantum.Algorithms.QFT
-import AutoQuantum.Algorithms.GHZ
-import AutoQuantum.Algorithms.HPlus
