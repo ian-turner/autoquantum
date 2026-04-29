@@ -7,11 +7,6 @@ services:
     container_name: autoquantum
     working_dir: /workspace/autoquantum
     environment:
-      PROJECT_ROOT: /workspace/autoquantum
-      LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
-      LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
-      LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
-      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.tools}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
     volumes:

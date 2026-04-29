@@ -120,9 +120,7 @@ def discover_pairs(lean_dir: Path, selected_goals: set[str]) -> list[GoalPair]:
 
 def tool_dir_candidates(root: Path) -> list[Path]:
     candidates: list[Path] = []
-    if env_dir := os.environ.get("AUTOQUANTUM_TOOLS_DIR"):
-        candidates.append(Path(env_dir).expanduser())
-    candidates.append(Path("/home/opencode/.cache/autoquantum-tools"))
+    candidates.append(Path("/home/opencode/.tools"))
     candidates.append(root / ".tools")
     deduped: list[Path] = []
     seen: set[Path] = set()

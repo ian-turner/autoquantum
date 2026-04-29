@@ -3,7 +3,7 @@ set -e
 
 export PATH="/home/opencode/.elan/bin:/home/opencode/.tools/bin:$PATH"
 
-cd "${PROJECT_ROOT:-/workspace/autoquantum}"
+cd /workspace/autoquantum
 
 export OPENCODE_CONFIG="/workspace/autoquantum/opencode.json"
 exec opencode serve \
