@@ -82,6 +82,4 @@ RUN git clone --depth 1 https://github.com/Zouuup/landrun.git .tools/src/landrun
 
 WORKDIR /workspace
 
-USER root
-
 ENTRYPOINT ["/workspace/autoquantum/scripts/entrypoint.sh"]
