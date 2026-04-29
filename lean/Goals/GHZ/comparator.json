@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Goals.GHZ.GHZ",
+  "solution_module": "Solutions.GHZ",
+  "theorem_names": ["ghz_correct"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}

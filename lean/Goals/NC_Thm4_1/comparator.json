@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Goals.NC_Thm4_1.NC_Thm4_1",
+  "solution_module": "Solutions.NC_Thm4_1",
+  "theorem_names": ["nc_thm4_1_goal"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}

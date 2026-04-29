@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Goals.HPlus.HPlus",
+  "solution_module": "Solutions.HPlus",
+  "theorem_names": ["hPlus_correct"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}

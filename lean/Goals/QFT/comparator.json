@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Goals.QFT.QFT",
+  "solution_module": "Solutions.QFT",
+  "theorem_names": ["qft_correct"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}

@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Goals.Comm.Comm",
+  "solution_module": "Solutions.Comm",
+  "theorem_names": ["comm_goal"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}
