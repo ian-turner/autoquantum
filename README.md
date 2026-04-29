@@ -20,38 +20,6 @@ Lean kernel checks proof
 
 Because every output is a checked Lean proof, correctness is not tested—it is *verified*.
 
-## Repository Layout
-
-```
-autoquantum/
-├── lean/                   # Lean 4 library (AutoQuantum)
-│   ├── lakefile.lean
-│   ├── lean-toolchain       -- pins leanprover/lean4:v4.29.0
-│   └── AutoQuantum/
-│       ├── Core/
-│       │   ├── Hilbert.lean     -- Hilbert spaces, QState, basisState
-│       │   ├── Qubit.lean       -- Single-qubit primitives and basis states
-│       │   ├── Gate.lean        -- Gate definitions, placement API, permutations
-│       │   └── Circuit.lean     -- Circuit composition and semantics
-│       ├── Lemmas/
-│       │   ├── Hilbert.lean     -- tensorState, tensorVec_norm
-│       │   ├── Qubit.lean       -- Basis orthonormality
-│       │   ├── Gate.lean        -- applyGate lemmas, hadamard_apply_ket*
-│       │   └── Circuit.lean     -- circuitMatrix lemmas
-│       └── Algorithms/
-│           ├── QFT.lean         -- Quantum Fourier Transform
-│           ├── GHZ.lean         -- GHZ state and circuit
-│           └── HPlus.lean       -- Uniform superposition |+⟩^⊗n
-├── .mcp/                   # MCP servers (lean build/check tools, lean_lsp)
-├── scripts/                # Shell entrypoints and MCP launcher scripts
-├── notes/                  # Research wiki — start at notes/home.md
-├── references/             # Local PDFs (gitignored — see notes/reference-assets.md)
-├── Dockerfile
-├── docker-compose.yml
-├── AGENTS.md               # All instructions for AI agents working here
-└── CLAUDE.md               # Points to AGENTS.md
-```
-
 ## Docker Development Environment
 
 A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service still warms shared Lean caches first, but `scripts/entrypoint.sh` also falls back to `scripts/bootstrap-lean.sh` when runtime caches are missing and the container has permission to populate them.
@@ -65,7 +33,7 @@ To switch models, use the `--model` flag when running OpenCode (e.g. `opencode r
 ```bash
 docker compose build                        # Build the image (once, ~5 min)
 docker compose up -d                        # Start the OpenCode server
-opencode attach http://localhost:4096       # Connect (requires OpenCode CLI on host)
+opencode run --attach http://localhost:4096  # Connect (requires OpenCode CLI on host)
 docker compose down                         # Stop when done
 ```
 
@@ -124,19 +92,10 @@ Useful script options:
 | `Core/Hilbert.lean` | Yes | `QState`, `QHilbert`, `basisState`, `superpose`; all norm proofs complete |
 | `Core/Qubit.lean` | Yes | `ket0`, `ket1`, `ketPlus`, `ketMinus`, Bloch sphere; all proofs complete |
 | `Core/Gate.lean` | Yes | Gates, `applyGate`, full placement API (`onQubit`, `controlledPhaseAt`, `bitReverse`, etc.) |
-| `Lemmas/Gate.lean` | Yes | `applyGate_vec_apply`, `hadamard_apply_ket0/1`, basis-state apply |
 | `Core/Circuit.lean` | Yes | `circuitMatrix`, `circuitMatrix_append`, `CorrectFor` |
-| `Algorithms/QFT.lean` | **No** | 2 sorries: `qft_correct`, `qft2_correct` |
-| `Algorithms/GHZ.lean` | **No** | 3 sorries: correctness for n=1, n=2, general case |
-| `Algorithms/HPlus.lean` | **No** | 1 sorry: `hPlus_correct` |
+| `Core/Tensor.lean` | Yes | Tensor product helpers; all proofs complete |
 
-## Key Design Decisions
-
-- **States as unit vectors** in `EuclideanSpace ℂ (Fin (2^n))` — integrates with Mathlib's inner product space machinery.
-- **Gates as `Matrix.unitaryGroup` members** — unitary constraints are type-level, not runtime checks.
-- **Circuits as `abbrev` list** — `abbrev Circuit (n : ℕ) := List (GateStep n)` ensures `List` instances (`++`, induction) work without manual unfolding.
-- **Gate placement via permutation conjugation** — `onQubit`, `controlledAt`, `controlledPhaseAt`, `bitReverse` are expressed as `P⁻¹ * U * P` rather than ad hoc `SWAP` chains.
-- **Tensor products via Kronecker** — `Matrix.kroneckerMap` computes multi-qubit gate embeddings, reindexed through `finProdFinEquiv`.
+Algorithm correctness goals live in `lean/Goals/` (trusted challenge statements) with candidate proofs in `lean/Solutions/`.
 
 ## References
 
