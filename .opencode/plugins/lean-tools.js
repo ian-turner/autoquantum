@@ -79,7 +79,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
         await client.tui.showToast({
           directory,
           title: "Comparator skipped",
-          message: "No proof goal found in the prove prompt. Pass `goal=<Stem>`.",
+          message: "Could not identify the goal stem from the prompt — mention a file name or goal name (e.g. 'prove the goal in NC_Ex4_2.lean').",
           variant: "error",
           duration: 8000,
         });
