@@ -83,20 +83,6 @@ Useful script options:
 - `--dry-run` — print generated comparator configs without invoking comparator
 - `--comparator /path/to/comparator` — use a specific comparator binary
 
-## Current Status
-
-`lake build AutoQuantum` succeeds with 0 errors. Mathlib pinned to **v4.29.0**.
-
-| Module | Sorry-free? | Notes |
-|--------|-------------|-------|
-| `Core/Hilbert.lean` | Yes | `QState`, `QHilbert`, `basisState`, `superpose`; all norm proofs complete |
-| `Core/Qubit.lean` | Yes | `ket0`, `ket1`, `ketPlus`, `ketMinus`, Bloch sphere; all proofs complete |
-| `Core/Gate.lean` | Yes | Gates, `applyGate`, full placement API (`onQubit`, `controlledPhaseAt`, `bitReverse`, etc.) |
-| `Core/Circuit.lean` | Yes | `circuitMatrix`, `circuitMatrix_append`, `CorrectFor` |
-| `Core/Tensor.lean` | Yes | Tensor product helpers; all proofs complete |
-
-Algorithm correctness goals live in `lean/Goals/` (trusted challenge statements) with candidate proofs in `lean/Solutions/`.
-
 ## References
 
 See [`notes/research-references.md`](notes/research-references.md) for the full literature survey and [`notes/lean-quantum-landscape.md`](notes/lean-quantum-landscape.md) for the current Lean API state.
