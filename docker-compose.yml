@@ -1,63 +1,25 @@
 version: '3.8'
 
 services:
-  cache-warmer:
-    build: .
-    image: autoquantum:latest
-    container_name: autoquantum-cache-warmer
-    working_dir: /workspace/autoquantum
-    entrypoint: ["./scripts/warm-cache.sh"]
-    environment:
-      PROJECT_ROOT: /workspace/autoquantum
-      LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
-      LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
-      LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
-      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.cache/autoquantum-tools}
-    volumes:
-      - ./:/workspace/autoquantum
-      - elan-cache:/home/opencode/.elan
-      - mathlib-cache:/workspace/autoquantum/lean/.lake/packages
-      - comparator-cache:/home/opencode/.cache/autoquantum-tools
-    restart: "no"
-
   opencode:
     build: .
     image: autoquantum:latest
     container_name: autoquantum
     working_dir: /workspace/autoquantum
-    depends_on:
-      cache-warmer:
-        condition: service_completed_successfully
     environment:
-      # Project configuration
       PROJECT_ROOT: /workspace/autoquantum
       LEAN_PROJECT_PATH: ${LEAN_PROJECT_PATH:-/workspace/autoquantum/lean}
       LEAN_TOOLS_REPO_ROOT: ${LEAN_TOOLS_REPO_ROOT:-/workspace/autoquantum}
       LEAN_TARGET: ${LEAN_TARGET:-AutoQuantum}
-      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.cache/autoquantum-tools}
+      AUTOQUANTUM_TOOLS_DIR: ${AUTOQUANTUM_TOOLS_DIR:-/home/opencode/.tools}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
     volumes:
-      # Mount the autoquantum project directory (host ./ to container /workspace/autoquantum)
       - ./:/workspace/autoquantum
-      # Mount user's gitconfig (read‑only) for commit authorship
       - ~/.gitconfig:/home/opencode/.gitconfig:ro
-      # Elan stays shared and read-only at runtime.
-      - elan-cache:/home/opencode/.elan:ro
-      # Shared warmed package cache is mounted read-only at a seed path.
-      - mathlib-cache:/home/opencode/.cache/lake-packages-seed:ro
-      # Shared comparator toolchain is mounted read-only at runtime.
-      - comparator-cache:/home/opencode/.cache/autoquantum-tools:ro
-      # Runtime Lake package worktree is a per-container anonymous volume.
-      - /workspace/autoquantum/lean/.lake/packages
+      # Anonymous volume over .lake so Docker exposes the image's baked packages
+      # rather than whatever is (or isn't) on the host at lean/.lake
+      - /workspace/autoquantum/lean/.lake
     ports:
       - "4096:4096"
       - "1455:1455"
-
-volumes:
-  elan-cache:
-    name: autoquantum-elan-cache
-  mathlib-cache:
-    name: autoquantum-mathlib-cache
-  comparator-cache:
-    name: autoquantum-comparator-cache

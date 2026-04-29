@@ -1,10 +1,10 @@
 # AutoQuantum OpenCode Docker image
-# Lean 4.29.0 + Mathlib v4.29.0 + OpenCode CLI + MCP servers
-# Built for reproducible, sandboxed quantum circuit verification.
+# Lean 4.29.0 + Mathlib v4.29.0 + comparator + OpenCode CLI
+# All heavy dependencies are baked in at build time.
 
 FROM ubuntu:22.04
 
-# Install system dependencies as root
+# Install system dependencies
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository universe && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     && ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv (fast Python package manager) and Python mcp package globally
+# Install uv and Python MCP packages globally
 RUN pip3 install uv \
     && uv pip install --system mcp \
     && uv pip install --system lean-lsp-mcp
@@ -36,25 +36,47 @@ RUN pip3 install uv \
 # Install OpenCode CLI globally
 RUN npm install -g opencode-ai
 
-# Create non‑root user matching host UID/GID (501:20)
+# Create non-root user matching host UID/GID (501:20)
 RUN useradd -m -u 501 -g 20 -s /bin/bash opencode
 
-# Create workspace directory and set ownership
+# Create workspace and set ownership
 RUN mkdir -p /workspace && chown opencode:20 /workspace
 
-# Copy the entire autoquantum framework into the container
-COPY --chown=opencode:20 . /workspace/autoquantum
-
-# Switch to non-root user for home-directory setup. Lean itself is installed
-# by the dedicated cache warmer service into mounted volumes at runtime.
 USER opencode
 WORKDIR /home/opencode
 
-RUN mkdir -p ~/.cache/opencode
+# Install elan and the Lean toolchain
+ENV PATH="/home/opencode/.elan/bin:/home/opencode/.tools/bin:$PATH"
+RUN curl -sSf https://elan.lean-lang.org/elan-init.sh | sh -s -- -y --default-toolchain none && \
+    elan toolchain install leanprover/lean4:v4.29.0 && \
+    elan default leanprover/lean4:v4.29.0
 
-# Keep interactive shells aligned with elan's PATH updates once bootstrap runs,
-# without introducing a .bashrc <-> .profile recursion loop.
-RUN printf '\nif [ -f "$HOME/.elan/env" ]; then\n  . "$HOME/.elan/env"\nfi\n' >> ~/.bashrc
+# Copy project and resolve Lean dependencies (packages land at lean/.lake/packages)
+COPY --chown=opencode:20 . /workspace/autoquantum
+WORKDIR /workspace/autoquantum/lean
+RUN lake update && lake exe cache get
+
+# Build lean4export
+WORKDIR /home/opencode
+RUN mkdir -p .tools/src .tools/bin && \
+    git clone --depth 1 --branch v4.29.0 https://github.com/leanprover/lean4export.git .tools/src/lean4export && \
+    lake --dir .tools/src/lean4export update && \
+    lake --dir .tools/src/lean4export build && \
+    cp .tools/src/lean4export/.lake/build/bin/lean4export .tools/bin/lean4export
+
+# Build comparator (pin its lean4export dependency to v4.29.0)
+RUN git clone --depth 1 --branch v4.29.0 https://github.com/leanprover/comparator.git .tools/src/comparator && \
+    python3 /workspace/autoquantum/scripts/pin-comparator.py .tools/src/comparator/lakefile.toml v4.29.0 && \
+    rm -f .tools/src/comparator/lake-manifest.json && \
+    rm -rf .tools/src/comparator/.lake && \
+    lake --dir .tools/src/comparator update && \
+    lake --dir .tools/src/comparator build && \
+    cp .tools/src/comparator/.lake/build/bin/comparator .tools/bin/comparator
+
+# Build landrun
+RUN git clone --depth 1 https://github.com/Zouuup/landrun.git .tools/src/landrun && \
+    cd .tools/src/landrun && \
+    go build -o /home/opencode/.tools/bin/landrun cmd/landrun/main.go
 
 WORKDIR /workspace
 
