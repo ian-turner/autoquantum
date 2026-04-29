@@ -197,7 +197,7 @@ private lemma exp_sub_arg_mul (r q : ℝ) (x : ℂ) :
           rw [← Complex.exp_add]
           congr 1
           simp [Complex.ofReal_sub]
-          ring
+          ring_nf
     _ = Complex.exp (Complex.I * (r : ℂ)) *
         (x * Complex.exp (-Complex.I * (q : ℂ))) := by ring
 
