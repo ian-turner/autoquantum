@@ -25,13 +25,14 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 | `Core/Gate.lean` | **Yes** | Core gates, qubit permutations, generic `controlled` constructor, Rx/Ry rotation gates, and one-qubit `controlPhase` gate (April 27, 2026) |
 | `Core/Circuit.lean` | **Yes** | `Circuit n = List (QGate n)`; includes `idTensorCircuit`, `tensorWithIdCircuit`, `circuitMatrix`, `circuitMatrix_append`, and `Circuit.Implements` |
 | `Core/Tensor.lean` | **Yes** | Tensor basis equivalence `tensorIndexEquiv k m` |
-| `Goals/Comm.lean` | Trusted challenge | `n + m = m + n`; always sorry by design. `Solutions/Comm.lean` has the `omega` proof. |
-| `Goals/NC_Ex4_2.lean` | **Solution exists** | `Solutions/NC_Ex4_2.lean` proves `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1` |
-| `Goals/NC_Thm4_1.lean` | **Solution exists** | `Solutions/NC_Thm4_1.lean` proves Nielsen-Chuang theorem 4.1: single-qubit Z-Y-Z Euler decomposition |
-| `Goals/NC_Fig4_6.lean` | **Solution exists** | `Solutions/NC_Fig4_6.lean` proves Nielsen-Chuang Figure 4.6: two-CNOT controlled-U decomposition |
-| `Goals/HPlus.lean` | No solution | `hPlusState` norm proof + `hPlus_correct` both sorry'd |
-| `Goals/GHZ.lean` | No solution | `ghzState` norm proof + `ghz_correct` both sorry'd |
-| `Goals/QFT.lean` | No solution | `qftGate` isUnitary + `qft_correct` both sorry'd |
+| `Goals/Comm/Comm.lean` | Trusted challenge | `n + m = m + n`; always sorry by design. `Solutions/Comm.lean` has the `omega` proof. |
+| `Goals/NC_Ex4_2/NC_Ex4_2.lean` | **Solution exists** | `Solutions/NC_Ex4_2.lean` proves `exp (z • A) = cosh z • I + sinh z • A` from `A ^ 2 = 1` |
+| `Goals/NC_Thm4_1/NC_Thm4_1.lean` | **Solution exists** | `Solutions/NC_Thm4_1.lean` proves Nielsen-Chuang theorem 4.1: single-qubit Z-Y-Z Euler decomposition |
+| `Goals/NC_Fig4_6/NC_Fig4_6.lean` | **Solution exists** | `Solutions/NC_Fig4_6.lean` proves Nielsen-Chuang Figure 4.6: two-CNOT controlled-U decomposition |
+| `Goals/NC_Fig4_8/NC_Fig4_8.lean` | No solution | `nc_fig4_8_goal`: Toffoli decomposition via controlled-V/V†/CNOT layers where `V^2=U`; stated as direct matrix product |
+| `Goals/HPlus/HPlus.lean` | No solution | `hPlusState` norm proof + `hPlus_correct` both sorry'd |
+| `Goals/GHZ/GHZ.lean` | No solution | `ghzState` norm proof + `ghz_correct` both sorry'd |
+| `Goals/QFT/QFT.lean` | No solution | `qftGate` isUnitary + `qft_correct` both sorry'd |
 
 ## Container Usage
 
@@ -48,13 +49,14 @@ docker compose down                         # Stop when done
 
 ## Open Goals
 
-Six open sorries across three `Goals/` files. Goals carry sorry'd theorems by design; the aim is to write a `Solutions/` file that eliminates each sorry.
+Seven open sorries across four `Goals/` files. Goals carry sorry'd theorems by design; the aim is to write a `Solutions/` file that eliminates each sorry.
 
 | Goal file | Theorems to prove | Notes |
 |-----------|------------------|-------|
-| `Goals/HPlus.lean` | `hPlus_correct` (uniform superposition circuit), `hPlusState` norm | Induction on n; back-qubit route (Hadamard at last qubit) is likely easiest. See HPlus section below for dead ends. |
-| `Goals/GHZ.lean` | `ghz_correct` (GHZ state preparation circuit), `ghzState` norm | Hadamard on qubit 0 then CNOT chain; n=1,2 cases may be a useful warmup. |
-| `Goals/QFT.lean` | `qft_correct` (QFT circuit = QFT matrix), `qftGate` isUnitary | QFT matrix unitarity requires DFT orthogonality; circuit correctness requires tensor-product induction over `hadamardAt`, `controlledPhaseAt`, and `bitReverse` layers. |
+| `Goals/HPlus/HPlus.lean` | `hPlus_correct` (uniform superposition circuit), `hPlusState` norm | Induction on n; back-qubit route (Hadamard at last qubit) is likely easiest. See HPlus section below for dead ends. |
+| `Goals/GHZ/GHZ.lean` | `ghz_correct` (GHZ state preparation circuit), `ghzState` norm | Hadamard on qubit 0 then CNOT chain; n=1,2 cases may be a useful warmup. |
+| `Goals/QFT/QFT.lean` | `qft_correct` (QFT circuit = QFT matrix), `qftGate` isUnitary | QFT matrix unitarity requires DFT orthogonality; circuit correctness requires tensor-product induction over `hadamardAt`, `controlledPhaseAt`, and `bitReverse` layers. |
+| `Goals/NC_Fig4_8/NC_Fig4_8.lean` | `nc_fig4_8_goal` (Toffoli via controlled-V/V†) | Show controlled-V · CNOT · controlled-V† · CNOT · controlled-V = controlled(controlled U) given V²=U. Uses `controlledAt` and `QGate.dagger`. |
 
 ### HPlus
 
@@ -79,6 +81,16 @@ Circuit is defined for `n ≥ 1`. No proof attempts yet; the n=1 case is a reaso
 ### QFT
 
 The n-qubit QFT maps `|j⟩ ↦ (1/√(2^n)) ∑_k ω^{jk} |k⟩` where `ω = exp(2πi/2^n)`. The circuit applies Hadamard + controlled phase rotations per qubit, then a bit-reversal. Both `qftMatrix` and `qftCircuit` are defined; proving their equality requires tensor-product induction on circuit layers.
+
+### NC_Fig4_8
+
+Nielsen-Chuang Figure 4.8: decompose a doubly-controlled unitary into single-controlled operations. Given a single-qubit gate `U` and a square root `V` with `V^2 = U`, the circuit:
+
+```
+CV(0→2) · CNOT(0→1) · CV†(1→2) · CNOT(0→1) · CV(1→2) = controlled(controlled U)
+```
+
+where all gates act on 3 qubits (qubits 0, 1, 2). The theorem is stated as a direct matrix product (`nc_fig4_8_goal`) to avoid unfolding `circuitMatrix`/`foldl`. No proof attempts yet; properties of `QGate.dagger` and `controlledAt` are the main tools needed.
 
 ## Topics
 

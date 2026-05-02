@@ -102,9 +102,10 @@ Last updated: April 27, 2026 (Mathlib v4.29.0).
 | `idTensorCircuit`, `tensorWithIdCircuit` — suffix/prefix circuit lifts | Done | `Core/Circuit.lean` |
 | `circuitMatrix`, `circuitMatrix_append`, `Circuit.Implements` | Done | `Core/Circuit.lean` |
 | `tensorState`, `tensorVec` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` |
-| `hPlusVector`, `hPlusState`, `hPlusCircuit`, `hPlus_correct` (sorry) | Goal | `Goals/HPlus.lean` |
-| GHZ state, circuit, `ghz_correct` (sorry) | Goal | `Goals/GHZ.lean` |
-| QFT matrix, circuit, `qft_correct` (sorry) | Goal | `Goals/QFT.lean` |
+| `hPlusVector`, `hPlusState`, `hPlusCircuit`, `hPlus_correct` (sorry) | Goal | `Goals/HPlus/HPlus.lean` |
+| GHZ state, circuit, `ghz_correct` (sorry) | Goal | `Goals/GHZ/GHZ.lean` |
+| QFT matrix, circuit, `qft_correct` (sorry) | Goal | `Goals/QFT/QFT.lean` |
+| `nc_fig4_8_goal`: Toffoli via controlled-V/V†/CNOT (sorry) | Goal | `Goals/NC_Fig4_8/NC_Fig4_8.lean` |
 | involution matrix exponential `exp (z • A) = cosh z • I + sinh z • A` | **Done** (Apr 25, 2026) | `Solutions/NC_Ex4_2.lean` |
 | Nielsen-Chuang theorem 4.1 single-qubit Z-Y-Z Euler decomposition | **Done** | `Solutions/NC_Thm4_1.lean` |
 | Nielsen-Chuang Figure 4.6 controlled-U two-CNOT decomposition | **Done** | `Solutions/NC_Fig4_6.lean` |
