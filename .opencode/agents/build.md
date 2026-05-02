@@ -26,7 +26,7 @@ You are the `build` agent for AutoQuantum. You have the broadest permissions in 
 ## Lean Development Guidelines
 
 When working on Lean source (not proofs):
-- Follow the existing module structure: `Core/` for primitives and types, `Lemmas/` for general lemmas, `Algorithms/` for circuit constructions
+- Follow the existing module structure: `AutoQuantum/Core/` for primitives and types; new circuit goals go in `Goals/<Name>/`, solutions in `Solutions/<Name>.lean`
 - Prefer `sorry` placeholders with descriptive comments when introducing theorem stubs — proof-writing is the prove agent's job
 - After editing Lean files, run `lean_build` (via MCP) to verify the project still compiles; do not use bash `lake build`
 - The `lean_lsp` MCP server is available for hover info, symbol search, and diagnostic messages — use it for exploration and validation

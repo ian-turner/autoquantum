@@ -11,18 +11,6 @@ AutoQuantum is a system for **automatic generation and formal verification of qu
 3. Lean's kernel checks the proof. If it fails, the LLM receives elaborated error feedback and retries.
 4. Verified circuits are exported to executable formats (OpenQASM, Qiskit, etc.).
 
-## Framework Evolution
-
-AutoQuantum is evolving from a single-project setup into a **reusable framework for Lean 4 auto-coding**, specifically optimized for quantum computing verification but extensible to other formal verification domains. The framework will include:
-
-1. **Configurable Docker/container setup** with flexible volume mounts and command support
-2. **Multi-agent system** with specialized agents (prove, read, code-reviewer, test-generator) and fine-grained permissions
-3. **Generic Lean MCP tools** that work with any Lean project structure
-4. **Layered configuration system** for project-specific customization
-5. **Research integration** via the `read` agent for arXiv paper analysis
-
-For detailed planning, see [Framework Generalization Plan](../notes/framework-generalization-plan.md).
-
 **Configuration Note:** Project paths are configurable at runtime via `docker-compose.yml` defaults or explicit environment variable overrides. The model is specified via the `--model` flag when running OpenCode sessions (e.g., `opencode run --model deepseek/deepseek-reasoner "task"`).
 
 **Container Entrypoint:** The default container entrypoint is `/workspace/autoquantum/scripts/entrypoint.sh`, which starts OpenCode in headless `serve` mode.
@@ -59,8 +47,11 @@ autoquantum/
 │   │   ├── NC_Fig4_6/  -- Nielsen & Chuang Figure 4.6
 │   │   │   ├── NC_Fig4_6.lean
 │   │   │   └── comparator.json
-│   │   └── NC_Thm4_1/ -- Nielsen & Chuang Theorem 4.1
-│   │       ├── NC_Thm4_1.lean
+│   │   ├── NC_Thm4_1/ -- Nielsen & Chuang Theorem 4.1
+│   │   │   ├── NC_Thm4_1.lean
+│   │   │   └── comparator.json
+│   │   └── NC_Fig4_8/ -- Nielsen & Chuang Figure 4.8 (Toffoli decomposition)
+│   │       ├── NC_Fig4_8.lean
 │   │       └── comparator.json
 │   └── Solutions/      # Completed proofs (flat, sorry-free when done)
 │       ├── Comm.lean

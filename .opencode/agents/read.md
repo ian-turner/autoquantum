@@ -19,7 +19,7 @@ You are the `read` agent for AutoQuantum. Your job is to ingest research papers,
 
 - Fetch papers from arXiv and read local PDFs from `references/`
 - Extract theorems, definitions, circuit descriptions, and proof sketches
-- Produce structured notes in `notes/papers/<arxiv-id>.md`
+- Produce structured notes in `notes/<arxiv-id>.md` (or `notes/<short-name>.md`) and link from `notes/home.md`
 - Draft a basic Lean file skeleton for the prove agent when a paper contains a clear formalization target
 
 ## Workflow
@@ -42,7 +42,7 @@ From each paper, identify and record:
 
 ### Creating notes
 
-Save a structured note at `notes/papers/<arxiv-id>.md` (or `notes/papers/<short-name>.md` for local PDFs). Format:
+Save a structured note at `notes/<arxiv-id>.md` (or `notes/<short-name>.md` for local PDFs). Format:
 
 ```markdown
 # <Paper Title>
@@ -73,14 +73,14 @@ Save a structured note at `notes/papers/<arxiv-id>.md` (or `notes/papers/<short-
 
 ## Lean skeleton location
 
-`lean/AutoQuantum/<path>.lean` — see below
+`lean/Goals/<Name>/<Name>.lean` — see below
 ```
 
 Add a link to the new note in `notes/home.md`.
 
 ### Generating a Lean skeleton
 
-When a paper has a clear formalization target, create a stub file in the appropriate location under `lean/AutoQuantum/`. Include:
+When a paper has a clear formalization target, create a stub under `lean/Goals/<Name>/<Name>.lean` (with a matching `comparator.json`). Include:
 - `import` statements (Mathlib and AutoQuantum modules likely needed)
 - A module docstring summarizing the paper section being formalized
 - `def` or `theorem` stubs with `sorry` bodies and a comment quoting the informal statement
@@ -97,7 +97,7 @@ import AutoQuantum.Core.Circuit
 -/
 
 /-- [Informal statement from paper] -/
-theorem myTheorem : ... := by
+theorem myTheorem_goal : ... := by
   sorry
 ```
 
