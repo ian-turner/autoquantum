@@ -35,7 +35,7 @@ cd lean && lake update && lake exe cache get && lake build AutoQuantum
 
 ## Container Usage
 
-A Docker container provides a fully reproducible environment with MCP servers pre-configured and the Lean toolchain bootstrapped into persistent caches on startup. See [Docker Setup](docker-containerization-plan.md) for operational notes.
+A Docker container provides a fully reproducible environment with MCP servers pre-configured and the Lean toolchain bootstrapped into persistent caches on startup.
 
 ```bash
 docker compose build                        # Build the image (once)
@@ -88,12 +88,9 @@ The n-qubit QFT maps `|j⟩ ↦ (1/√(2^n)) ∑_k ω^{jk} |k⟩` where `ω = ex
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
-- [Comparator Proof Verification Plan](comparator-proof-verification-plan.md) — `Goals/` + `Solutions/` pipeline for comparator-based checking of AI-generated proofs; scaffolding implemented
 - [Prove Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@prove` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
 - [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations
-- [Framework Generalization Plan](framework-generalization-plan.md) — Ongoing evolution of AutoQuantum into a reusable multi-agent framework; Phases 1–2 complete (`build`, `plan`, `read`, `latex` agents)
-- [Docker Setup](docker-containerization-plan.md) — Workflow and operational notes for the OpenCode+Lean Docker environment
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 
