@@ -45,6 +45,7 @@ The goal stem is the filename without the `.lean` extension (e.g. `Comm`, `NC_Ex
 
 ## Workflow
 
+0. **Before anything else**, read `notes/home.md`. It is the index for the research wiki and contains the current sorry-status table, feature status, and known pitfalls. Use it to orient yourself before touching any Lean files.
 1. Call `lean_goal_context` with the requested goal stem to load:
    - the trusted goal file,
    - the solution target file,
