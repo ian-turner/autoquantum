@@ -88,9 +88,7 @@ The n-qubit QFT maps `|j⟩ ↦ (1/√(2^n)) ∑_k ω^{jk} |k⟩` where `ω = ex
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
-- [Prove Comparator Hook](proof-writer-comparator-hook.md) — Mandatory post-response comparator verification for `@prove` sessions keyed off `goal=<Stem>` prompt syntax
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
-- [Script Layout Refactor](script-layout-refactor.md) — Shell scripts now live under `scripts/`; `.mcp/` keeps Python MCP server implementations
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
 
