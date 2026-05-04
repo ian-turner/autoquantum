@@ -1,26 +1,13 @@
-MAIN := main
-BUILD_DIR := build
-
 .PHONY: all clean
 
-all: $(BUILD_DIR)/$(MAIN).pdf
+all: build/main.pdf
 
-$(BUILD_DIR)/$(MAIN).pdf: $(MAIN).tex refs.bib aaai2026.sty aaai2026.bst | $(BUILD_DIR)
-	@if command -v latexmk >/dev/null 2>&1; then \
-		latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error \
-			-outdir="$(BUILD_DIR)" "$(MAIN).tex"; \
-	else \
-		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
-			-output-directory="$(BUILD_DIR)" "$(MAIN).tex"; \
-		BIBINPUTS=".:$(BUILD_DIR):" bibtex "$(BUILD_DIR)/$(MAIN)"; \
-		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
-			-output-directory="$(BUILD_DIR)" "$(MAIN).tex"; \
-		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
-			-output-directory="$(BUILD_DIR)" "$(MAIN).tex"; \
-	fi
+build/main.pdf: main.tex refs.bib aaai2026.sty aaai2026.bst | build
+	latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error \
+		-outdir="build" "main.tex"
 
-$(BUILD_DIR):
-	mkdir -p "$(BUILD_DIR)"
+build:
+	mkdir -p "build"
 
 clean:
-	latexmk -C -outdir="$(BUILD_DIR)" "$(MAIN).tex" 2>/dev/null || true
+	latexmk -C -outdir="build" "main.tex" 2>/dev/null || true

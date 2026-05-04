@@ -98,6 +98,7 @@ where all gates act on 3 qubits (qubits 0, 1, 2). The theorem is stated as a dir
 - [Research References](research-references.md) — Annotated bibliography: Lean quantum libs, LLM+quantum papers, Coq patterns, QFT verification
 - [Reference Assets](reference-assets.md) — Local PDF references stored under `references/` with source provenance and git-ignore policy
 - [Paper Extended Abstract](paper-extended-abstract.md) — Notes for the initial `paper/` LaTeX scaffold and extended-abstract direction
+- [Paper Build](paper-build.md) — Notes on the intentionally minimal `paper/Makefile` build target
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
