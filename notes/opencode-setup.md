@@ -78,17 +78,17 @@ opencode run --attach http://localhost:4096 --model anthropic/claude-3-5-sonnet 
 ```
 - `OPENCODE_HOST`, `OPENCODE_PORT`: Server binding
 
-**Important:** OpenCode does **not** read `AGENTS.md` or `CLAUDE.md` automatically. Agent instructions for OpenCode sessions must be placed in `.opencode/rules/` (markdown files, auto-loaded into every session context).
+**Important:** OpenCode reads project instructions from `AGENTS.md` (with `CLAUDE.md` as a fallback) and from any extra files listed in the `instructions` field of `opencode.json`. A `.opencode/rules/` directory is not auto-loaded by current OpenCode releases unless its files are explicitly referenced from `opencode.json`.
 
-## OpenCode rules (`.opencode/rules/`)
+## OpenCode instructions
 
-Common rules are auto-loaded into every session:
+This repository keeps shared project guidance in `AGENTS.md`. If modular instruction files are reintroduced later, add them to `opencode.json`, for example:
 
-| File | Contents |
-|------|----------|
-| `project-overview.md` | Project layout, key files, build commands, agent roster and how they relate |
-| `lean-workflow.md` | Tool reference table, decision tree, mandatory iterative workflow, file-path format guidance, stop conditions |
-| `lean-proof-patterns.md` | Tensor-product proof patterns (Patterns 1–4), `onQubit`/`permuteGate` algebra notes, circuit decomposition patterns, pitfall table |
+```json
+{
+  "instructions": ["docs/guidelines.md", ".opencode/rules/*.md"]
+}
+```
 
 ## Agent files (`.opencode/agents/`)
 

@@ -66,11 +66,8 @@ autoquantum/
 │   ├── entrypoint.sh        -- container startup: starts opencode serve
 │   └── verify_comparator.py -- proof verification helper
 ├── .opencode/
-│   ├── rules/          # Auto-loaded rules for every OpenCode session
-│   │   ├── lean-workflow.md       -- iterative proof workflow and tool decision tree
-│   │   ├── lean-proof-patterns.md -- tensor/gate/circuit proof patterns and pitfalls
-│   │   └── project-overview.md   -- project layout and agent roster
-│   └── agents/         # Per-agent .md files (build, prove, plan, read, latex)
+│   ├── agents/         # Per-agent .md files (build, prove, plan, read, latex)
+│   └── plugins/        # OpenCode plugin files
 ├── notes/              # Research wiki — start at notes/home.md
 ├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
 ├── Dockerfile
@@ -150,10 +147,7 @@ lake build           # compile only our library
 
 ## Proof Workflow and Patterns
 
-The canonical proof workflow, MCP tool decision tree, confirmed API patterns, and known pitfalls live in the OpenCode rules files (also readable by any agent):
-
-- **`.opencode/rules/lean-workflow.md`** — iterative tactic workflow, tool decision tree, file path conventions, stop conditions
-- **`.opencode/rules/lean-proof-patterns.md`** — tensor-product coordinate patterns, gate placement patterns, circuit decomposition patterns, pitfalls table
+The canonical proof workflow, MCP tool decision tree, confirmed API patterns, and known pitfalls live in this `AGENTS.md` file and the notes wiki. OpenCode sessions load `AGENTS.md` automatically; additional modular instruction files must be listed explicitly in `opencode.json` under `instructions`.
 
 Read these before starting any proof work.
 
