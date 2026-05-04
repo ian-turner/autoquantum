@@ -91,7 +91,7 @@
 % nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
 % articles, conjunctions, and prepositions are lower case unless they
 % directly follow a colon or long dash
-\title{AutoQuantum: LLM-Guided Formal Verification of Quantum Circuits}
+\title{Agentic Engineering for Automating Quantum Computing Research}
 \author{Anonymous Submission}
 \affiliations{}
 
@@ -100,7 +100,7 @@
 \maketitle
 
 \begin{abstract}
-AutoQuantum explores an end-to-end workflow for generating, checking, and exporting formally verified quantum circuits.
+This work explores an end-to-end workflow for generating, checking, and exporting formally verified quantum circuits.
 The central idea is to place a Lean 4 proof assistant in the feedback loop of a language-model system: a model proposes circuit definitions and correctness proofs, Lean checks them against a small quantum circuit library, and elaborated failures guide subsequent repair attempts.
 This extended abstract sketches the project structure, the verification pipeline, and the role of reusable Lean infrastructure for gates, tensors, circuits, goals, and solutions.
 \end{abstract}
@@ -108,12 +108,12 @@ This extended abstract sketches the project structure, the verification pipeline
 \section{Motivation}
 
 Quantum circuit descriptions are compact, but correctness arguments are often algebraically dense and easy to get subtly wrong.
-AutoQuantum treats formal verification as a practical part of circuit generation rather than a separate after-the-fact audit, building on the proof-assistant approach exemplified by Lean~\citep{moura2021lean}.
+Our workflow treats formal verification as a practical part of circuit generation rather than a separate after-the-fact audit, building on the proof-assistant approach exemplified by Lean~\citep{moura2021lean}.
 
 \section{Project Structure}
 
 The repository is organized around a Lean 4 library, a collection of benchmark goals, and solution files that discharge those goals.
-Core definitions live under \texttt{lean/AutoQuantum/Core}, challenge statements under \texttt{lean/Goals}, and completed proofs under \texttt{lean/Solutions}.
+Core definitions, challenge statements, and completed proofs are separated into library, goal, and solution modules.
 Development notes and research references are maintained as a lightweight project wiki under \texttt{notes/}.
 
 \section{Verification Workflow}
