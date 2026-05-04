@@ -25,6 +25,8 @@ lean/.lake
 # Local notes and references
 notes/.obsidian
 references/*.pdf
+paper
+tmp
 
 # Docker logs and temp files
 *.log

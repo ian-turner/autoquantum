@@ -97,10 +97,10 @@ where all gates act on 3 qubits (qubits 0, 1, 2). The theorem is stated as a dir
 ### Research & Literature
 - [Research References](research-references.md) — Annotated bibliography: Lean quantum libs, LLM+quantum papers, Coq patterns, QFT verification
 - [Reference Assets](reference-assets.md) — Local PDF references stored under `references/` with source provenance and git-ignore policy
+- [Paper Extended Abstract](paper-extended-abstract.md) — Notes for the initial `paper/` LaTeX scaffold and extended-abstract direction
 
 ### Lean Formalization
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — What Mathlib provides, what AutoQuantum has built, confirmed API pitfalls (EuclideanSpace/mulVec, import order, `abbrev` vs `def`, `star` vs `conj`, etc.)
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in `Core/Gate.lean`
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode: `lean` build/check tools and `lean_lsp` LSP server
 - [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions in `Core/Qubit.lean`
-

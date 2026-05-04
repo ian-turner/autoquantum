@@ -40,6 +40,9 @@ references/*.pdf
 # LaTeX compiled output
 latex-out/
 
+# Local temporary files and downloaded author kits
+tmp/
+
 # Docker build and runtime logs
 docker-*.log
 docker-compose*.log
