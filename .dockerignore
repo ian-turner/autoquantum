@@ -23,7 +23,7 @@ lean/.lake
 *.olean
 
 # Local notes and references
-notes/.obsidian
+notes/
 references/*.pdf
 paper
 tmp
