@@ -5,11 +5,14 @@ BUILD_DIR := build
 
 all: $(BUILD_DIR)/$(MAIN).pdf
 
-$(BUILD_DIR)/$(MAIN).pdf: $(MAIN).tex aaai2026.sty | $(BUILD_DIR)
+$(BUILD_DIR)/$(MAIN).pdf: $(MAIN).tex refs.bib aaai2026.sty aaai2026.bst | $(BUILD_DIR)
 	@if command -v latexmk >/dev/null 2>&1; then \
 		latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error \
 			-outdir="$(BUILD_DIR)" "$(MAIN).tex"; \
 	else \
+		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
+			-output-directory="$(BUILD_DIR)" "$(MAIN).tex"; \
+		BIBINPUTS=".:$(BUILD_DIR):" bibtex "$(BUILD_DIR)/$(MAIN)"; \
 		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
 			-output-directory="$(BUILD_DIR)" "$(MAIN).tex"; \
 		pdflatex -interaction=nonstopmode -halt-on-error -file-line-error \
