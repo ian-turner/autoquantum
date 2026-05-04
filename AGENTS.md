@@ -1,204 +1,104 @@
-# Agent Instructions — AutoQuantum
+# Agent Instructions - AutoQuantum
 
-This file contains all instructions for AI agents working in this repository.
+AutoQuantum is a Lean 4 project for generating and checking formal quantum-circuit proofs. Keep this file focused on repository workflow and tool usage. Do not add solved-goal inventories, proof sketches for benchmark goals, or examples that reveal completed solution status.
 
-## Project Overview
+## Repository Orientation
 
-AutoQuantum is a system for **automatic generation and formal verification of quantum circuits** using LLMs and the Lean 4 proof assistant. The high-level pipeline is:
+- Lean source lives under `lean/`.
+- Core library code lives under `lean/AutoQuantum/`.
+- Benchmark challenge statements live under `lean/Goals/`.
+- Candidate proof files live under `lean/Solutions/`.
+- Project notes live under `notes/`; add durable development notes there when changes create useful context for future work.
+- OpenCode agent prompts live under `.opencode/agents/`.
 
-1. A user specifies a quantum algorithm or circuit (in natural language or a structured DSL).
-2. An LLM generates a candidate Lean 4 formalization (circuit definition + correctness statement).
-3. Lean's kernel checks the proof. If it fails, the LLM receives elaborated error feedback and retries.
-4. Verified circuits are exported to executable formats (OpenQASM, Qiskit, etc.).
-
-**Configuration Note:** Project paths are configurable at runtime via `docker-compose.yml` defaults or explicit environment variable overrides. The model is specified via the `--model` flag when running OpenCode sessions (e.g., `opencode run --model deepseek/deepseek-reasoner "task"`).
-
-**Container Entrypoint:** The default container entrypoint is `/workspace/autoquantum/scripts/entrypoint.sh`, which starts OpenCode in headless `serve` mode.
-
-## Repository Layout
-
-```
-autoquantum/
-├── lean/               # Lean 4 project (lakefile.lean + source)
-│   ├── lean-toolchain   -- pins leanprover/lean4:v4.29.0
-│   ├── AutoQuantum/    # Core Lean library (imported by Goals and Solutions)
-│   │   └── Core/
-│   │       ├── Hilbert.lean  -- Hilbert space & quantum state types
-│   │       ├── Tensor.lean   -- Tensor product machinery
-│   │       ├── Qubit.lean    -- Single-qubit primitives
-│   │       ├── Gate.lean     -- Gate definitions, placement API, permutations
-│   │       └── Circuit.lean  -- Circuit composition & semantics
-│   ├── Goals/          # Problem statements — one subdirectory per goal
-│   │   ├── QFT/        -- Quantum Fourier Transform
-│   │   │   ├── QFT.lean
-│   │   │   └── comparator.json
-│   │   ├── GHZ/        -- GHZ state and circuit
-│   │   │   ├── GHZ.lean
-│   │   │   └── comparator.json
-│   │   ├── HPlus/      -- Uniform superposition |+⟩^⊗n
-│   │   │   ├── HPlus.lean
-│   │   │   └── comparator.json
-│   │   ├── Comm/       -- Gate commutativity examples
-│   │   │   ├── Comm.lean
-│   │   │   └── comparator.json
-│   │   ├── NC_Ex4_2/   -- Nielsen & Chuang Exercise 4.2
-│   │   │   ├── NC_Ex4_2.lean
-│   │   │   └── comparator.json
-│   │   ├── NC_Fig4_6/  -- Nielsen & Chuang Figure 4.6
-│   │   │   ├── NC_Fig4_6.lean
-│   │   │   └── comparator.json
-│   │   ├── NC_Thm4_1/ -- Nielsen & Chuang Theorem 4.1
-│   │   │   ├── NC_Thm4_1.lean
-│   │   │   └── comparator.json
-│   │   └── NC_Fig4_8/ -- Nielsen & Chuang Figure 4.8 (Toffoli decomposition)
-│   │       ├── NC_Fig4_8.lean
-│   │       └── comparator.json
-│   └── Solutions/      # Completed proofs (flat, sorry-free when done)
-│       ├── Comm.lean
-│       ├── NC_Ex4_2.lean
-│       ├── NC_Fig4_6.lean
-│       └── NC_Thm4_1.lean
-├── .mcp/               # MCP servers (shared by Claude Code and OpenCode)
-│   ├── lean-tools/     -- build/check/sorry_count tools (Python, runs via uv)
-│   ├── latex-tools/    -- LaTeX MCP server implementation
-│   └── run-lean-lsp-mcp.sh  -- launcher for lean-lsp-mcp
-├── scripts/            # Shell entrypoints and helper scripts
-│   ├── entrypoint.sh        -- container startup: starts opencode serve
-│   └── verify_comparator.py -- proof verification helper
-├── .opencode/
-│   ├── agents/         # Per-agent .md files (build, prove, plan, read, latex)
-│   └── plugins/        # OpenCode plugin files
-├── notes/              # Research wiki — start at notes/home.md
-├── references/         # Local PDFs (gitignored — see notes/reference-assets.md)
-├── Dockerfile
-└── docker-compose.yml
-```
+Agents can inspect the filesystem directly when they need exact paths. Avoid duplicating directory trees in this file.
 
 ## MCP Tools
 
-Two MCP servers are registered for this project and available to all agents.
+Prefer the Lean MCP tools over raw shell commands for Lean work.
 
-### `lean` — build and type-check tools
+### `lean`
 
-**Prefer these over raw bash for all Lean build and check operations.**
+- `build(target="AutoQuantum")`: build the project after completed Lean edits.
+- `check_file(file="...")`: typecheck one Lean file, with paths relative to `lean/`.
+- `sorry_count()`: count remaining `sorry`s.
+- `search_mathlib(query, kind="leansearch" | "loogle")`: search Mathlib.
 
-| Tool | Equivalent bash | Purpose |
-|------|----------------|---------|
-| `build(target="AutoQuantum")` | `cd lean && lake build AutoQuantum` | Build after editing Lean files |
-| `check_file(file="AutoQuantum/Core/Gate.lean")` | `cd lean && lake env lean AutoQuantum/Core/Gate.lean` | Quick typecheck of a single file |
-| `sorry_count()` | `grep -r sorry lean/AutoQuantum` | Count remaining sorrys across all source files |
-| `search_mathlib(query, kind="leansearch")` | — | Semantic natural-language Mathlib search (HTTP, no LSP) |
-| `search_mathlib(query, kind="loogle")` | — | Type-signature pattern Mathlib search (HTTP, no LSP) |
+Never grep Mathlib source or read files under `lean/.lake/` to find lemma names. Use `search_mathlib` first, then LSP search tools if needed.
 
-`file` paths are relative to `lean/`. The server handles PATH setup for `lake` automatically.
+### `lean_lsp`
 
-**Never grep Mathlib source files.** Use `search_mathlib` (fast, HTTP-based, available immediately) whenever you need to find a Mathlib lemma name, type, or concept. Fall back to `lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch` only if `search_mathlib` fails.
+Use LSP tools for interactive proof work:
 
-### `lean_lsp` — LSP-based proof tools
+- Diagnostics: `lean_lsp_lean_diagnostic_messages`
+- Goal inspection: `lean_lsp_lean_goal`, `lean_lsp_lean_term_goal`
+- Search: `lean_lsp_lean_local_search`, `lean_lsp_lean_loogle`, `lean_lsp_lean_leansearch`, `lean_lsp_lean_state_search`
+- Experiments: `lean_lsp_lean_multi_attempt`
+- IDE help: `lean_lsp_lean_hover_info`, `lean_lsp_lean_completions`, `lean_lsp_lean_code_actions`
 
-Provided by `lean-lsp-mcp`. Prefer these for interactive proof exploration and Mathlib API lookups:
-
-**Core proof state tools:**
-- `lean_goal` — inspect the proof state at a position (goals before/after a tactic)
-- `lean_term_goal` — get the expected type at a position (useful for `refine`, `have`, `show`)
-- `lean_diagnostic_messages` — get elaboration errors/warnings for a file
-- `lean_file_outline` — list top-level definitions in a file (imports + declarations)
-- `lean_hover_info` — type signature and documentation for a symbol
-
-**Search tools (in priority order):**
-1. `lean_local_search` — fast local search to verify declarations exist (use before trying a lemma name)
-2. `lean_loogle` — type‑signature‑based Mathlib lemma search (use when you know the type shape)
-3. `lean_leansearch` — semantic natural‑language Mathlib search (use when you know the concept)
-4. `lean_state_search` — find tactics/lemmas that close a specific proof goal (most specific)
-
-**Interactive proof assistance:**
-- `lean_multi_attempt` — try multiple tactic snippets without modifying the file (returns goal states for each)
-- `lean_code_actions` — get LSP quick fixes and "Try this" suggestions at a line
-- `lean_verify` — check theorem axioms and scan source for suspicious patterns
-- `lean_completions` — IDE autocompletions (use on incomplete code after `.` or partial name)
-
-**Additional tools** (less frequently needed): `lean_declaration_file`, `lean_references`, `lean_get_widgets`, `lean_profile_proof`.
-
-**Note:** All `lean_lsp` tool names have the prefix `lean_lsp_` in the actual MCP interface (e.g., `lean_lsp_lean_goal`). The shorthand names above are used throughout this document for readability. Both `lean_tools` and `lean_lsp` are registered in `.claude/settings.json` and available to Claude Code agents.
+After editing any Lean file, call diagnostics before continuing with more proof edits.
 
 ## Build
 
-For initial setup or after changing `lean-toolchain`:
+For initial setup or after changing the Lean toolchain:
 
 ```bash
 cd lean
-lake update          # fetch Mathlib at the pinned tag
-lake exe cache get   # download prebuilt .oleans — DO NOT skip this
-lake build           # compile only our library
+lake update
+lake exe cache get
+lake build AutoQuantum
 ```
 
-`lake build` with no target defaults to a no-op if nothing has changed; use the `build` MCP tool (or `lake build AutoQuantum`) to force compilation.
+For routine verification, use the MCP build/check tools instead of raw `lake` commands when available.
 
-## Lean 4 Conventions
+## Lean Conventions
 
-- **Imports first**: `import` statements must come before everything else in a file, including doc comments (`/-! ... -/`). This is a hard Lean 4 requirement.
-- **`noncomputable`**: Any definition that depends on `ℝ`, `ℂ`, or anything from `EuclideanSpace` must be marked `noncomputable`.
-- **`abbrev` vs `def` for type aliases**: Use `abbrev` (not `def`) when you want downstream code to inherit typeclass instances automatically (e.g., `abbrev Circuit (n : ℕ) := List (GateStep n)`).
-- **Mathlib dependency**: Always import from Mathlib rather than re-proving standard results.
-- **`sorry`-tagged goals**: Mark all unproven goals with `sorry` and a comment explaining the proof strategy. Never silently leave holes.
-- **Naming**: Follow Mathlib naming conventions (snake_case for definitions/lemmas, CamelCase for structures/types).
-- **Docstrings**: Add `/-- ... -/` docstrings to all top-level definitions and major lemmas.
-- **Modularity**: Each file should be independently importable with explicit `import` headers.
+- Put `import` statements before everything else in a Lean file, including module doc comments.
+- Mark definitions that depend on `ℝ`, `ℂ`, `EuclideanSpace`, or noncomputable analysis APIs as `noncomputable`.
+- Use `abbrev` for transparent type aliases when downstream typeclass inference should see through the alias.
+- Import Mathlib APIs rather than re-proving standard facts.
+- If a goal is intentionally left open, use `sorry` with a short comment explaining the remaining obligation.
+- Follow Mathlib naming style: snake_case for theorem/definition names and CamelCase for structures/types.
+- Add docstrings to top-level definitions and important lemmas.
+- Keep files independently importable with explicit imports.
+- Use `star` for complex conjugation unless an existing local API requires another spelling.
 
-## Proof Workflow and Patterns
+## Comparator Goals
 
-The canonical proof workflow, MCP tool decision tree, confirmed API patterns, and known pitfalls live in this `AGENTS.md` file and the notes wiki. OpenCode sessions load `AGENTS.md` automatically; additional modular instruction files must be listed explicitly in `opencode.json` under `instructions`.
+For benchmark proof tasks:
 
-Read these before starting any proof work.
+- Read the target challenge file under `lean/Goals/<Goal>/<Goal>.lean`.
+- Read `lean/Goals/<Goal>/comparator.json`; it is the authority for module and theorem names.
+- Write the candidate proof in the matching flat file under `lean/Solutions/<Goal>.lean`.
+- Do not edit files under `lean/Goals/`.
+- Do not import the corresponding `Goals.*` module into the candidate solution.
+- Do not consult existing completed solution files for the same benchmark goal.
+- Keep theorem names and statements aligned with the comparator config.
 
-## Proof Strategy for Quantum Circuit Correctness
+The instructions above are intentionally goal-agnostic. Do not add per-goal solution hints here.
 
-When generating or verifying a quantum circuit proof, follow this template:
+## Adding New Benchmark Goals
 
-1. **Define the circuit** as a composition of `QGate` values using `singleGate`, `seqComp`, or list append (`++`).
-2. **State the correctness theorem**: the circuit's matrix equals the target unitary (e.g., the DFT matrix for QFT).
-3. **Prove by `norm_num` / `ring`** for small fixed cases; use `Matrix.ext` + `fin_cases` + entry-wise calculation for general n.
-4. **Unitarity side-conditions**: prove the raw matrix is unitary with `Matrix.mem_unitaryGroup_iff` + `Matrix.ext` + `fin_cases`.
+When adding a new goal, create:
 
-## LLM Generation Guidelines
+- `lean/Goals/<Name>/<Name>.lean`
+- `lean/Goals/<Name>/comparator.json`
 
-- When generating Lean code, verify that imported modules exist in Mathlib 4.29 before using them.
-- Prefer `EuclideanSpace ℂ (Fin n)` for n-dimensional complex Hilbert spaces.
-- Use `Matrix (Fin n) (Fin n) ℂ` for gate matrices; `Matrix.unitaryGroup` for unitary membership.
-- For the QFT matrix: `qftMatrix n j k = (1 / Real.sqrt (2^n : ℝ) : ℂ) * Complex.exp (2 * Real.pi * Complex.I / (2^n : ℂ)) ^ (j.val * k.val)`.
-- Always mark complex/real-valued definitions `noncomputable`.
-- Use `star` for complex conjugation, not `conj` or `Complex.conj`.
-
-## Adding New Algorithms
-
-1. Create a folder `lean/Goals/<AlgorithmName>/` containing:
-   - `<AlgorithmName>.lean` — circuit definition and correctness theorem (use `sorry` for unproven goals).
-   - `comparator.json` — comparator config with `challenge_module: "Goals.<AlgorithmName>.<AlgorithmName>"`, `solution_module: "Solutions.<AlgorithmName>"`, and the theorem names.
-2. Put `import AutoQuantum.Core.Circuit` (and any Mathlib imports) at the very top of the `.lean` file, before the module doc comment.
-3. Once the proof is complete, create the corresponding flat `lean/Solutions/<AlgorithmName>.lean` (sorry-free).
-4. Add a kebab-case note in `notes/` and link it from `notes/home.md` if the algorithm has non-trivial prerequisites.
+Use `sorry` for unproved challenge obligations. Add only the minimal candidate file under `lean/Solutions/` when the benchmark workflow requires it.
 
 ## Testing
 
-- After any Lean edit, immediately call `lean_lsp_lean_diagnostic_messages` (fast, interactive) to check for errors — do **not** reach for `build` or `check_file` mid-proof.
-- To typecheck a completed proof block, use the `check_file` MCP tool (`file="AutoQuantum/<File>.lean"`) only when you changed a single Lean file. This is slow (60–180 s); do not run multiple `check_file` calls in parallel in this repo.
-- Full build: `build` MCP tool (`target="AutoQuantum"`). After edits spanning multiple Lean files or shared APIs, prefer a single full build over multiple `check_file` calls.
-- If MCP tools are unavailable, fall back to: `cd lean && lake build AutoQuantum` / `lake env lean AutoQuantum/<File>.lean`.
+- After Lean edits: call `lean_lsp_lean_diagnostic_messages`.
+- After completing a single-file Lean change: use `check_file`.
+- After shared API or multi-file Lean changes: use `build(target="AutoQuantum")`.
+- If MCP tools are unavailable, fall back to `cd lean && lake build AutoQuantum` or `cd lean && lake env lean <file>`.
 
-## Git Conventions
+Do not run multiple slow Lean checks in parallel.
 
-- When making a git commit, agents should add themselves as co-authors using a `Co-authored-by:` trailer in the commit message.
+## Notes
 
-## Keeping Notes in Sync
+When changes create durable project knowledge, add a kebab-case markdown note in `notes/` and link it from `notes/home.md` if it should be discoverable. For Lean source changes, keep relevant notes in sync with the current API and known pitfalls, but avoid recording benchmark solution strategies in agent-loaded docs.
 
-After every session that changes Lean source files, update the notes wiki **before or in the same commit**:
+## Git
 
-1. **`notes/home.md` sorry-status table** — mark files sorry-free when all proofs are complete; list remaining gaps for partially-proved files.
-2. **`notes/lean-quantum-landscape.md` feature table** — update status (Done / Partial / Deferred) for any definitions or lemmas that changed.
-3. **`notes/lean-quantum-landscape.md` pitfalls** — add a new numbered entry for any Lean or Mathlib API surprise encountered during the session (wrong lemma names, elaboration stalls, notation quirks, import paths, etc.).
-
-This is a hard requirement, not optional cleanup.
-
-## Research Context
-
-See `notes/research-references.md` for key papers and `notes/lean-quantum-landscape.md` for the current state of Lean quantum libraries. The notes are organized as a wiki — start at `notes/home.md`.
+When making a git commit, add yourself as a co-author using a `Co-authored-by:` trailer.

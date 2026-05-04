@@ -114,7 +114,7 @@ Provides four custom tools and three hooks:
 |------|------|---------|
 | `lean_proof_step` | tool | Resolves a Lean file path (any format) to absolute and formats the exact arguments for `lean_lsp_lean_multi_attempt` |
 | `lean_find_sorry` | tool | Scans a file for `sorry` occurrences and returns each with 3 lines of context and `>>>` markers |
-| `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>.lean` and shows the paired `lean/Solutions/<Stem>.lean` target |
+| `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>.lean`, shows the candidate target path, and intentionally does not print existing candidate source |
 | `verify_comparator_goal` | tool | Manually runs `scripts/verify_comparator.py --goal <Stem>` and returns the transcript |
 | `chat.message` | hook | Tracks the requested `goal=<Stem>` value for `@prove` sessions from the incoming prompt text |
 | `event` + `session.idle` | hook | Mandatory post-response comparator run for `@prove` sessions; shows a toast on pass/fail or missing goal |
@@ -127,8 +127,8 @@ Provides four custom tools and three hooks:
 The `prove` agent is goal-scoped. Pass the goal stem directly in the prompt:
 
 ```text
-@prove goal=Comm
-@prove goal: HPlusCorrect
+@prove goal=<GoalStem>
+@prove goal: <GoalStem>
 ```
 
 The plugin tracks that goal from the prompt and runs comparator automatically whenever the `prove` session returns to idle, regardless of whether the agent chose to call any verification tool itself.

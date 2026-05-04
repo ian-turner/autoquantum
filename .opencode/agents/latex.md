@@ -52,7 +52,7 @@ Conventions:
   - `applyGate U ψ` → `U \ket{\psi}` or `U\psi` depending on context
   - `QHilbert n` → `(\mathbb{C}^2)^{\otimes n}`
   - `EuclideanSpace ℂ (Fin n)` → `\mathbb{C}^n`
-- Include a comment in the LaTeX source citing the exact Lean declaration name for each theorem (e.g. `% Lean: AutoQuantum.Algorithms.HPlus.hPlus_correct`)
+- Include a comment in the LaTeX source citing the exact Lean declaration name for each theorem
 - Use `bra`/`ket` macros: `\newcommand{\ket}[1]{\left|#1\right\rangle}` etc.
 
 ### 3. Compile via MCP

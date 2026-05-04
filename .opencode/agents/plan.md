@@ -18,7 +18,7 @@ You are the `plan` agent for AutoQuantum. Your job is to produce a clear, action
 ## When to use this agent
 
 Invoke `@plan` before:
-- Formalizing a new algorithm or circuit (QFT, GHZ, etc.)
+- Formalizing a new algorithm or circuit
 - Refactoring the Lean module structure or API
 - Extending the framework (new MCP tools, new agents, Docker changes)
 - Ingesting a research paper and mapping it to existing Lean code
@@ -36,7 +36,7 @@ Invoke `@plan` before:
 
 When planning a proof task:
 - Read the relevant Lean file(s) to understand the current sorry-state and goal structure
-- Check `notes/` for any prior proof attempts or pitfall notes
+- Check project notes only for general API and tooling pitfalls, not for benchmark-specific solution strategies
 - Identify the key lemmas needed and whether they exist in Mathlib or need to be proved first
 - Propose a proof strategy (induction structure, key rewrites, decomposition approach) before any tactics are written
 - Flag goals that are likely to require `lean_lsp_lean_state_search` or `lean_lsp_lean_loogle`

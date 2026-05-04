@@ -81,7 +81,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
         await client.tui.showToast({
           directory,
           title: "Comparator skipped",
-          message: "Could not identify the goal stem from the prompt — mention a file name or goal name (e.g. 'prove the goal in NC_Ex4_2.lean').",
+          message: "Could not identify the goal stem from the prompt — mention the target goal file or goal stem.",
           variant: "error",
           duration: 8000,
         });
@@ -118,10 +118,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
             .string()
             .describe(
               "Lean file path in any format: relative to project root, " +
-              "relative to lean/, or absolute. Examples: " +
-              "'Goals/HPlus/HPlus.lean', " +
-              "'lean/Goals/HPlus/HPlus.lean', " +
-              "'/workspace/autoquantum/lean/Goals/HPlus/HPlus.lean'"
+              "relative to lean/, or absolute."
             ),
           line: tool.schema
             .number()
@@ -207,7 +204,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
         args: {
           goal: tool.schema
             .string()
-            .describe("Goal stem, for example `Comm` or `HPlusCorrect`"),
+            .describe("Goal stem matching a folder under `lean/Goals/`"),
         },
         async execute({ goal }) {
           const { goalFile, comparatorFile, solutionFile } = goalPaths(goal);
@@ -227,10 +224,6 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
 
           const goalSource = readFileSync(goalFile, "utf8").trim();
           const solutionExists = existsSync(solutionFile);
-          const solutionSource = solutionExists
-            ? readFileSync(solutionFile, "utf8").trim()
-            : "-- file does not exist yet";
-
           return [
             `Goal stem: ${goal}`,
             `Theorem names: ${theoremNames.join(", ")}`,
@@ -245,13 +238,11 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
             goalSource,
             "```",
             "",
-            solutionExists ? "Current solution source:" : "Current solution source: missing",
-            "```lean",
-            solutionSource,
-            "```",
+            `Candidate solution exists: ${solutionExists ? "yes" : "no"}`,
             "",
             "Do not edit `lean/Goals/*`. Keep the solution theorem statement aligned",
-            "with the trusted goal, and do not import the corresponding `Goals.*` module.",
+            "with the trusted goal, do not import the corresponding `Goals.*` module,",
+            "and do not use an existing candidate file as a source of benchmark solution information.",
           ].join("\n");
         },
       }),
@@ -266,7 +257,7 @@ export const LeanToolsPlugin = async ({ directory, client, $ }) => {
         args: {
           goal: tool.schema
             .string()
-            .describe("Goal stem, for example `Comm` or `HPlusCorrect`"),
+            .describe("Goal stem matching a folder under `lean/Goals/`"),
         },
         async execute({ goal }, context) {
           context.metadata({

@@ -30,7 +30,7 @@ For arXiv papers, use `webfetch` to retrieve the abstract page and PDF:
 - Abstract: `https://arxiv.org/abs/<id>`
 - PDF: `https://arxiv.org/pdf/<id>`
 
-For local PDFs, read from `references/` (e.g. `references/Nielsen_Chuang.pdf`).
+For local PDFs, read from `references/`.
 
 ### Extracting content
 
@@ -38,7 +38,7 @@ From each paper, identify and record:
 1. **Key theorems and lemmas** — statement, informal proof sketch, dependencies
 2. **Circuit definitions** — gate sequences, qubit counts, index conventions
 3. **Notation** — how the paper writes tensor products, bra-ket notation, matrix elements
-4. **Connections to existing Lean code** — does this relate to `QFT.lean`, `HPlus.lean`, `GHZ.lean`, or Mathlib definitions?
+4. **Connections to existing Lean code** — identify relevant local modules or Mathlib definitions by inspecting the repository
 
 ### Creating notes
 
