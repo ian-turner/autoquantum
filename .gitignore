@@ -39,6 +39,7 @@ references/*.pdf
 
 # LaTeX compiled output
 latex-out/
+paper/build/
 
 # Local temporary files and downloaded author kits
 tmp/
