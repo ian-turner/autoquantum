@@ -100,9 +100,15 @@
 \maketitle
 
 \begin{abstract}
-This work explores an end-to-end workflow for generating, checking, and exporting formally verified quantum circuits.
-The central idea is to place a Lean 4 proof assistant in the feedback loop of a language-model system: a model proposes circuit definitions and correctness proofs, Lean checks them against a small quantum circuit library, and elaborated failures guide subsequent repair attempts.
-This extended abstract sketches the project structure, the verification pipeline, and the role of reusable Lean infrastructure for gates, tensors, circuits, goals, and solutions.
+Large language models (LLMs) have shown competence in abstract mathematical research and theorem proving.
+Some frontier models have even been able to solve non-trivial open problems in combinatorics.
+However, these models often fail to consistently produce correct, verifiable results, and require
+much human intervention and iteration.
+Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
+limited compared to a more general and well-studied field such as combinatorics.
+We present a work-in-progress agentic framework for abstract quantum computing research;
+core definitions and axioms of the field are human-defined, training goals are specified from existing results,
+and the trained system can be directed towards a formally-defined goal with varying levels of human intervention.
 \end{abstract}
 
 \section{Motivation}
