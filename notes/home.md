@@ -35,7 +35,6 @@ For agent sessions, prefer the Lean MCP tools described in `AGENTS.md`.
 
 - [Lean Quantum Landscape](lean-quantum-landscape.md) — Current library surface and Mathlib/API pitfalls; keep benchmark-solution details out of this note
 - [Gate Embedding Patterns](gate-embedding-patterns.md) — Reusable Kronecker/reindex and block-matrix patterns for lifted gates in core gate code
-- [Qubit Normalization Pattern](qubit-normalization-pattern.md) — Reusable proof patterns for normalized and orthogonal single-qubit superpositions
 
 ### Tooling
 

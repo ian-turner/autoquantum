@@ -81,9 +81,6 @@ Last updated: April 27, 2026 (Mathlib v4.29.0).
 | `basisState n k` — computational basis state | Done | `Core/Hilbert.lean` |
 | `superpose` — linear combination of vectors | Done | `Core/Hilbert.lean` |
 | `superpose_norm_eq_one` — normalization of superposition | **Done** (c4dcc6b) | `Core/Hilbert.lean` |
-| `ket0`, `ket1`, `ketPlus`, `ketMinus` | Done | `Core/Qubit.lean` (lint-cleaned Apr 17, 2026) |
-| `ketPlus_braket_ketMinus` | Done | `Core/Qubit.lean` |
-| Bloch sphere parameterization | Done | `Core/Qubit.lean` |
 | `QGate k` — unitary gate type | Done | `Core/Gate.lean` |
 | Pauli X, Y, Z gates + unitarity proofs | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | Hadamard gate + unitarity proof | Done | `Core/Gate.lean` |

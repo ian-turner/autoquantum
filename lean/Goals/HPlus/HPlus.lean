@@ -1,5 +1,4 @@
 import AutoQuantum.Core.Circuit
-import AutoQuantum.Core.Qubit
 import AutoQuantum.Core.Tensor
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
