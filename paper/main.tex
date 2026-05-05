@@ -178,13 +178,14 @@ and run the entire setup inside of a containerized environment to ensure reprodu
 
 \paragraph{Qubit States}
 
-We can define a Hilbert space in Lean using the existing \verb|EuclideanSpace| type,
+We define a Hilbert space in Lean using the existing \verb|EuclideanSpace| type,
 which gives access to the inner product required to satisfy the rules of a Hilbert space.
 An $n$-qubit Hilbert space is then defined as a $2^n$-dimensional complex Euclidian space, and
 an $n$-qubit state is defined as an element of the $n$-qubit Hilbert space,
 provided that the norm of the element is 1.
 The basis states $|0\rangle$ and $|1\rangle$ are then defined as the basis vectors
-of the 2-dimensional complex Euclidean space.
+of the 2-dimensional complex Euclidean space, and a superposition by a linear combination
+of the basis vectors.
 
 \paragraph{Tensor Product}
 
@@ -253,6 +254,20 @@ quantum computing tasks, whose solutions are known, for benchmarking against.
         \node at (7.35,0) {$A$};
       \end{tikzpicture}
       \end{center}
+      
+      \begin{center}
+      \textit{(Here the $e^{i\alpha}$ gate denotes the single-qubit controlled-phase gate)}
+      \end{center}
+
+\item Bell state preparation
+
+      \textit{Construct a circuit which prepares the 2-qubit Bell state
+      $|\Psi\rangle=(|00\rangle+|11\rangle)/\sqrt{2}$}
+
+\item GHZ state preparation
+
+      \textit{Construct a circuit which prepares the $n$-qubit GHZ state}
+      $|$GHZ$\rangle_n=(|0\rangle^{\otimes n}+|1\rangle^{\otimes n})/\sqrt{2}$
 
 \end{enumerate}
 
