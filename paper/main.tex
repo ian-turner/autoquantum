@@ -107,13 +107,26 @@ much human intervention and iteration.
 Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
 limited compared to a more general and well-studied field such as combinatorics.
 We present a work-in-progress agentic framework for abstract quantum computing research.
-Core definitions and axioms of the field are human-defined (written in Lean),
-and training goals can be specified from known results or synthetically generated.
-The trained system can then be directed towards a new goal with varying levels of human intervention,
+Core definitions and axioms of the field are human-defined in Lean, as are goals,
 and correctness is checked at every step with the Lean proof-checker.
 \end{abstract}
 
-\section{Preliminaries}
+
+
+
+\section{Introduction}
+
+Quantum computing has the potential to exponentially speed up many classical computing algorithms \cite{brandao2010exponential}.
+However, making advancements in this field requires an intricate understanding of topics ranging from linear algebra and
+group theory to probability and statistics.
+In addition, solutions to quantum computing problems are often hard to verify by testing,
+given that quantum programs cannot be efficiently simulated on a classical computer [CITE],
+and access to currently-available quantum machines is very expensive.
+Because of this, correctness of quantum algorithms can often only be proved analytically.
+This makes quantum computing research a particularly difficult task for LLM agents,
+given that their reinforcement learning training loops rely on tasks which can be easily verified
+and scored [CITE].
+
 
 
 
