@@ -107,38 +107,12 @@ much human intervention and iteration.
 Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
 limited compared to a more general and well-studied field such as combinatorics.
 We present a work-in-progress agentic framework for abstract quantum computing research;
-core definitions and axioms of the field are human-defined, training goals are specified from existing results,
-and the trained system can be directed towards a formally-defined goal with varying levels of human intervention.
+core definitions and axioms of the field are human-defined (written in Lean), and training goals are specified from existing results.
+The trained system can then be directed towards a goal with varying levels of human intervention,
+and correctness is checked at every step with the Lean proof-checker.
 \end{abstract}
 
-\section{Motivation}
-
-Quantum circuit descriptions are compact, but correctness arguments are often algebraically dense and easy to get subtly wrong.
-Our workflow treats formal verification as a practical part of circuit generation rather than a separate after-the-fact audit, building on the proof-assistant approach exemplified by Lean~\citep{moura2021lean}.
-
-\section{Project Structure}
-
-The repository is organized around a Lean 4 library, a collection of benchmark goals, and solution files that discharge those goals.
-Core definitions, challenge statements, and completed proofs are separated into library, goal, and solution modules.
-Development notes and research references are maintained as a lightweight project wiki under \texttt{notes/}.
-
-\section{Verification Workflow}
-
-The intended workflow has four stages.
-First, a user specifies a quantum algorithm or circuit.
-Second, an LLM generates a Lean formalization containing a circuit definition and correctness statement.
-Third, Lean checks the proposed proof and returns structured diagnostics on failure.
-Finally, verified circuits can be exported to executable representations such as OpenQASM or Qiskit.
-
-\section{Lean Infrastructure}
-
-The Lean library currently emphasizes finite-dimensional Hilbert spaces, tensor-index bookkeeping, single-qubit gates, gate placement, controlled operations, and list-based circuit composition.
-This infrastructure is designed to make small concrete circuit identities tractable while leaving room for larger algorithmic proofs such as QFT and GHZ preparation.
-
-\section{Outlook}
-
-The extended-abstract version of this paper should clarify the architecture and research contribution before expanding into a full evaluation.
-Near-term additions include a sharper problem statement, a worked example, and a concise comparison with simulation-based verification and existing quantum formalization projects.
+\section{Preliminaries}
 
 \bibliography{refs}
 
