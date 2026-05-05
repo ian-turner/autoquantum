@@ -18,6 +18,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{verbatim}
+\usepackage{tikz}
 
 %
 % These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
@@ -175,7 +176,7 @@ and run the entire setup inside of a containerized environment to ensure reprodu
 
 \subsection{Formalizing Quantum Computing}
 
-\paragraph{Qubits}
+\paragraph{Qubit States}
 
 We can define a Hilbert space in Lean using the existing \verb|EuclideanSpace| type,
 which gives access to the inner product required to satisfy the rules of a Hilbert space.
@@ -199,6 +200,33 @@ of the 2-dimensional complex Euclidean space.
 
 \section{Experiments}
 
+In order to evaluate the performance of our agentic setup, we prepare several abstract
+quantum computing tasks, whose solutions are known, for benchmarking against.
+
+\subsection{Benchmark Tasks}
+
+\begin{enumerate}
+
+\item Matrix exponential lemma
+
+      \textit{Let $x$ be a real number and $A$ a matrix such that $A^2=I$.
+              Show that $e^{iAx}=\cos (x) I + i \sin (x) A$}
+
+\item Single-qubit Z-Y decomposition
+
+      \textit{Let $U$ be a unitary operation on a single qubit. Then show there
+              exist real numbers $\alpha,\beta,\gamma,\delta$ such that
+              $U=e^{i\alpha}R_z(\beta)R_y(\gamma)R_z(\delta)$.}
+
+\item Controlled gate decomposition
+      
+      \textit{Let $U=e^{i\alpha}AXBXC$, where $U$ is a single-qubit unitary operation,
+              $ABC=I$, and $X$ is the Pauli $X$ gate. Show that the circuit below
+              implements the controlled-$U$ gate.}
+      \begin{tikzpicture}
+      \end{tikzpicture}
+
+\end{enumerate}
 
 
 
