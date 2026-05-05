@@ -103,7 +103,7 @@
 
 \begin{abstract}
 Large language models (LLMs) have shown competence in abstract mathematical research and theorem proving.
-Some frontier models have even been able to solve non-trivial open problems in combinatorics.
+Some frontier models have even been able to solve open problems in combinatorics.
 However, these models often fail to consistently produce correct, verifiable results, and require
 much human intervention and iteration.
 Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
@@ -121,14 +121,14 @@ and correctness is checked at every step with the Lean proof-checker.
 Quantum computing has the potential to exponentially speed up
 many classical computing algorithms \cite{brandao2010exponential}.
 However, solutions to quantum computing problems are often hard to verify,
-given that quantum programs cannot be efficiently simulated on a classical computer [CITE],
+given that quantum programs cannot be efficiently simulated on a classical computer,
 and access to currently-available quantum machines is very expensive.
 Because of this, correctness of quantum algorithms can often only be proved analytically.
 For these reasons, quantum algorithm design
 presents a particular challenge for LLM agents, and artificial intelligence agents more broadly,
 given that their training loops rely on tasks for which solutions can be easily verified or scored.
 
-Previous applications of artificial intelligence (AI) to quantum computing have fallen
+Previous applications of artificial intelligence (AI) to quantum computing have mostly fallen
 into two categories. The first is numerical optimization algorithms, which use neural
 nets and reinforcement learning to optimize low-level aspects of quantum algorithm
 design, such as direct unitary synthesis, circuit optimization, or error correcting
@@ -137,16 +137,17 @@ This area has shown some promise, but these methods do not scale to large number
 making them impractical for large-scale synthesis tasks.
 The second, more recent category, is the use of LLMs to perform quantum computing tasks.
 Several works have used LLMs to write Qiskit or OpenQASM code directly, which is then
-run through a local simulator to produce results [CITE].
+run through a local simulator to produce results \cite{dupuis2024qiskit,yang2024qcircuitbench,
+guo2025quanbench,vishwakarma2024qiskit,yu2025quasar,fu2025qagent}.
 This suffers from the same problem of the first approach; it does not generalize beyond
 small numbers of qubits, and code is only verified on the examples which it is tested
 against.
 
-In order to solve these problems, we build a domain-specific benchmark of
-abstract quantum computing tasks, formalized in Lean.
+In order to solve these problems, we build a formalization of quantum computing in Lean,
+which then allows for abstract specification of quantum computing tasks, and complete verification of results.
 The tasks range from proving simple lemmas about matrices, to more complex theorems
 about circuit synthesis, to implementing circuit design specifications.
-We test several state-of-the art LLMs on these problems, using the coding harness
+We test several state-of-the-art LLMs on these problems, using the coding harness
 OpenCode \cite{opencode}, equipped with specialized Lean tools.
 We use the Lean tool `Comparator' [CITE] to run a strict verification of the LLM-generated code,
 and run the entire setup inside of a containerized environment to ensure reproducibility.
@@ -193,7 +194,13 @@ of the basis vectors.
 
 \paragraph{Quantum Circuits}
 
-\subsection{OpenCode Agent Environment}
+\subsection{Agent Environment}
+
+\paragraph{Containerization}
+
+\paragraph{Tools and Permissions}
+
+\paragraph{Prompt Engineering}
 
 \subsection{Proof Verification Pipeline}
 
@@ -203,6 +210,7 @@ of the basis vectors.
 
 In order to evaluate the performance of our agentic setup, we prepare several abstract
 quantum computing tasks, whose solutions are known, for benchmarking against.
+These are summarized below.
 
 \subsection{Benchmark Tasks}
 
