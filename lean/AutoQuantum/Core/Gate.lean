@@ -140,24 +140,35 @@ lemma hadamardMatrix_isUnitary : hadamardMatrix ∈ Matrix.unitaryGroup (Fin 2) 
 /-- The Hadamard gate. -/
 noncomputable def hadamard : QGate 1 := ⟨hadamardMatrix, hadamardMatrix_isUnitary⟩
 
-/-- The phase rotation R_k gate matrix: [[1, 0], [0, exp(2πi/2^k)]].
-    R_1 = Z, R_2 = S, R_3 = T. -/
-noncomputable def phaseRotationMatrix (k : ℕ) : Matrix (Fin 2) (Fin 2) ℂ :=
-  !![1, 0; 0, Complex.exp (2 * Real.pi * Complex.I / (2 ^ k : ℂ))]
+/-- A 2-by-2 diagonal matrix. -/
+noncomputable def diagonal2Matrix (a b : ℂ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  !![a, 0; 0, b]
 
-lemma phaseRotationMatrix_isUnitary (k : ℕ) :
-    phaseRotationMatrix k ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+lemma diagonal2Matrix_isUnitary {a b : ℂ}
+    (ha : a * (starRingEnd ℂ) a = 1) (hb : b * (starRingEnd ℂ) b = 1) :
+    diagonal2Matrix a b ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
   rw [Matrix.mem_unitaryGroup_iff]
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [phaseRotationMatrix, Matrix.mul_apply]
-  · rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
-    have hθ : (starRingEnd ℂ) (2 * (Real.pi : ℂ) * Complex.I / (2 : ℂ) ^ k) +
-        2 * (Real.pi : ℂ) * Complex.I / (2 : ℂ) ^ k = 0 := by
-      simp only [map_mul, map_div₀, map_pow, map_ofNat,
-        Complex.conj_I, Complex.conj_ofReal]
-      ring
-    simpa using congrArg Complex.exp hθ
+    simp [diagonal2Matrix, Matrix.mul_apply, Fin.sum_univ_two, ha, hb]
+
+lemma exp_mul_star_eq_one_of_add_conj_eq_zero {z : ℂ}
+    (hz : z + (starRingEnd ℂ) z = 0) : Complex.exp z * star (Complex.exp z) = 1 := by
+  change Complex.exp z * (starRingEnd ℂ) (Complex.exp z) = 1
+  rw [← Complex.exp_conj, ← Complex.exp_add, hz, Complex.exp_zero]
+
+/-- The phase rotation R_k gate matrix: [[1, 0], [0, exp(2πi/2^k)]].
+    R_1 = Z, R_2 = S, R_3 = T. -/
+noncomputable def phaseRotationMatrix (k : ℕ) : Matrix (Fin 2) (Fin 2) ℂ :=
+  diagonal2Matrix 1 (Complex.exp (2 * Real.pi * Complex.I / (2 ^ k : ℂ)))
+
+lemma phaseRotationMatrix_isUnitary (k : ℕ) :
+    phaseRotationMatrix k ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
+  apply diagonal2Matrix_isUnitary
+  · simp
+  · apply exp_mul_star_eq_one_of_add_conj_eq_zero
+    simp only [map_mul, map_div₀, map_pow, map_ofNat, Complex.conj_I, Complex.conj_ofReal]
+    ring
 
 /-- The phase rotation gate R_k. -/
 noncomputable def phaseRotation (k : ℕ) : QGate 1 :=
@@ -166,20 +177,15 @@ noncomputable def phaseRotation (k : ℕ) : QGate 1 :=
 /-- The single-qubit phase gate `diag(1, exp(i α))` used on the control wire in
 Nielsen--Chuang Figure 4.6. -/
 noncomputable def controlPhaseMatrix (α : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
-  !![1, 0; 0, Complex.exp (Complex.I * (α : ℂ))]
+  diagonal2Matrix 1 (Complex.exp (Complex.I * (α : ℂ)))
 
 lemma controlPhaseMatrix_isUnitary (α : ℝ) :
     controlPhaseMatrix α ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [controlPhaseMatrix, Matrix.mul_apply]
-  rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
-  have hθ : (starRingEnd ℂ) (Complex.I * (α : ℂ)) + Complex.I * (α : ℂ) = 0 := by
+  apply diagonal2Matrix_isUnitary
+  · simp
+  · apply exp_mul_star_eq_one_of_add_conj_eq_zero
     simp only [map_mul, Complex.conj_I, Complex.conj_ofReal]
     ring
-  rw [hθ]
-  simp
 
 /-- The single-qubit phase gate `diag(1, exp(i α))`. -/
 noncomputable def controlPhase (α : ℝ) : QGate 1 :=
@@ -194,23 +200,16 @@ noncomputable def tGate : QGate 1 := phaseRotation 3
 /-- The Rz (Z-rotation) gate matrix: [[exp(−iθ/2), 0], [0, exp(iθ/2)]].
     Rz(θ) = exp(−iθZ/2). (Nielsen & Chuang, Box 4.1.) -/
 noncomputable def rzMatrix (θ : ℝ) : Matrix (Fin 2) (Fin 2) ℂ :=
-  !![Complex.exp (-Complex.I * ↑θ / 2), 0; 0, Complex.exp (Complex.I * ↑θ / 2)]
+  diagonal2Matrix (Complex.exp (-Complex.I * ↑θ / 2)) (Complex.exp (Complex.I * ↑θ / 2))
 
 lemma rzMatrix_isUnitary (θ : ℝ) : rzMatrix θ ∈ Matrix.unitaryGroup (Fin 2) ℂ := by
-  rw [Matrix.mem_unitaryGroup_iff]
-  ext i j
-  fin_cases i <;> fin_cases j <;>
-    simp [rzMatrix, Matrix.mul_apply]
-  · rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
-    have hθ : (starRingEnd ℂ) (-Complex.I * (θ : ℂ) / 2) + (-Complex.I * (θ : ℂ) / 2) = 0 := by
-      simp only [map_mul, map_div₀, map_ofNat, map_neg, Complex.conj_I, Complex.conj_ofReal]
-      ring
-    simpa using congrArg Complex.exp hθ
-  · rw [mul_comm, ← Complex.exp_conj, ← Complex.exp_add]
-    have hθ : (starRingEnd ℂ) (Complex.I * (θ : ℂ) / 2) + (Complex.I * (θ : ℂ) / 2) = 0 := by
-      simp only [map_mul, map_div₀, map_ofNat, Complex.conj_I, Complex.conj_ofReal]
-      ring
-    simpa using congrArg Complex.exp hθ
+  apply diagonal2Matrix_isUnitary
+  · apply exp_mul_star_eq_one_of_add_conj_eq_zero
+    simp only [map_mul, map_div₀, map_ofNat, map_neg, Complex.conj_I, Complex.conj_ofReal]
+    ring
+  · apply exp_mul_star_eq_one_of_add_conj_eq_zero
+    simp only [map_mul, map_div₀, map_ofNat, Complex.conj_I, Complex.conj_ofReal]
+    ring
 
 /-- The Rz (Z-rotation) gate. Rz(θ) = exp(−iθZ/2). -/
 noncomputable def rz (θ : ℝ) : QGate 1 := ⟨rzMatrix θ, rzMatrix_isUnitary θ⟩
@@ -256,7 +255,7 @@ lemma rxMatrix_eq_conj_rz (θ : ℝ) :
     exact exp_neg_half θ
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [rxMatrix, hadamardMatrix, rzMatrix, Matrix.mul_apply, Fin.sum_univ_two,
+    simp [rxMatrix, hadamardMatrix, rzMatrix, diagonal2Matrix, Matrix.mul_apply, Fin.sum_univ_two,
       exp_pos_half] <;>
     field_simp [hne] <;>
     simp [hneg3, hneg4] <;>
@@ -368,25 +367,28 @@ lemma reindex_mem_unitaryGroup {n m : Type*} [DecidableEq n] [Fintype n]
   simpa [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_reindex] using
     congrArg (Matrix.reindex e e) hA'
 
+/-- Reindex a packaged unitary matrix along an equivalence. -/
+noncomputable def reindexUnitary {n m : Type*} [DecidableEq n] [Fintype n]
+    [DecidableEq m] [Fintype m] (e : n ≃ m) (U : Matrix.unitaryGroup n ℂ) :
+    Matrix.unitaryGroup m ℂ :=
+  ⟨Matrix.reindex e e (U : Matrix n n ℂ), reindex_mem_unitaryGroup e (SetLike.coe_mem U)⟩
+
+/-- Package the Kronecker product of two unitary matrices as a unitary matrix. -/
+noncomputable def kroneckerUnitary {n m : Type*} [DecidableEq n] [Fintype n]
+    [DecidableEq m] [Fintype m] (U : Matrix.unitaryGroup n ℂ)
+    (V : Matrix.unitaryGroup m ℂ) : Matrix.unitaryGroup (n × m) ℂ :=
+  ⟨(U : Matrix n n ℂ) ⊗ₖ (V : Matrix m m ℂ),
+    Matrix.kronecker_mem_unitary (SetLike.coe_mem U) (SetLike.coe_mem V)⟩
+
 /-- Embed a k-qubit gate on the first k qubits of a (k+m)-qubit system (U ⊗ I_{2^m}). -/
 noncomputable def tensorWithId {k : ℕ} (m : ℕ) (U : QGate k) : QGate (k + m) := by
   let e := tensorIndexEquiv k m
-  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
-    ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
-  refine ⟨Matrix.reindex e e ((U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ) ⊗ₖ Im), ?_⟩
-  have hIm : Im ∈ Matrix.unitaryGroup (Fin (2 ^ m)) ℂ := SetLike.coe_mem (1 : QGate m)
-  exact reindex_mem_unitaryGroup e <|
-    Matrix.kronecker_mem_unitary (SetLike.coe_mem U) hIm
+  exact reindexUnitary e (kroneckerUnitary U (1 : QGate m))
 
 /-- Embed a k-qubit gate on the last k qubits of an (m+k)-qubit system (I_{2^m} ⊗ U). -/
 noncomputable def idTensorWith {k : ℕ} (m : ℕ) (U : QGate k) : QGate (m + k) := by
   let e := tensorIndexEquiv m k
-  let Im : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ :=
-    ((1 : QGate m) : Matrix (Fin (2 ^ m)) (Fin (2 ^ m)) ℂ)
-  refine ⟨Matrix.reindex e e (Im ⊗ₖ (U : Matrix (Fin (2 ^ k)) (Fin (2 ^ k)) ℂ)), ?_⟩
-  have hIm : Im ∈ Matrix.unitaryGroup (Fin (2 ^ m)) ℂ := SetLike.coe_mem (1 : QGate m)
-  exact reindex_mem_unitaryGroup e <|
-    Matrix.kronecker_mem_unitary hIm (SetLike.coe_mem U)
+  exact reindexUnitary e (kroneckerUnitary (1 : QGate m) U)
 
 /-- Build a controlled version of a k-qubit gate as `diag(I, U)`.
 
