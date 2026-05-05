@@ -118,12 +118,13 @@ and correctness is checked at every step with the Lean proof-checker.
 
 Quantum computing has the potential to exponentially speed up
 many classical computing algorithms \cite{brandao2010exponential}.
-However, solutions to quantum computing problems are often hard to verify by testing,
+However, solutions to quantum computing problems are often hard to verify,
 given that quantum programs cannot be efficiently simulated on a classical computer [CITE],
 and access to currently-available quantum machines is very expensive.
 Because of this, correctness of quantum algorithms can often only be proved analytically.
-This presents a particular challenge for LLM agents, given that their training loops
-rely on tasks for which solutions can be easily verified or scored [CITE].
+For these reasons, quantum algorithm design
+presents a particular challenge for LLM agents, and artificial intelligence agents more broadly,
+given that their training loops rely on tasks for which solutions can be easily verified or scored.
 
 Previous applications of artificial intelligence (AI) to quantum computing have fallen
 into two categories. The first is numerical optimization algorithms, which use neural
@@ -146,9 +147,37 @@ about circuit synthesis, to implementing circuit design specifications.
 We test several state-of-the art LLMs on these problems, using the OpenCode \cite{opencode}
 coding harness, running inside of a containerized environment to ensure reproducibility.
 We use the Lean tool `Comparator' [CITE] to run a strict verification of the LLM-generated code,
-ensuring that no illegal axioms were injected into the context, effectively ensuring the model
-did not ``cheat'' in the completion of the proof.
-We also discuss how this approach could be generalized to other domains, even beyond formal mathematics.
+ensuring that no illegal axioms were injected into the proof.
+
+
+
+
+\section{Background}
+
+
+
+
+\section{Related Work}
+
+
+
+
+\section{Approach}
+
+
+
+
+\section{Experiments}
+
+
+
+
+\section{Discussion and Future Work}
+
+
+
+
+\section{Conclusion}
 
 
 \bibliography{refs}
