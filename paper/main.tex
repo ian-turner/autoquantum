@@ -17,6 +17,7 @@
 % These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
 \usepackage{algorithm}
 \usepackage{algorithmic}
+\usepackage{verbatim}
 
 %
 % These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
@@ -173,6 +174,22 @@ and run the entire setup inside of a containerized environment to ensure reprodu
 \section{Approach}
 
 \subsection{Formalizing Quantum Computing}
+
+\paragraph{Qubits}
+
+We can define a Hilbert space in Lean using the existing \verb|EuclideanSpace| type,
+which gives access to the inner product required to satisfy the rules of a Hilbert space.
+An $n$-qubit Hilbert space is then defined as a $2^n$-dimensional complex Euclidian space, and
+an $n$-qubit state is defined as an element of the $n$-qubit Hilbert space,
+provided that the norm of the element is 1.
+The basis states $|0\rangle$ and $|1\rangle$ are then defined as the basis vectors
+of the 2-dimensional complex Euclidean space.
+
+\paragraph{Tensor Product}
+
+\paragraph{Quantum Gates}
+
+\paragraph{Quantum Circuits}
 
 \subsection{OpenCode Agent Environment}
 
