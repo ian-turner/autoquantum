@@ -144,10 +144,10 @@ In order to solve these problems, we build a domain-specific benchmark of
 abstract quantum computing tasks, formalized in Lean.
 The tasks range from proving simple lemmas about matrices, to more complex theorems
 about circuit synthesis, to implementing circuit design specifications.
-We test several state-of-the art LLMs on these problems, using the OpenCode \cite{opencode}
-coding harness, running inside of a containerized environment to ensure reproducibility.
-We use the Lean tool `Comparator' [CITE] to run a strict verification of the LLM-generated code,
-ensuring that no illegal axioms were injected into the proof.
+We test several state-of-the art LLMs on these problems, using the coding harness
+OpenCode \cite{opencode}, equipped with specialized Lean tools,
+running inside of a containerized environment to ensure reproducibility.
+We use the Lean tool `Comparator' [CITE] to run a strict verification of the LLM-generated code.
 
 
 
@@ -159,8 +159,6 @@ ensuring that no illegal axioms were injected into the proof.
 \paragraph{Quantum States}
 
 \paragraph{Quantum Circuits}
-
-\paragraph{Measurement}
 
 
 
