@@ -91,7 +91,7 @@
 % nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
 % articles, conjunctions, and prepositions are lower case unless they
 % directly follow a colon or long dash
-\title{Agentic Engineering for Automating Quantum Computing Research}
+\title{Agentic Engineering for Automating Quantum Algorithm Design}
 \author{Anonymous Submission}
 \affiliations{}
 
@@ -106,7 +106,7 @@ However, these models often fail to consistently produce correct, verifiable res
 much human intervention and iteration.
 Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
 limited compared to a more general and well-studied field such as combinatorics.
-We present a work-in-progress agentic framework for abstract quantum computing research.
+We present a work-in-progress agentic framework for abstract quantum computing algorithm design.
 Core definitions and axioms of the field are human-defined in Lean, as are goals,
 and correctness is checked at every step with the Lean proof-checker.
 \end{abstract}
@@ -116,18 +116,39 @@ and correctness is checked at every step with the Lean proof-checker.
 
 \section{Introduction}
 
-Quantum computing has the potential to exponentially speed up many classical computing algorithms \cite{brandao2010exponential}.
-However, making advancements in this field requires an intricate understanding of topics ranging from linear algebra and
-group theory to probability and statistics.
-In addition, solutions to quantum computing problems are often hard to verify by testing,
+Quantum computing has the potential to exponentially speed up
+many classical computing algorithms \cite{brandao2010exponential}.
+However, solutions to quantum computing problems are often hard to verify by testing,
 given that quantum programs cannot be efficiently simulated on a classical computer [CITE],
 and access to currently-available quantum machines is very expensive.
 Because of this, correctness of quantum algorithms can often only be proved analytically.
-This makes quantum computing research a particularly difficult task for LLM agents,
-given that their reinforcement learning training loops rely on tasks which can be easily verified
-and scored [CITE].
+This presents a particular challenge for LLM agents, given that their training loops
+rely on tasks for which solutions can be easily verified or scored [CITE].
 
+Previous applications of artificial intelligence (AI) to quantum computing have fallen
+into two categories. The first is numerical optimization algorithms, which use neural
+nets and reinforcement learning to optimize low-level aspects of quantum algorithm
+design, such as direct unitary synthesis, circuit optimization, or error correcting
+\cite{zhang2020topological,alam2023quantum,bao2024twisty}.
+This area has shown some promise, but these methods do not scale to large numbers of qubits,
+making them impractical for large-scale synthesis tasks.
+The second, more recent category, is the use of LLMs to perform quantum computing tasks.
+Several works have used LLMs to write Qiskit or OpenQASM code directly, which is then
+run through a local simulator to produce results [CITE].
+This suffers from the same problem of the first approach; it does not generalize beyond
+small numbers of qubits, and code is only verified on the examples which it is tested
+against.
 
+In order to solve these problems, we build a domain-specific benchmark of
+abstract quantum computing tasks, formalized in Lean.
+The tasks range from proving simple lemmas about matrices, to more complex theorems
+about circuit synthesis, to implementing circuit design specifications.
+We test several state-of-the art LLMs on these problems, using the OpenCode \cite{opencode}
+coding harness, running inside of a containerized environment to ensure reproducibility.
+We use the Lean tool `Comparator' [CITE] to run a strict verification of the LLM-generated code,
+ensuring that no illegal axioms were injected into the context, effectively ensuring the model
+did not ``cheat'' in the completion of the proof.
+We also discuss how this approach could be generalized to other domains, even beyond formal mathematics.
 
 
 \bibliography{refs}
