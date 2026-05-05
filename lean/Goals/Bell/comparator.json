@@ -1,7 +1,7 @@
 {
   "challenge_module": "Goals.Bell.Bell",
   "solution_module": "Solutions.Bell",
-  "theorem_names": ["bell_goal"],
+  "theorem_names": ["bell_correct"],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
   "enable_nanoda": false
 }
