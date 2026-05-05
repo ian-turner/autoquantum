@@ -25,3 +25,6 @@ noncomputable def bellVector : QHilbert 2 :=
 noncomputable def bellState : QState 2 := QState.mk bellVector (by sorry)
 
 noncomputable def bellCircuit : Circuit 2 := sorry
+
+theorem bell_correct : runCircuit bellCircuit (basisState 2 0) = bellState := by
+  sorry
