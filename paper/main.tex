@@ -178,18 +178,24 @@ and run the entire setup inside of a containerized environment to ensure reprodu
 
 \subsection{Formalizing Quantum Computing}
 
-\paragraph{Qubit States}
+\paragraph{Quantum States}
 
 We define a Hilbert space in Lean using the existing \verb|EuclideanSpace| type,
 which gives access to the inner product required to satisfy the rules of a Hilbert space.
 An $n$-qubit Hilbert space is then defined as a $2^n$-dimensional complex Euclidian space, and
-an $n$-qubit state is defined as an element of the $n$-qubit Hilbert space,
-provided that the norm of the element is 1.
+an $n$-qubit state is defined as an element of the $n$-qubit Hilbert space with unit norm.
 The basis states $|0\rangle$ and $|1\rangle$ are then defined as the basis vectors
-of the 2-dimensional complex Euclidean space, and a superposition by a linear combination
-of the basis vectors.
+of the two-dimensional complex Euclidean space, and a superposition of states is then
+a linear combination of the basis vectors.
 
 \paragraph{Tensor Product}
+
+The tensor product of two quantum states can be represented in Lean as an isomorphism.
+This maps the indices of the product space of the two individual
+spaces to the indices of the combined space, yielding
+the relationship $\mathcal{H}_n \times \mathcal{H}_m \cong \mathcal{H}_{n+m}$.
+The map is defined using the \verb|finProdFinEquiv| isomorphism from Mathlib, which
+maps the product of two finite sets of size $n$ and $m$ to their combined set of size $n+m$.
 
 \paragraph{Quantum Gates}
 
@@ -213,7 +219,7 @@ In order to evaluate the performance of our agentic setup, and provide a baselin
 for evaluation of future setups, we prepare several abstract
 quantum computing tasks, whose solutions are known, for benchmarking against.
 These are summarized below.
-a
+
 \paragraph{Benchmark Tasks}
 
 \begin{enumerate}
