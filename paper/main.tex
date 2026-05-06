@@ -145,7 +145,7 @@ small numbers of qubits, and code is only verified on the examples which it is t
 against.
 
 In order to solve these problems, we build a formalization of quantum computing in Lean,
-which then allows for abstract specification of quantum computing tasks, and complete verification of results.
+which then allows for abstract specification of quantum computing tasks, and formal verification of results.
 We then develop a set of benchmark tasks, pulled from existing circuits/results.
 The tasks range from proving simple lemmas about matrices, to more complex theorems
 about circuit synthesis, to implementing circuit design specifications.
@@ -210,7 +210,7 @@ a linear combination of the basis vectors.
 The tensor product of two quantum states can be represented in Lean as an isomorphism.
 This maps the indices of the product space of the two individual
 spaces to the indices of the combined space, yielding
-the relationship $\mathcal{H}_n \times \mathcal{H}_m \cong \mathcal{H}_{n+m}$.
+the map $\mathcal{H}_n \times \mathcal{H}_m \mapsto \mathcal{H}_{n+m}$.
 The map is defined using the \verb|finProdFinEquiv| isomorphism from Mathlib, which
 maps the product of two finite sets of size $n$ and $m$ to their combined set of size $n \cdot m$.
 
@@ -253,11 +253,11 @@ These are summarized below.
       \textit{The Quantum Fourier Transform is defined by the map}
               
               \begin{equation*}
-                \text{QFT}_n |x\rangle = \frac{1}{\sqrt{2^n}}
-                \sum_{y=0}^{2^n-1} e^{2\pi ixy/2^n} |y\rangle.
+                \text{QFT}_n |x\rangle = \frac{1}{\sqrt{N}}
+                \sum_{y=0}^{N-1} e_n (xy) |y\rangle
               \end{equation*}
       
-      \textit{Show that this map is unitary.}
+      \textit{where $N=2^n$ and $e_n(x)=e^{2i\pi x/N}$. Show that this map is unitary.}
 
 \end{enumerate}
 
