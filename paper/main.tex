@@ -19,6 +19,7 @@
 \usepackage{algorithmic}
 \usepackage{verbatim}
 \usepackage{tikz}
+\usepackage{amssymb,amsmath}
 
 %
 % These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
@@ -161,6 +162,22 @@ and run the entire setup inside of a containerized environment to ensure reprodu
 
 \paragraph{Quantum States}
 
+A quantum program is an operation on a quantum state.
+A quantum state for a single qubit can be represented
+as a complex unit vector $|\psi\rangle \in \mathbb{C}^{2^n}$.
+We form the `computational basis' with the two unit vectors;
+\begin{equation}
+|0\rangle = \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+,~~~
+|1\rangle = \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+\end{equation}
+and form any general state as $|\psi\rangle=\alpha|0\rangle+\beta|1\rangle$,
+with $\alpha,\beta\in\mathbb{C}$ and $|\alpha|^2+|\beta|^2=1$.
+When a qubit is measured, it collapses into either the $|0\rangle$ or
+$|1\rangle$ states, with probability $|\alpha|^2$ and $|\beta|^2$ respectively.
+
+\paragraph{Tensor Products}
+
 \paragraph{Quantum Circuits}
 
 
@@ -188,7 +205,7 @@ The basis states $|0\rangle$ and $|1\rangle$ are then defined as the basis vecto
 of the two-dimensional complex Euclidean space, and a superposition of states is then
 a linear combination of the basis vectors.
 
-\paragraph{Tensor Product}
+\paragraph{Tensor Products}
 
 The tensor product of two quantum states can be represented in Lean as an isomorphism.
 This maps the indices of the product space of the two individual
@@ -220,14 +237,22 @@ for evaluation of future setups, we prepare several abstract
 quantum computing tasks, whose solutions are known, for benchmarking against.
 These are summarized below.
 
-\paragraph{Benchmark Tasks}
+\subsection{Benchmark Tasks}
+
+\paragraph{Matrix Lemmas}
 
 \begin{enumerate}
 
 \item Matrix exponential lemma
 
       \textit{Let $x$ be a real number and $A$ a matrix such that $A^2=I$.
-              Show that $e^{iAx}=\cos (x) I + i \sin (x) A$}
+              Show that} $\exp(iAx)=\cos (x) I + i \sin (x) A$
+
+\end{enumerate}
+
+\paragraph{Circuit Identities}
+
+\begin{enumerate}
 
 \item Single-qubit Z-Y decomposition
 
@@ -274,6 +299,12 @@ These are summarized below.
       \begin{center}
       \textit{(Here the $e^{i\alpha}$ gate denotes the single-qubit controlled-phase gate)}
       \end{center}
+
+\end{enumerate}
+
+\paragraph{Circuit Synthesis}
+
+\begin{enumerate}
 
 \item Bell state preparation
 
