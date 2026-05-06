@@ -11,7 +11,8 @@ The Bell_00 state is the entangled state:
   |Ψ⟩ = (|00⟩ + |11⟩) / √2
 
 Create a circuit using only the gates defined
-in the `Gate` module of AutoQuantum
+in the `Gate` module of AutoQuantum which
+prepares the Bell state on two qubits
 -/
 
 open AutoQuantum Complex
