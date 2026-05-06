@@ -1,4 +1,5 @@
 import AutoQuantum.Core.Circuit
+import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Tensor
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
@@ -9,12 +10,9 @@ import Mathlib.Tactic
 The Bell_00 state is the entangled state:
   |Ψ⟩ = (|00⟩ + |11⟩) / √2
 
-The preparation circuit is:
-  1. Apply a Hadamard gate to the first qubit (qubit 0)
-  2. Apply CNOT from qubit 0 to qubit 1
+Create a circuit using only the gates defined
+in the `Gate` module of AutoQuantum
 -/
-
-namespace AutoQuantum.GHZ
 
 open AutoQuantum Complex
 open scoped InnerProductSpace
