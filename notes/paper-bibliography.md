@@ -8,5 +8,5 @@ BibTeX can resolve that style name during local builds.
 
 References should be added to `paper/refs.bib` and cited with standard natbib
 commands such as `\citep{key}` or `\citet{key}`. The `paper/Makefile`
-includes `refs.bib` as a dependency and runs BibTeX in its non-`latexmk`
-fallback path.
+includes `refs.bib` as a dependency and delegates the full LaTeX/BibTeX cycle
+to `latexmk`; there is no manual `pdflatex`/`bibtex` fallback path.

@@ -22,24 +22,22 @@ Because every output is a checked Lean proof, correctness is not tested—it is 
 
 ## Docker Development Environment
 
-A Docker container provides a fully reproducible environment with the Lean toolchain and MCP servers pre-configured. A dedicated compose service still warms shared Lean caches first, but `scripts/entrypoint.sh` also falls back to `scripts/bootstrap-lean.sh` when runtime caches are missing and the container has permission to populate them.
+A Docker container provides a reproducible OpenCode environment with Lean 4.29.0, Mathlib v4.29.0, MCP server dependencies, comparator, `lean4export`, `landrun`, and LaTeX tooling baked into the image.
 
 ### Configuration
 
 The container defaults are defined in `docker-compose.yml`. Override them with standard Compose environment handling or inline environment variables when you launch the container. In practice, the only values you usually need to supply are provider API keys.
 
-To switch models, use the `--model` flag when running OpenCode (e.g. `opencode run --model deepseek/deepseek-chat "task"`).
+To switch models, use the `--model` flag when running OpenCode (for example, `opencode run --model provider/model-id "task"`).
 
 ```bash
-docker compose build                        # Build the image (once, ~5 min)
-docker compose up -d                        # Start the OpenCode server
+docker compose build                         # Build the image and baked tool caches
+docker compose up -d                         # Start the OpenCode server
 opencode run --attach http://localhost:4096  # Connect (requires OpenCode CLI on host)
-docker compose down                         # Stop when done
+docker compose down                          # Stop when done
 ```
 
-`docker compose up` runs a one-shot cache warmer first, which installs `elan`, the Lean/Lake dependency cache, and the comparator toolchain (`comparator`, `lean4export`, `landrun`) into named Docker volumes. The main `opencode` service mounts the shared `elan` cache and comparator tool cache read-only, copies the warmed Lake package tree into its own anonymous writable package volume on first start, and then runs a one-time `lake update` against that private worktree so builds succeed without mutating the shared cache. If you run the image standalone without those shared caches, the entrypoint now attempts the same Lean bootstrap flow directly inside the container.
-
-**Web Interface:** To start OpenCode with a web UI, run `docker compose run opencode web`. The server will be accessible at http://localhost:4096 in your browser.
+The Compose service bind-mounts the repository at `/workspace/autoquantum` and overlays `lean/.lake` with an anonymous volume so the container uses the image's prebuilt Lake package cache instead of any host-local `.lake` tree. `scripts/entrypoint.sh` starts `opencode serve` and honors `OPENCODE_HOST` / `OPENCODE_PORT` if those need to be overridden.
 
 ### Local Development
 
@@ -56,20 +54,15 @@ lake build           # compile only our library (~seconds)
 
 ## Comparator Proof Verification
 
-The repo now includes a comparator-oriented proof verification scaffold under `lean/Goals/` and `lean/Solutions/`.
+The repo includes a comparator-oriented proof verification scaffold under `lean/Goals/` and `lean/Solutions/`.
 
-- `lean/Goals/*.lean` are trusted challenge theorems.
-- `lean/Solutions/*.lean` are candidate proofs with the same module basename and theorem statement.
-- theorem names are derived from the file stem in snake case with a `_goal` suffix, e.g. `Comm.lean` → `comm_goal`.
+- `lean/Goals/<Goal>/<Goal>.lean` files are trusted challenge theorems.
+- `lean/Goals/<Goal>/comparator.json` is the authority for trusted module, candidate module, theorem names, and permitted axioms.
+- `lean/Solutions/<Goal>.lean` files are candidate proofs with flat `Solutions.<Goal>` module names.
 
-For local host development outside Docker, bootstrap comparator tooling with:
+Inside the Compose-managed container, no extra comparator setup is needed because the image includes comparator, `lean4export`, and `landrun` in `/home/opencode/.tools/bin`.
 
-```bash
-./scripts/setup_comparator.sh
-export PATH="$PWD/.tools/bin:$PATH"
-```
-
-Inside the Compose-managed container, no extra comparator setup is needed: warmup installs the toolchain into the shared read-only cache and `scripts/entrypoint.sh` adds it to `PATH`. For host-local setup, `setup_comparator.sh` builds `landrun` too when Go is available; without Go, comparator verification will still be blocked on that binary.
+For host-local development outside Docker, provide a comparator binary on `PATH`, set `COMPARATOR_BIN=/path/to/comparator`, or use the same `.tools/` layout expected by `scripts/verify_comparator.py`. Comparator also needs `lean4export` and `landrun` available on `PATH` or under the expected `.tools/` directories.
 
 Then verify the sample goal with:
 
@@ -79,9 +72,9 @@ python3 scripts/verify_comparator.py --goal Comm
 
 Useful script options:
 
-- `--list-goals` — show discovered goal files and expected theorem names
-- `--dry-run` — print generated comparator configs without invoking comparator
-- `--comparator /path/to/comparator` — use a specific comparator binary
+- `--goal <Goal>` — limit verification to one goal folder; can be repeated
+- `--list-goals` — show discovered goal folders
+- `--fail-fast` — stop after the first comparator failure
 
 ## References
 

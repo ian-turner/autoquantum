@@ -1,7 +1,7 @@
 # Lean 4 Quantum Computing Landscape
 
 Current state of quantum formalization in Lean 4 / Mathlib, and what AutoQuantum has built on top of it.
-Last updated: April 27, 2026 (Mathlib v4.29.0).
+Last updated: May 6, 2026 (Mathlib v4.29.0).
 
 ---
 
@@ -87,18 +87,19 @@ Last updated: April 27, 2026 (Mathlib v4.29.0).
 | Phase rotation R_k + unitarity proof | Done | `Core/Gate.lean` |
 | `controlPhase α = diag(1, exp(iα))` + unitarity proof | Done | `Core/Gate.lean` (Apr 27, 2026) |
 | Rz/Rx/Ry rotation gates + unitarity proofs | **Done** (Apr 26, 2026) | `Core/Gate.lean` |
+| S and T gate aliases | Done | `Core/Gate.lean` |
 | CNOT gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | SWAP gate + unitarity proof | Done | `Core/Gate.lean` (lint-cleaned Apr 17, 2026) |
 | `applyGate` — gate application to state | Done | `Core/Gate.lean` |
 | `tensorWithId`, `idTensorWith`, generic `controlled` | Done | `Core/Gate.lean` |
 | `tensorIndexEquiv k m` — canonical tensor basis equivalence | Done | `Core/Tensor.lean` |
 | `qubitPerm`, `permuteQubits`, `permuteGate` | Done | `Core/Gate.lean` (Apr 18, 2026) |
-| `onQubit`, `hadamardAt`, `phaseRotationAt`, `swapAt`, `bitReverse` | Done | `Core/Gate.lean` (Apr 18, 2026) |
+| `onQubit`, `hadamardAt`, `phaseRotationAt`, `rzAt`, `rxAt`, `ryAt`, `swapAt`, `bitReverse` | Done | `Core/Gate.lean` |
 | `onQubits`, `controlledAt`, `controlledPhaseAt` | Done | `Core/Gate.lean` (Apr 18, 2026) |
 | `Circuit n` — `List (QGate n)` | Done | `Core/Circuit.lean` |
 | `idTensorCircuit`, `tensorWithIdCircuit` — suffix/prefix circuit lifts | Done | `Core/Circuit.lean` |
-| `circuitMatrix`, `circuitMatrix_append`, `Circuit.Implements` | Done | `Core/Circuit.lean` |
-| `tensorState`, `tensorVec` | **Done** (Apr 19, 2026) | `Core/Hilbert.lean` |
-| Benchmark challenge modules | See source | `Goals/` |
-| Candidate benchmark proof modules | See source | `Solutions/` |
+| `circuitMatrix`, `runCircuit`, `Circuit.Implements` | Done | `Core/Circuit.lean` |
+| `tensorVec`, `tensorVec_apply`, `tensorState` | **Done** | `Core/Tensor.lean` |
+| Benchmark challenge modules and comparator configs | See source | `Goals/<Goal>/` |
+| Candidate benchmark proof modules | See source | `Solutions/<Goal>.lean` |
 | Qubit measurement / Born rule | Future | — |

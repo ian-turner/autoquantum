@@ -25,26 +25,29 @@ Both Claude Code and OpenCode are configured to use the same set of MCP servers,
 
 Registered as `mcp.lean` in `opencode.json` and `mcpServers.lean_tools` in `.claude/settings.json`.
 
-Provides three tools:
+Provides four tools:
 
 | Tool | What it runs |
 |------|-------------|
 | `build(target="AutoQuantum")` | `lake build <target>` in `lean/` |
 | `check_file(file="AutoQuantum/Core/Gate.lean")` | `lake env lean <file>` in `lean/` |
-| `sorry_count()` | `grep -r sorry lean/AutoQuantum` — count remaining sorries |
+| `sorry_count()` | Count `sorry` occurrences in `lean/AutoQuantum/**/*.lean` |
+| `search_mathlib(query, kind="leansearch" \| "loogle")` | Query LeanSearch or Loogle over HTTP for Mathlib declarations |
 
 Implemented in Python (`mcp>=1.0.0`, FastMCP). Runs via `uv run` — no separate install needed.
 
 ### `lean_lsp` server
 
-Registered as `mcp.lean_lsp` in `opencode.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, with
+Registered as `mcp.lean_lsp` in `opencode.json` and `.claude/settings.json`. Launched by `.mcp/run-lean-lsp-mcp.sh`, with
 `LEAN_REPL=false`, which:
 - Sets `LEAN_PROJECT_PATH` to this repo's `lean/` directory.
-- Keeps the launcher's default `LEAN_LOOGLE_LOCAL=true`, so `lean_loogle` uses the local index instead of the hosted service.
+- Keeps the launcher's default `LEAN_LOOGLE_LOCAL=false`; set it explicitly if a local Loogle index is available.
 - Biases the agent toward core proof state, search, and interactive proof tools (see AGENTS.md for full list).
 - Prefers an installed `lean-lsp-mcp` binary and falls back to `uvx lean-lsp-mcp`.
 
-Note: `lean_lsp` is registered in `.claude/settings.json` and is available to both Claude Code and OpenCode agents.
+### `latex` server
+
+Registered as `mcp.latex` in `opencode.json` and `mcpServers.latex_tools` in `.claude/settings.json`. Launched by `.mcp/latex-tools/run.sh`.
 
 ## Agent instructions
 
@@ -58,9 +61,10 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 
 | Setting | Value | Reason |
 |---------|-------|--------|
-| `mcp.lean.timeout` | 180 000 ms | `lean_check_file` takes 60–180 s; 15 s (original) caused immediate timeout errors |
-| `mcp.lean_lsp.timeout` | 120 000 ms | Cold-start LSP queries can exceed 60 s (original) |
-| `mcp.lean_lsp.command` | `LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Keep REPL noise off while allowing the launcher default local Loogle index |
+| `mcp.lean.timeout` | 600 000 ms | Full `lake build` and cold single-file checks can be slow |
+| `mcp.lean_lsp.timeout` | 300 000 ms | Cold-start LSP queries can exceed short default tool timeouts |
+| `mcp.latex.timeout` | 300 000 ms | LaTeX builds can take long enough to exceed short default tool timeouts |
+| `mcp.lean_lsp.command` | `LEAN_REPL=false .mcp/run-lean-lsp-mcp.sh` | Keep REPL noise off for LSP sessions |
 | `plugin` | `.opencode/plugins/lean-tools.js` | Custom tools and post-edit hook (see below) |
 
 ### Model Selection
@@ -68,13 +72,13 @@ OpenCode reads its project config from `opencode.json` (project root), not from 
 The `model` field is omitted from `opencode.json`. Instead, specify the model via the `--model` flag when running OpenCode sessions:
 
 ```bash
-opencode run --model deepseek/deepseek-reasoner "Your task here"
+opencode run --model provider/model-id "Your task here"
 ```
 
 or when attaching to a running server:
 
 ```bash
-opencode run --attach http://localhost:4096 --model anthropic/claude-3-5-sonnet "Your task here"
+opencode run --attach http://localhost:4096 --model provider/model-id "Your task here"
 ```
 - `OPENCODE_HOST`, `OPENCODE_PORT`: Server binding
 
@@ -114,7 +118,7 @@ Provides four custom tools and three hooks:
 |------|------|---------|
 | `lean_proof_step` | tool | Resolves a Lean file path (any format) to absolute and formats the exact arguments for `lean_lsp_lean_multi_attempt` |
 | `lean_find_sorry` | tool | Scans a file for `sorry` occurrences and returns each with 3 lines of context and `>>>` markers |
-| `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>.lean`, shows the candidate target path, and intentionally does not print existing candidate source |
+| `lean_goal_context` | tool | Loads a comparator goal contract from `lean/Goals/<Stem>/<Stem>.lean`, shows the candidate target path, and intentionally does not print existing candidate source |
 | `verify_comparator_goal` | tool | Manually runs `scripts/verify_comparator.py --goal <Stem>` and returns the transcript |
 | `chat.message` | hook | Tracks the requested `goal=<Stem>` value for `@prove` sessions from the incoming prompt text |
 | `event` + `session.idle` | hook | Mandatory post-response comparator run for `@prove` sessions; shows a toast on pass/fail or missing goal |

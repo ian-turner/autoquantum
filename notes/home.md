@@ -39,4 +39,4 @@ For agent sessions, prefer the Lean MCP tools described in `AGENTS.md`.
 ### Tooling
 
 - [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode
-- [Docker Build Context](docker-build-context.md) — Notes on Docker context and prove-agent startup behavior
+- [Docker Build Context](docker-build-context.md) — Notes on Docker image build context and baked Lean/comparator caches
