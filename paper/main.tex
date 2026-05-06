@@ -235,6 +235,7 @@ maps the product of two finite sets of size $n$ and $m$ to their combined set of
 In order to evaluate the performance of our agentic setup, and provide a baseline
 for evaluation of future setups, we prepare several abstract
 quantum computing tasks, whose solutions are known, for benchmarking against.
+They are selected from the textbook `Quantum Computation and Quantum Information' \cite{nielsen2010quantum}.
 These are summarized below.
 
 \subsection{Benchmark Tasks}
@@ -372,22 +373,22 @@ These are summarized below.
 
 \end{enumerate}
 
-\paragraph{Circuit Synthesis}
+\paragraph{State Preparation}
 
 \begin{enumerate}
 
-\item Bell state preparation
+\item Bell state
 
       \textit{Construct a circuit which prepares the 2-qubit Bell state
               $|\Psi\rangle=(|00\rangle+|11\rangle)/\sqrt{2}$}
 
-\item Uniform superposition state preparation
+\item Uniform superposition state
 
       \textit{Construct a circuit which prepares the uniform superposition
               state on $n$ qubits
               $|+\rangle^{\otimes n}=\frac{1}{\sqrt{2^n}} \sum_{k=0}^{N-1} |k\rangle$}
 
-\item GHZ state preparation
+\item GHZ state
 
       \textit{Construct a circuit which prepares the $n$-qubit GHZ state}
               $|$GHZ$\rangle_n=(|0\rangle^{\otimes n}+|1\rangle^{\otimes n})/\sqrt{2}$
