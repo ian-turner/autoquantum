@@ -333,10 +333,16 @@ end TwoQubit
 /-- Lift a permutation of qubit positions to a permutation of computational-basis indices.
 
     The basis index `Fin (2^n)` is identified with bitstrings `Fin n → Fin 2`; the qubit
-    permutation acts by reindexing that bitstring. -/
+    permutation acts by reindexing that bitstring.
+
+    Public qubit indices follow the tensor-product convention used elsewhere in this file:
+    qubit `0` is the most significant wire. `finFunctionFinEquiv` stores coordinate `0` as
+    the least significant bit, so the permutation is conjugated by `Fin.revPerm` before it is
+    transported through that equivalence. -/
 noncomputable def qubitPerm {n : ℕ} (σ : Equiv.Perm (Fin n)) : Equiv.Perm (Fin (2 ^ n)) :=
+  let ρ : Equiv.Perm (Fin n) := Fin.revPerm * σ * Fin.revPerm
   ((finFunctionFinEquiv (m := 2) (n := n)).symm.trans
-      (Equiv.piCongrLeft (fun _ : Fin n => Fin 2) σ)).trans
+      (Equiv.piCongrLeft (fun _ : Fin n => Fin 2) ρ)).trans
     (finFunctionFinEquiv (m := 2) (n := n))
 
 /-- The unitary gate that permutes qubit positions according to `σ`. -/
@@ -353,9 +359,12 @@ noncomputable def permuteQubits {n : ℕ} (σ : Equiv.Perm (Fin n)) : QGate n :=
     _ = 1 := by simp
 
 /-- Conjugate a gate by a qubit permutation. This is the basic transport operation used to move
-    gates away from the ends of the register. -/
+    gates away from the ends of the register.
+
+    If `σ` maps the source wires to the canonical wires on which `U` acts, the transported gate
+    has matrix entries obtained by reading `U` at the permuted row and column indices. -/
 noncomputable def permuteGate {n : ℕ} (σ : Equiv.Perm (Fin n)) (U : QGate n) : QGate n :=
-  permuteQubits σ⁻¹ * U * permuteQubits σ
+  permuteQubits σ * U * permuteQubits σ⁻¹
 
 /-- Reindexing a unitary matrix along an equivalence preserves unitarity. -/
 lemma reindex_mem_unitaryGroup {n m : Type*} [DecidableEq n] [Fintype n]

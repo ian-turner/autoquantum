@@ -64,3 +64,15 @@ After that, `Matrix.fromBlocks_conjTranspose` and `Matrix.fromBlocks_multiply` r
 
 For two qubits this is the repository's `|00⟩, |01⟩, |10⟩, |11⟩` ordering, so the Kronecker-based
 embeddings line up with `cnotMatrix` and `swapMatrix` without extra permutation lemmas.
+
+Public qubit indices follow the same convention: qubit `0` is the most significant wire in the
+computational-basis index. Mathlib's `finFunctionFinEquiv` numbers coordinate `0` as the least
+significant bit, so `qubitPerm` conjugates public qubit permutations by `Fin.revPerm` before
+transporting them through the bitstring equivalence.
+
+For arbitrary gate placement, `permuteGate σ U` is used when `σ` maps the source wires to the
+canonical wires on which `U` already acts. With Mathlib's permutation-matrix convention, the
+transported gate reads entries of `U` at the permuted row and column indices, so the conjugation
+is `permuteQubits σ * U * permuteQubits σ⁻¹`. This direction is easy to miss for swaps, because
+swaps are self-inverse; use a non-involutive three-wire permutation when testing arbitrary
+two-qubit embeddings.
