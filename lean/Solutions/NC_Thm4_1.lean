@@ -229,7 +229,7 @@ private lemma zyz_matrix_entries (β γ δ : ℝ) :
             Complex.exp (Complex.I * (δ : ℂ) / 2)] := by
   ext i j
   fin_cases i <;> fin_cases j <;>
-    simp [rz, ry, rzMatrix, ryMatrix]
+    simp [rz, ry, rzMatrix, ryMatrix, diagonal2Matrix]
 
 /-- Nielsen and Chuang theorem 4.1: every single-qubit unitary has a `Z-Y-Z`
 Euler-angle decomposition, up to a global phase. -/

@@ -54,7 +54,7 @@ theorem nc_fig4_6_goal (U A B C : QGate 1) (α : ℝ)
           (V : Matrix (Fin 2) (Fin 2) ℂ) := by
     ext i j
     fin_cases i <;> fin_cases j <;>
-      simp [idTensorWith, block2, hidx0, hidx1, hidx2, hidx3,
+      simp [idTensorWith, reindexUnitary, kroneckerUnitary, block2, hidx0, hidx1, hidx2, hidx3,
         hsum0, hsum1, hsum2, hsum3]
   have hcnot : ((cnot : QGate 2) : Matrix (Fin 4) (Fin 4) ℂ) =
       block2 1 0 0 (pauliX : Matrix (Fin 2) (Fin 2) ℂ) := by
@@ -68,8 +68,9 @@ theorem nc_fig4_6_goal (U A B C : QGate 1) (α : ℝ)
           ((Complex.exp (Complex.I * (α : ℂ))) • (1 : Matrix (Fin 2) (Fin 2) ℂ)) := by
     ext i j
     fin_cases i <;> fin_cases j <;>
-      simp [tensorWithId, block2, controlPhase, controlPhaseMatrix,
-        hidx0, hidx1, hidx2, hidx3, hsum0, hsum1, hsum2, hsum3]
+      simp [tensorWithId, reindexUnitary, kroneckerUnitary, block2, controlPhase,
+        controlPhaseMatrix, diagonal2Matrix, hidx0, hidx1, hidx2, hidx3,
+        hsum0, hsum1, hsum2, hsum3]
   have hctrl : ((controlled U : QGate 2) : Matrix (Fin 4) (Fin 4) ℂ) =
       block2 1 0 0 (U : Matrix (Fin 2) (Fin 2) ℂ) := by
     ext i j

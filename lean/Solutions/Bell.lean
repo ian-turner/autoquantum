@@ -1,6 +1,7 @@
 import AutoQuantum.Core.Circuit
 import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Tensor
+import AutoQuantum.States.Bell
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Tactic
 
@@ -10,21 +11,6 @@ import Mathlib.Tactic
 
 open AutoQuantum Complex Matrix
 open scoped InnerProductSpace
-
-noncomputable def bellVector : QHilbert 2 :=
-  superpose (1 / Real.sqrt 2 : ℂ) (1 / Real.sqrt 2 : ℂ)
-    (basisState 2 0).vec (basisState 2 3).vec
-
-noncomputable def bellState : QState 2 :=
-  QState.mk bellVector (by
-    apply superpose_norm_eq_one
-    · exact (basisState 2 0).norm_eq_one
-    · exact (basisState 2 3).norm_eq_one
-    · change ⟪EuclideanSpace.single (0 : Fin 4) (1 : ℂ),
-          EuclideanSpace.single (3 : Fin 4) (1 : ℂ)⟫_ℂ = 0
-      rw [EuclideanSpace.inner_single_left]
-      simp
-    · norm_num [Complex.normSq, Complex.ext_iff, sq])
 
 /-- Prepare the Bell state by applying H to the first qubit, then CNOT. -/
 noncomputable def bellCircuit : Circuit 2 :=
@@ -81,4 +67,4 @@ theorem bell_correct : runCircuit bellCircuit (basisState 2 0) = bellState := by
   fin_cases i <;>
     simp [runCircuit, applyGate, circuitMatrix, bellCircuit, bellState, bellVector,
       superpose, basisState, QState.mk, QState.vec, hH, hC,
-      Matrix.toEuclideanLin_apply, h]
+      Matrix.toLpLin_apply, h]

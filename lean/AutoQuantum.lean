@@ -5,3 +5,4 @@ import AutoQuantum.Core.Hilbert
 import AutoQuantum.Core.Tensor
 import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Circuit
+import AutoQuantum.States.Bell
