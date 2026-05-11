@@ -98,7 +98,13 @@ Do not run multiple slow Lean checks in parallel.
 
 ## Notes
 
-When changes create durable project knowledge, add a kebab-case markdown note in `notes/` and link it from `notes/home.md` if it should be discoverable. For Lean source changes, keep relevant notes in sync with the current API and known pitfalls, but avoid recording benchmark solution strategies in agent-loaded docs.
+Notes in `notes/` capture durable knowledge that cannot be recovered from the git log or by reading the code — architectural decisions, non-obvious constraints, API pitfalls, and tooling gotchas. Do not add notes for:
+
+- Small code changes or incremental proof steps (those belong in commit messages).
+- Information already apparent from the source files or git history.
+- Temporary state, in-progress work, or per-session context.
+
+When a note is warranted, write it as a kebab-case `.md` file and link it from `notes/home.md`. Prefer updating an existing note over creating a new one. Keep the notes directory small and navigable — a few well-maintained files are more useful than many small, disconnected ones. Never record benchmark solution strategies in any note.
 
 ## Git
 

@@ -108,6 +108,14 @@ Each agent is defined as a `.md` file with YAML frontmatter (`name`, `descriptio
 
 To edit an agent's prompt or permissions, edit the corresponding file directly. No `opencode.json` update required.
 
+## Docker
+
+The Docker build context excludes `notes/`, local reference PDFs, `paper/`, and `tmp/` via `.dockerignore`.
+
+The image bakes Lean 4.29.0, Mathlib v4.29.0, comparator, `lean4export`, and `landrun` at build time. At runtime, Compose bind-mounts the repository and overlays `/workspace/autoquantum/lean/.lake` with an anonymous volume, keeping the baked Lake package tree visible inside the container without depending on the host's `lean/.lake`.
+
+---
+
 ## OpenCode plugin (`.opencode/plugins/lean-tools.js`)
 
 Registered via `"plugin": [".opencode/plugins/lean-tools.js"]` in `opencode.json`.

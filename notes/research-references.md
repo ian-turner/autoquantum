@@ -81,6 +81,17 @@ Literature survey for the AutoQuantum project. Organized by theme.
 
 ---
 
+## Local Reference Assets
+
+PDFs live under `references/` and are gitignored. Sources for recovery:
+
+| File | Citation |
+|------|----------|
+| `references/Nielsen_Chuang.pdf` | Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and Quantum Information* |
+| `references/course-notes-fa22.pdf` | Steven A. Fenner (Univ. of South Carolina), Quantum Computation course notes, Fall 2022 — [source](https://cse.sc.edu/~fenner/csce785/notes/course-notes-fa22.pdf) |
+
+---
+
 ## Additional Resources
 
 - `lean-quantum` (duckki): https://github.com/duckki/lean-quantum — early Lean formalization of quantum computing

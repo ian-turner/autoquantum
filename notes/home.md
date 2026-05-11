@@ -25,11 +25,11 @@ For agent sessions, prefer the Lean MCP tools described in `AGENTS.md`.
 
 ### Research & Literature
 
-- [Research References](research-references.md) — Annotated bibliography for Lean quantum libraries, LLM+quantum papers, and related verification work
-- [Reference Assets](reference-assets.md) — Local PDF references stored under `references/` with source provenance and git-ignore policy
-- [Paper Extended Abstract](paper-extended-abstract.md) — Notes for the initial `paper/` LaTeX scaffold and extended-abstract direction
-- [Paper Bibliography](paper-bibliography.md) — Bibliography cleanup notes for paper sources
-- [Paper Build](paper-build.md) — Notes on the intentionally minimal `paper/Makefile` build target
+- [Research References](research-references.md) — Annotated bibliography for Lean quantum libraries, LLM+quantum papers, related verification work, and local PDF asset provenance
+
+### Paper
+
+- [Paper](paper.md) — LaTeX scaffold overview, build setup, and bibliography conventions
 
 ### Lean Formalization
 
@@ -38,5 +38,4 @@ For agent sessions, prefer the Lean MCP tools described in `AGENTS.md`.
 
 ### Tooling
 
-- [MCP Setup](opencode-setup.md) — Shared MCP server config for Claude Code and OpenCode
-- [Docker Build Context](docker-build-context.md) — Notes on Docker image build context and baked Lean/comparator caches
+- [MCP & OpenCode Setup](opencode-setup.md) — Shared MCP server config, OpenCode configuration, Docker environment, and agent files
