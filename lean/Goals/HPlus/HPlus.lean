@@ -11,8 +11,6 @@ The preparation circuit applies `hadamardAt i` for each i : Fin n.
 - Nielsen & Chuang, §1.3
 -/
 
-namespace AutoQuantum.HPlus
-
 open AutoQuantum Complex
 open scoped InnerProductSpace
 
@@ -23,5 +21,3 @@ noncomputable def hPlusCircuit (n : ℕ) : Circuit n := sorry
 theorem hPlus_correct (n : ℕ) :
     runCircuit (hPlusCircuit n) (basisState n 0) = hPlusState n := by
   sorry
-
-end AutoQuantum.HPlus

@@ -7,3 +7,4 @@ import AutoQuantum.Core.Gate
 import AutoQuantum.Core.Circuit
 import AutoQuantum.States.Bell
 import AutoQuantum.States.HPlus
+import AutoQuantum.Algorithms.QFT
