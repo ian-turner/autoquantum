@@ -63,7 +63,10 @@ RUN mkdir -p .lake/packages && \
     git clone --filter=blob:none --depth 1 --branch v4.29.0 \
         https://github.com/leanprover-community/repl \
         .lake/packages/repl && \
-    lake update && lake exe cache get
+    lake update && lake exe cache get && \
+    python3 /workspace/autoquantum/.mcp/lean-tools/build_index.py \
+        /workspace/autoquantum/lean/.lake/packages/mathlib/Mathlib \
+        > /workspace/autoquantum/lean/.lake/mathlib_index.json
 
 # Build comparator and lean4export (lean4export is a dependency of comparator)
 WORKDIR /home/opencode

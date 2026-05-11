@@ -69,18 +69,24 @@ Do not rely on examples from this prompt for concrete theorem names; read `compa
 
 ## Finding Mathlib lemmas
 
-**Never read files under `lean/.lake/` or grep Mathlib source.** Those directories are large and searching them manually is slow and error-prone.
+**Never read files under `lean/.lake/` or grep Mathlib source directly.**
 
-Instead, use `lean_search_mathlib` from the `lean` MCP server:
+Use the `lean` MCP server tools in this order:
 
-```
-lean_search_mathlib(query="commutativity of addition", kind="leansearch")   -- natural language
-lean_search_mathlib(query="?a + ?b = ?b + ?a", kind="loogle")               -- type-pattern
-```
+1. **`lean_search_mathlib_local`** — offline search of the baked declaration index, no rate limits. Try this first.
+   ```
+   lean_search_mathlib_local(query="add_comm", kind="name")         -- name substring
+   lean_search_mathlib_local(query="∀ n m : ℕ", kind="type")       -- type header
+   lean_search_mathlib_local(query="theorem.*unitary", kind="grep") -- ripgrep pattern
+   ```
 
-`lean_search_mathlib` is an HTTP call — no LSP warmup, available immediately. Use it any time you need to find a lemma name or check whether something exists in Mathlib.
+2. **`lean_search_mathlib`** — HTTP search (leansearch.net / loogle). Use only when local search returns nothing useful.
+   ```
+   lean_search_mathlib(query="commutativity of addition", kind="leansearch")
+   lean_search_mathlib(query="?a + ?b = ?b + ?a", kind="loogle")
+   ```
 
-Only fall back to `lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch` if `lean_search_mathlib` returns no results.
+3. **`lean_lsp_lean_loogle` / `lean_lsp_lean_leansearch`** — LSP-backed search. Requires LSP warmup; use as last resort.
 
 ## Constraints
 

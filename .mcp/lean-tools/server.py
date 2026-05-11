@@ -94,6 +94,72 @@ def check_file(file: str) -> str:
 
 _UA = "Mozilla/5.0 (compatible; lean-mcp-search/1.0)"
 
+_index_cache: list | None = None
+
+
+def _index_path() -> Path:
+    if env := os.environ.get("MATHLIB_INDEX"):
+        return Path(env)
+    return _lean_root() / ".lake" / "mathlib_index.json"
+
+
+def _load_index() -> list:
+    global _index_cache
+    if _index_cache is None:
+        p = _index_path()
+        _index_cache = json.loads(p.read_text()) if p.exists() else []
+    return _index_cache
+
+
+@mcp.tool()
+def search_mathlib_local(query: str, kind: str = "name") -> str:
+    """Search the baked local Mathlib declaration index — offline, no rate limits.
+
+    Prefer this over search_mathlib for name lookups and type-pattern searches.
+    Falls back gracefully if the index has not been built yet.
+
+    kind="name"   case-insensitive substring match on declaration name
+                  e.g. "add_comm", "Matrix.mul", "unitaryGroup"
+    kind="type"   case-insensitive substring match on type signature header
+                  e.g. "∀ n m : ℕ", "Matrix ℂ", "unitary"
+    kind="grep"   ripgrep over Mathlib source — most flexible, ~10–30 s
+                  e.g. "theorem.*Unitary", "Matrix.mul.*comm"
+    """
+    if kind in ("name", "type"):
+        index = _load_index()
+        if not index:
+            return (
+                f"Local index not found at {_index_path()}. "
+                "Falling back: use search_mathlib with kind='leansearch' or 'loogle'."
+            )
+        q = query.lower()
+        field = "name" if kind == "name" else "header"
+        hits = [d for d in index if q in d.get(field, "").lower()]
+        if not hits:
+            return f"No local results for '{query}' (kind={kind})"
+        hits = hits[:25]
+        lines = [f"Local Mathlib results for '{query}' ({len(hits)} shown):"]
+        for h in hits:
+            lines.append(f"  [{h['kind']}] {h['name']}  {h['file']}:{h['line']}")
+            if header := h.get("header", ""):
+                lines.append(f"    {header[:200]}")
+        return "\n".join(lines)
+
+    if kind == "grep":
+        mathlib_src = _lean_root() / ".lake" / "packages" / "mathlib" / "Mathlib"
+        if not mathlib_src.exists():
+            return f"Mathlib source not found at {mathlib_src}"
+        result = subprocess.run(
+            ["rg", "-n", "--max-count=200", query, str(mathlib_src)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        out = _trim(result.stdout)
+        return out or f"No grep matches for '{query}' in Mathlib source"
+
+    raise ValueError(f"Unknown kind {kind!r}. Use 'name', 'type', or 'grep'.")
+
 
 @mcp.tool()
 def search_mathlib(query: str, kind: str = "leansearch") -> str:

@@ -22,9 +22,10 @@ Prefer the Lean MCP tools over raw shell commands for Lean work.
 - `build(target="AutoQuantum")`: build the project after completed Lean edits.
 - `check_file(file="...")`: typecheck one Lean file, with paths relative to `lean/`.
 - `sorry_count()`: count remaining `sorry`s.
-- `search_mathlib(query, kind="leansearch" | "loogle")`: search Mathlib.
+- `search_mathlib_local(query, kind="name" | "type" | "grep")`: search the baked local Mathlib index — offline, no rate limits. **Use this first.**
+- `search_mathlib(query, kind="leansearch" | "loogle")`: HTTP search via leansearch.net / loogle.lean-lang.org. Use only when `search_mathlib_local` returns no useful results.
 
-Never grep Mathlib source or read files under `lean/.lake/` to find lemma names. Use `search_mathlib` first, then LSP search tools if needed.
+Never read files under `lean/.lake/packages/` to find lemma names. Use `search_mathlib_local` first; fall back to `search_mathlib` (HTTP) only if the local search misses.
 
 ### `lean_lsp`
 
