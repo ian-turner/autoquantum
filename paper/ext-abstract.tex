@@ -1,0 +1,69 @@
+%File: ext-abstract.tex
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage[submission]{aaai2026}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{amssymb,amsmath}
+
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},%
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,%
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+
+\setcounter{secnumdepth}{0}
+
+\title{Agentic Engineering for Quantum Algorithm Design (Extended Abstract)}
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Large language models (LLMs) have shown competence in abstract mathematical reasoning.
+Some frontier models have even been able to solve open problems in combinatorics.
+However, these models often fail to consistently produce correct, verifiable results, and require
+much human intervention and iteration.
+Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
+limited compared to a more general and well-studied field such as combinatorics.
+We present a work-in-progress agentic framework for abstract quantum computing algorithm design.
+Core definitions and axioms of the field are defined in Lean, as are goals,
+and correctness is checked at every step with the Lean proof-checker.
+\end{abstract}
+
+\section{Preliminaries}
+
+\section{Formalization}
+
+\section{Benchmarks}
+
+\bibliography{refs}
+
+\end{document}
