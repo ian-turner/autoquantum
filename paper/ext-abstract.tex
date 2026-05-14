@@ -136,8 +136,8 @@ circuits and run on quantum machines.
 
 Formalization of quantum computing in proof assistant languages has already been
 extensively explored. \textbf{SQIR} \cite{hietala2021verified} introduces a formalization
-of quantum circuits using density matrices in Coq, \textbf{VyZX} \cite{lehmann2026vy}
-formalizes the ZX-calculus, a graphical language for reasoning about quantum circuits, also in Coq.
+of quantum circuits using density matrices, \textbf{VyZX} \cite{lehmann2026vy}
+formalizes the ZX-calculus, a graphical language for reasoning about quantum circuits (both are written in Coq).
 This allows for machine-checked proofs of statements such as the circuit identity in Figure \ref{fig:circ_identity},
 where the equivalence can be proved for \textit{all} possible unitary matrices $U$,
 rather than just a single instance.
@@ -145,16 +145,16 @@ rather than just a single instance.
 \paragraph{Theorem Proving}
 
 Much research has been done on automating Lean theorem proving with artificial intelligence.
-AlphaProof \cite{hubert2025olympiad} uses end-to-end reinforcement learning to train a
+\textbf{AlphaProof} \cite{hubert2025olympiad} uses end-to-end reinforcement learning to train a
 neural network for solving math olympiad problems, and achieves significant success.
-APOLLO \cite{ospanov2026apollo} uses LLMs to generate proofs in Lean for formal math benchmarks,
+\textbf{APOLLO} \cite{ospanov2026apollo} uses LLMs to generate proofs in Lean for formal math benchmarks,
 using a feedback-loop system where the proof state and compiler errors are fed back into the LLM context,
 and new sub-goals are extracted from partially correct proofs.
 Our approach would extend these frameworks to optimize them specifically for quantum computing,
-with a formalized QC language such as \textbf{SQIR} or \textbf{VyZX} as the underlying
+with a formalized QC language similar to \textbf{SQIR} or \textbf{VyZX} as the underlying
 ``engine,'' allowing for humans to specify formal goals, and LLMs to generate verified solutions.
 
-\paragraph{Agentic Environment}
+\paragraph{Agentic Engineering}
 
 The rapid uptake of auto-coding frameworks such as Codex or Claude Code in recent months demonstrates
 the benefits of ``agentic'' LLMs. The difference between agentic and regular LLMs
@@ -162,16 +162,36 @@ is not in the models themselves, but rather in the structure they are placed int
 they are given \cite{plaat2025agentic}.
 For example, agentic coding involves placing an LLM into a real coding environment, where the model
 can write code, run Bash commands, or search the web.
-Our approach towards quantum algorithm design would include a specialized agentic environment.
-This could include specialized agents for tasks such as paper reading, plan generation,
+Our approach towards quantum algorithm design would include a tailored agentic environment,
+which would be made up of specialized agents for tasks such as paper reading, plan generation,
 circuit synthesis, circuit verification, or code refactoring.
 Each agent would have their own prompt, permissions, and tools.
-For example, an agentic responsible for reading papers may use a tool for searching the arxiv.org database,
+For example, an agent responsible for reading papers may use a tool for searching the arxiv.org database,
 and vision tools for reading figures and plots, but would not have permission to write and run code.
 
 \paragraph{Reinforcement Learning}
 
+LLMs are unlikely to have the capabilities required for QC research ``out of the box.''
+Even on basic theorem proving tasks, frontier models often require hundreds or even thousands of iterations
+before converging on the correct solution. For this reason, researchers have recently begun
+to build specialized LLMs which are trained on large datasets of mathematical problems
+\cite{lin2025goedel,xin2024deepseek}.
+These models can often achieve superior performance to frontier models, despite being
+much smaller and requiring much fewer resources to run.
+\textbf{AlphaProof} even uses test-time reinforcement learning to learn ``on the fly''
+when solving a specific problem by generating many similar problems to train on.
+We plan to carry this approach over to quantum computing, using existing papers and
+textbooks as the ``seed data'' to generate a much larger dataset.
+For example, we can generate circuit identities to either prove or disprove,
+or generate circuit synthesis goals by constructing random unitary matrices.
+
 \section{Benchmarking}
+
+\paragraph{Existing Results}
+
+\paragraph{Unpublished Results}
+
+\paragraph{New Results}
 
 \bibliography{refs}
 
