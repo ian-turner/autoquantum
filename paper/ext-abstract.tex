@@ -74,7 +74,7 @@ written as code in these languages, then executed on a quantum simulator,
 and the results are compared with the expected answer.
 We propose a different approach: quantum computing foundamentals can be formalized in a
 proof assistant language such as Lean, then goals such as circuit synthesis
-can be posed formally. The LLM is then instructed to not only provide code to construct
+can be posed formally. An LLM can then be instructed to not only provide code to construct
 a circuit, but also a proof-of-correctness, allowing for automatic verification
 without the need for expensive numerical simulation.
 Once verified, abstract circuit definitions can then be compiled to OpenQASM or Qiskit
@@ -174,8 +174,8 @@ and vision tools for reading figures and plots, but would not have permission to
 LLMs are unlikely to have the capabilities required for QC research ``out of the box.''
 Even on basic theorem proving tasks, frontier models often require hundreds or even thousands of iterations
 before converging on the correct solution. For this reason, researchers have recently begun
-to build specialized LLMs which are trained on large datasets of mathematical problems
-\cite{lin2025goedel,xin2024deepseek}.
+to train LLMs on large datasets of mathematical problems, creating an ``expert'' on
+the task of mathematical theorem proving \cite{lin2025goedel,xin2024deepseek}.
 These models can often achieve superior performance to frontier models, despite being
 much smaller and requiring much fewer resources to run.
 \textbf{AlphaProof} even uses test-time reinforcement learning to learn ``on the fly''
@@ -187,11 +187,46 @@ or generate circuit synthesis goals by constructing random unitary matrices.
 
 \section{Benchmarking}
 
+In order to evaluate the performance of our system, we must build a set of benchmark
+tasks for the system to complete. We propose several options for the source of these tasks,
+and discuss the potential strengths and downsides of each option.
+
 \paragraph{Existing Results}
 
-\paragraph{Unpublished Results}
+One potential source of benchmark tasks is existing results.
+These could come from textbooks or published papers, but would require
+human formalization of each goal.
+There is also the potential for unwanted information about the solution
+to leak into the LLM context, or to have been included in the training data,
+effectively allowing the model to ``cheat.''
+This could be avoided by using results which are unpublished, but there
+are unlikely to be enough unpublished quantum computing results that could
+be collated from different researchers in order to build a representative benchmark.
 
-\paragraph{New Results}
+\paragraph{Synthetic Data}
+
+It is also possible to generate benchmarking data synthetically.
+The process that \textbf{AlphaProof} uses to generate synthetic goals for training
+could also be used to generate a large set of benchmark problems.
+However, this approach depends on the novelty of the generated goals.
+A sophisticated system may have to be developed to ensure novelty and representativeness,
+to avoid ending up with a large set of almost-identical
+or already-existing goals.
+
+\paragraph{Open Problems}
+
+Solving a non-trivial open problem within a field is possibly the best way to
+show the performance of an agentic research system.
+A set of open problems could be compiled and formalized into Lean,
+then passed to the LLM to solve.
+In the field of combinatorics, this has been done with the ``Erdős Problems.''
+The problems are a set of over 1000 similar combinatorics problems compiled by
+the mathematician Paul Erdős over his lifetime.
+Only about half of the problems have known solutions, resulting in an excellent
+benchmark for AI; a model can be tested both on solved and unsolved problems,
+and ability to recreate human solutions as well as generate new solutions is evaluated.
+A similar benchmark could be compiled for quantum computing, combining both solved
+and unsolved problems in the field.
 
 \bibliography{refs}
 
