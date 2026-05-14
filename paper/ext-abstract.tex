@@ -150,11 +150,24 @@ neural network for solving math olympiad problems, and achieves significant succ
 APOLLO \cite{ospanov2026apollo} uses LLMs to generate proofs in Lean for formal math benchmarks,
 using a feedback-loop system where the proof state and compiler errors are fed back into the LLM context,
 and new sub-goals are extracted from partially correct proofs.
-We propose extending these frameworks to optimize them specifically for quantum computing,
+Our approach would extend these frameworks to optimize them specifically for quantum computing,
 with a formalized QC language such as \textbf{SQIR} or \textbf{VyZX} as the underlying
 ``engine,'' allowing for humans to specify formal goals, and LLMs to generate verified solutions.
 
 \paragraph{Agentic Environment}
+
+The rapid uptake of auto-coding frameworks such as Codex or Claude Code in recent months demonstrates
+the benefits of ``agentic'' LLMs. The difference between agentic and regular LLMs
+is not in the models themselves, but rather in the structure they are placed into, and the tools
+they are given \cite{plaat2025agentic}.
+For example, agentic coding involves placing an LLM into a real coding environment, where the model
+can write code, run Bash commands, or search the web.
+Our approach towards quantum algorithm design would include a specialized agentic environment.
+This could include specialized agents for tasks such as paper reading, plan generation,
+circuit synthesis, circuit verification, or code refactoring.
+Each agent would have their own prompt, permissions, and tools.
+For example, an agentic responsible for reading papers may use a tool for searching the arxiv.org database,
+and vision tools for reading figures and plots, but would not have permission to write and run code.
 
 \paragraph{Reinforcement Learning}
 
