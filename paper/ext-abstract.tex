@@ -180,10 +180,10 @@ These models can often achieve superior performance to frontier models, despite 
 much smaller and requiring much fewer resources to run.
 \textbf{AlphaProof} even uses test-time reinforcement learning to learn ``on the fly''
 when solving a specific problem by generating many similar problems to train on.
-We plan to carry this approach over to quantum computing, using existing papers and
-textbooks as the ``seed data'' to generate a much larger dataset.
-For example, we can generate circuit identities to either prove or disprove,
-or generate circuit synthesis goals by constructing random unitary matrices.
+We plan to carry this approach over to quantum computing.
+For example, we can generate random circuit identities such as the one in Figure \ref{fig:circ_identity}
+to either prove or disprove, or random circuits using basis gates as well as building blocks such as
+loops and recursion, and random circuit properties to either prove or disprove.
 
 \section{Benchmarking}
 
