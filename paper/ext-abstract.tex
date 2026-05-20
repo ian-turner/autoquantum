@@ -165,6 +165,8 @@ This allows for machine-checked proofs of statements about circuits,
 where results can be proved for \textit{all} possible inputs rather than just a single instance.
 For example, Figure~\ref{fig:ghz} shows the GHZ state preparation task as an agent would encounter it:
 a formal specification, an implementation, and the resulting circuit.
+A formalizer agent might be responsible for translating the problem into Lean, a circuit constructor agent
+could write the algorithm, and a verifier agent could write the Lean proof-of-correctness to verify the algorithm.
 
 \begin{figure*}[t]
 \centering
