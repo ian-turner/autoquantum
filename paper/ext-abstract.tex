@@ -18,6 +18,7 @@
 \usepackage{algorithmic}
 \usepackage{verbatim}
 \usepackage{tikz}
+\usetikzlibrary{arrows,positioning}
 \usepackage{amssymb,amsmath}
 
 \usepackage{newfloat}
@@ -79,6 +80,78 @@ a circuit, but also a proof-of-correctness, allowing for automatic verification
 without the need for expensive numerical simulation.
 Once verified, abstract circuit definitions can then be compiled to OpenQASM or Qiskit
 circuits and run on quantum machines.
+Figure~\ref{fig:arch} illustrates one such architecture.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, text width=2.0cm, minimum height=0.58cm,
+              align=center, font=\small},
+  agent/.style={box, fill=blue!8},
+  io/.style={box, fill=gray!14},
+  tool/.style={draw, rounded corners=2pt, text width=1.5cm, minimum height=0.5cm,
+               align=center, font=\scriptsize, fill=orange!8},
+  arr/.style={->, thick},
+  darr/.style={->, dashed, thick},
+  tarr/.style={->, thin, gray},
+  tstem/.style={thin, gray},
+  lbl/.style={font=\scriptsize},
+]
+  % Pipeline
+  \node[io]    (input) at (0,5.0) {Problem spec};
+  \node[agent] (plan)  at (0,3.8) {Planner};
+  \node[agent] (cons)  at (0,2.5) {Constructor};
+  \node[agent] (ver)   at (0,1.2) {Verifier};
+  \node[io]    (out)   at (0,0.0) {Lean proof};
+
+  % Tools container (drawn first, behind tool nodes)
+  \draw[rounded corners=4pt] (2.25, 0.38) rectangle (4.35, 4.82);
+  \node[font=\small\bfseries] at (3.3, 4.62) {Tools};
+
+  % Tool nodes
+  \node[tool] (web)     at (3.3, 4.10) {Web search};
+  \node[tool] (papers)  at (3.3, 3.30) {Papers};
+  \node[tool] (docs)    at (3.3, 1.85) {Lean docs};
+  \node[tool] (tactics) at (3.3, 0.92) {Lean server};
+
+  % Main pipeline arrows
+  \draw[arr] (input) -- (plan);
+  \draw[arr] (plan)  -- (cons);
+  \draw[arr] (cons)  -- node[right,lbl]{circuit} (ver);
+  \draw[arr] (ver)   -- node[right,lbl]{verified} (out);
+
+  % Tool access routing
+  % Planner: stem to split junction, then branches to web and papers
+  \draw[tstem] (plan.east) -- (1.5, 3.8);
+  \draw[tarr] (1.5, 3.8) |- (web.west);
+  \draw[tarr] (1.5, 3.8) -- ++(0.5,0) |- (papers.west);
+
+  % Constructor: stub right then down to docs join point
+  \draw[tstem] (cons.east) -| (1.5, 1.85);
+
+  % Verifier: stem to split junction, then tactics branch and up to docs join
+  \draw[tstem] (ver.east) -- (1.5, 1.2);
+  \draw[tarr] (1.5, 1.2) -- ++(0.3,0) |- (tactics.west);
+  \draw[tstem] (1.5, 1.2) -- (1.5, 1.85);
+
+  % Docs join: cons arrives from above, ver from below; single arrow into docs
+  \draw[tarr] (1.5, 1.85) -- (docs.west);
+
+  % Retry / escalation arrows (left side)
+  \draw[darr] (ver.west)
+    to[out=180,in=180,looseness=1.8]
+    node[left,lbl,align=right]{fail\\($b_v$)}
+    (cons.west);
+
+  \draw[darr] (cons.west)
+    to[out=180,in=180,looseness=2.5]
+    node[left,lbl,align=right]{budget\\exhausted}
+    (plan.west);
+\end{tikzpicture}
+\caption{Example agentic architecture. Arrows to the tools panel
+indicate tool access; dashed arrows show retry and escalation paths.}
+\label{fig:arch}
+\end{figure}
 
 \section{Proposed Approach}
 
