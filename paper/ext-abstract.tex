@@ -55,25 +55,22 @@ much human intervention and iteration.
 Furthermore, LLMs struggle in the niche domain of quantum computing, where the potential training material is
 limited compared to a more general and well-studied field such as combinatorics.
 We propose an agentic framework for abstract quantum computing algorithm design,
-where core definitions and axioms of the field are defined in Lean, goals can be formally specified,
-and correctness is checked at every step with the Lean proof-checker.
+where core definitions and axioms of the field are defined in Lean, goals can be formally specified, and correctness is checked at every step with the Lean proof-checker. Based on a formal specification, the LLM would then be trained to construct a quantum algorithm that meets this specification and then formally verify the algorithm meets the specifications by generating proof steps in Lean.
 \end{abstract}
 
 \section{Introduction}
 
 Quantum computing (QC) has the potential to exponentially speed up
-many classical computing algorithms \cite{brandao2010exponential}.
-However, solutions to quantum computing problems are often hard to verify,
-given that quantum programs cannot be efficiently simulated on a classical computer,
-and access to currently-available quantum machines is very expensive.
-As a result, many programs can only be verified analytically.
-This presents as particular challenge for LLM agents.
+many classical computing algorithms \cite{brandao2010exponential}. However, synthesizing quantum algorithms based on specifications of what the algorithm should do is currently a challenging task. Furthermore, verifying a given quantum algorithm on digital computers can be impractically slow while verifying them on quantum computers can be prohibitively expensive. On the other hand, while formal verification can be performed in theorem proving languages, such as Lean, there can be thousands of proof steps to consider at any point in a proof. Therefore, automated theorem proving methods for quantum algorithms are often impractically slow without intelligent proof step selection.
 
+Deep reinforcement learning and heuristic search has proven to be capable of synthesizing quantum circuits based on specifications in the form of unitary matrices \cite{zhang2020topological,bao2024twisty,turner2025quantum}. Large language models (LLMs) have proven capable of solving mathematical problems and proving theorems. For example, AlphaProof \cite{hubert2025olympiad} uses LLMs for solving math olympiad problems and APOLLO \cite{ospanov2026apollo} uses LLMs to generate proofs in Lean for formal math benchmarks. Given the dearth of supervised data on quantum circuit constructions and verification that one can use to train LLMs, we propose using deep reinforcement learning to train LLMs to construct quantum algorithms and then to take proof steps in Lean to verify them while also taking advantage of the information available on the topic of quantum computing and Lean. An overview of this approach is shown in Figure \ref{fig:arch}.
+
+\iffalse
 So far, most attempts to use LLMs for quantum circuit synthesis have
 used Qiskit or OpenQASM as the underlying environment; circuits are
 written as code in these languages, then executed on a quantum simulator,
 and the results are compared with the expected answer.
-We propose a different approach: quantum computing foundamentals can be formalized in a
+We propose a different approach: quantum computing fundamentals can be formalized in a
 proof assistant language such as Lean, then goals such as circuit synthesis
 can be posed formally. An LLM can then be instructed to not only provide code to construct
 a circuit, but also a proof-of-correctness, allowing for automatic verification
@@ -81,6 +78,7 @@ without the need for expensive numerical simulation.
 Once verified, abstract circuit definitions can then be compiled to OpenQASM or Qiskit
 circuits and run on quantum machines.
 Figure~\ref{fig:arch} illustrates one such architecture.
+\fi
 
 \begin{figure}[t]
 \centering
@@ -155,7 +153,7 @@ indicate tool access; dashed arrows show retry and escalation paths.}
 
 \section{Proposed Approach}
 
-\paragraph{Quantum Formalization}
+\paragraph{Quantum Formalization and Verification}
 
 Formalization of quantum computing in proof assistant languages has already been
 extensively explored. \textbf{SQIR} \cite{hietala2021verified} introduces a formalization
@@ -242,17 +240,8 @@ could write the algorithm, and a verifier agent could write the Lean proof-of-co
 \label{fig:ghz}
 \end{figure*}
 
-\paragraph{Theorem Proving}
-
-Much research has been done on automating Lean theorem proving with artificial intelligence.
-\textbf{AlphaProof} \cite{hubert2025olympiad} uses end-to-end reinforcement learning to train a
-neural network for solving math olympiad problems, and achieves significant success.
-\textbf{APOLLO} \cite{ospanov2026apollo} uses LLMs to generate proofs in Lean for formal math benchmarks,
-using a feedback-loop system where the proof state and compiler errors are fed back into the LLM context,
-and new sub-goals are extracted from partially correct proofs.
-Our approach would extend these frameworks to optimize them specifically for quantum computing,
-with a formalized QC language similar to \textbf{SQIR} or \textbf{VyZX} as the underlying
-``engine,'' allowing for humans to specify formal goals, and LLMs to generate verified solutions.
+%\paragraph{Theorem Proving}
+%Our approach would extend these frameworks to optimize them specifically for quantum computing, with a formalized QC language similar to \textbf{SQIR} or \textbf{VyZX} as the underlying ``engine,'' allowing for humans to specify formal goals, and LLMs to generate verified solutions.
 
 \paragraph{Agentic Engineering}
 
@@ -270,7 +259,9 @@ For example, an agent responsible for reading papers may use a tool for searchin
 and vision tools for reading figures and plots, but would not have permission to write and run code.
 
 \paragraph{Reinforcement Learning}
+While methods such as AlphaProof build on the plethora of available data generated by humans for mathematics, there is very little data in this relatively specialized area of quantum algorithm synthesis and verification. To overcome this, we will leverage reinforcement learning to learn without any human input. Specifically, we will treat the task of synthesis and verification as pathfinding problems. In this formalism, goals represent sets of states and the objective is to find a sequence of actions that transforms a start state into a goal state. For synthesis, the states are algorithms, goals are problem specifications, and actions are algorithmic modifications. For verification, states are proofs, goals are proofs that prove that a given algorithm does or does not implement a given specification, and actions are proof steps. Building on work by \citet{agostinelli2024specifying}, goals can be sampled by generalizing states and problem instances can be generated by sampling start states, taking actions, and sampling a goal state from the final state. Reinforcement learning can then be used to learn a heuristic function that estimates the cost-to-go from a state to a goal and heuristic search methods, such as batch weighted A* search \cite{hart1968formal, agostinelli2019solving, li2022optimal}, can be used to find paths. Furthermore, methods such as intrinsic motivation \cite{singh2010intrinsically} can be used to generate challenging problem instances.
 
+\iffalse
 LLMs are unlikely to have the capabilities required for QC research ``out of the box.''
 Even on basic theorem proving tasks, frontier models often require hundreds or even thousands of iterations
 before converging on the correct solution. For this reason, researchers have recently begun
@@ -286,6 +277,7 @@ to either prove or disprove, or random circuits using basis gates as well as bui
 loops and recursion, and random circuit properties to either prove or disprove.
 This would allow us to build a set of training data without \textit{any} human input,
 whereas \textbf{AlphaProof} and others require at least some human-written mathematical text and code.
+\fi
 
 \section{Benchmarking}
 
