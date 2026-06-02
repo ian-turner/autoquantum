@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     git \
     python3 \
     python3-pip \
-    nodejs \
-    npm \
     golang-go \
     cargo \
     ripgrep \
@@ -27,6 +25,11 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     latexmk \
     && ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20 (Ubuntu 22.04 ships Node 12 which is too old for opencode-ai)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install uv and Python MCP packages globally
 RUN pip3 install uv \
